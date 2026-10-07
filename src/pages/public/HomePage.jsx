@@ -1,0 +1,10 @@
+export default function HomePage() {
+  return (
+    <section className="flex min-h-screen flex-col items-center justify-center gap-2 p-6 text-center">
+      <h1 className="text-3xl font-bold">
+        Sistema Integral de <span className="text-brand-600 dark:text-brand-500">Gestión de Maquinaria</span>
+      </h1>
+      <p className="text-neutral-600 dark:text-neutral-400">Portal público en construcción.</p>
+    </section>
+  )
+}
