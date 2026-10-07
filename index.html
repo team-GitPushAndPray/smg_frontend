@@ -1,10 +1,21 @@
 <!doctype html>
-<html lang="en">
+<html lang="es">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>sgm_frontend</title>
+    <title>SGM · Sistema Integral de Gestión de Maquinaria</title>
+    <script>
+      // Aplica el tema antes del primer render para evitar el parpadeo
+      try {
+        const tema = localStorage.getItem('tema')
+        const prefiereOscuro = window.matchMedia('(prefers-color-scheme: dark)').matches
+        if (tema === 'oscuro' || (!tema && prefiereOscuro)) {
+          document.documentElement.classList.add('dark')
+        }
+      } catch {
+        // Sin acceso a localStorage: queda el tema claro
+      }
+    </script>
   </head>
   <body>
     <div id="root"></div>
