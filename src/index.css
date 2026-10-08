@@ -36,6 +36,68 @@
   --color-neutral-800: #27272a;
   --color-neutral-900: #18181b;
   --color-neutral-950: #0f0f10;
+
+  /* Tipografía del sistema Apple */
+  --font-sans: -apple-system, BlinkMacSystemFont, 'SF Pro Display', Inter, system-ui, sans-serif;
+
+  /* Radios: superficies y controles (genera rounded-card y rounded-control) */
+  --radius-card: 1.5rem;
+  --radius-control: 0.875rem;
+
+  /* Curva de las transiciones (genera ease-glass) */
+  --ease-glass: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/*
+ * Tokens de vidrio y fondo global, diseñados por separado para cada modo.
+ * En celular el blur es menor para cuidar el rendimiento.
+ */
+:root {
+  --glass-bg: color-mix(in srgb, var(--color-white) 60%, transparent);
+  --glass-bg-strong: color-mix(in srgb, var(--color-white) 78%, transparent);
+  --glass-border: color-mix(in srgb, var(--color-white) 60%, transparent);
+  --glass-highlight: inset 0 1px 0 color-mix(in srgb, var(--color-white) 70%, transparent);
+  --glass-shadow:
+    0 8px 32px color-mix(in srgb, var(--color-brand-950) 8%, transparent),
+    0 1px 2px color-mix(in srgb, var(--color-black) 4%, transparent);
+  --glass-shadow-strong:
+    0 12px 40px color-mix(in srgb, var(--color-brand-950) 12%, transparent),
+    0 2px 6px color-mix(in srgb, var(--color-black) 6%, transparent);
+  --glass-blur: 12px;
+  --glass-blur-strong: 16px;
+  --glass-saturate: 160%;
+
+  --focus-ring: var(--color-brand-600);
+
+  --bg-base: var(--color-neutral-50);
+  --bg-blob-1: color-mix(in srgb, var(--color-brand-300) 45%, transparent);
+  --bg-blob-2: color-mix(in srgb, var(--color-brand-500) 18%, transparent);
+  --bg-blob-3: color-mix(in srgb, var(--color-neutral-300) 70%, transparent);
+
+  @media (width >= 48rem) {
+    --glass-blur: 20px;
+    --glass-blur-strong: 28px;
+  }
+}
+
+.dark {
+  --glass-bg: color-mix(in srgb, var(--color-neutral-900) 50%, transparent);
+  --glass-bg-strong: color-mix(in srgb, var(--color-neutral-900) 72%, transparent);
+  --glass-border: color-mix(in srgb, var(--color-white) 12%, transparent);
+  --glass-highlight: inset 0 1px 0 color-mix(in srgb, var(--color-white) 10%, transparent);
+  --glass-shadow:
+    0 8px 32px color-mix(in srgb, var(--color-black) 45%, transparent),
+    0 1px 2px color-mix(in srgb, var(--color-black) 30%, transparent);
+  --glass-shadow-strong:
+    0 12px 40px color-mix(in srgb, var(--color-black) 55%, transparent),
+    0 2px 6px color-mix(in srgb, var(--color-black) 35%, transparent);
+
+  --focus-ring: var(--color-brand-400);
+
+  --bg-base: var(--color-black);
+  --bg-blob-1: color-mix(in srgb, var(--color-brand-700) 35%, transparent);
+  --bg-blob-2: color-mix(in srgb, var(--color-brand-950) 80%, transparent);
+  --bg-blob-3: color-mix(in srgb, var(--color-neutral-800) 60%, transparent);
 }
 
 @layer base {
@@ -48,6 +110,110 @@
   }
 
   body {
-    @apply bg-white text-black antialiased dark:bg-black dark:text-white;
+    @apply text-black antialiased dark:text-white;
+    background-color: var(--bg-base);
+  }
+
+  /* Fondo global: manchas difusas de la paleta, fijas al hacer scroll */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    background:
+      radial-gradient(60rem 40rem at 5% -10%, var(--bg-blob-1), transparent 70%),
+      radial-gradient(50rem 36rem at 100% 30%, var(--bg-blob-2), transparent 70%),
+      radial-gradient(56rem 40rem at 30% 110%, var(--bg-blob-3), transparent 70%);
+  }
+
+  h1,
+  h2,
+  h3 {
+    @apply tracking-tight;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    ::before,
+    ::after {
+      transition-duration: 0.01ms !important;
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+    }
+  }
+}
+
+/*
+ * El prefijo -webkit-backdrop-filter lo agrega Tailwind al compilar.
+ * No escribirlo a mano: el compilador descarta la versión estándar y Firefox pierde el blur.
+ */
+
+/* Nivel 1: superficies de contenido (cards, paneles, footer) */
+@utility glass {
+  background: var(--glass-bg);
+  backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--glass-highlight), var(--glass-shadow);
+  border-radius: var(--radius-card);
+
+  @supports not (backdrop-filter: blur(1px)) {
+    background: var(--glass-bg-strong);
+  }
+
+  @media (prefers-reduced-transparency: reduce) {
+    background: var(--glass-bg-strong);
+    backdrop-filter: none;
+  }
+}
+
+/* Nivel 2: elementos flotantes (navbar, modales, menús): más opaco y con más sombra */
+@utility glass-strong {
+  background: var(--glass-bg-strong);
+  backdrop-filter: blur(var(--glass-blur-strong)) saturate(var(--glass-saturate));
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--glass-highlight), var(--glass-shadow-strong);
+  border-radius: var(--radius-card);
+
+  @media (prefers-reduced-transparency: reduce) {
+    backdrop-filter: none;
+  }
+}
+
+/* Contenedor de página: ancho máximo y márgenes laterales por breakpoint */
+@utility page-container {
+  width: 100%;
+  max-width: 72rem;
+  margin-inline: auto;
+  padding-inline: 1rem;
+
+  @media (width >= 40rem) {
+    padding-inline: 1.5rem;
+  }
+
+  @media (width >= 64rem) {
+    padding-inline: 2rem;
+  }
+}
+
+/* Estados comunes de cualquier elemento interactivo: foco, press y deshabilitado */
+@utility interactive {
+  transition-property: color, background-color, border-color, box-shadow, transform, opacity;
+  transition-duration: 200ms;
+  transition-timing-function: var(--ease-glass);
+
+  &:focus-visible {
+    outline: 2px solid var(--focus-ring);
+    outline-offset: 2px;
+  }
+
+  &:active {
+    transform: scale(0.98);
+  }
+
+  &:disabled,
+  &[aria-disabled='true'] {
+    opacity: 0.5;
+    pointer-events: none;
   }
 }
