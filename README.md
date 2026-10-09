@@ -24,8 +24,13 @@ sgm_frontend/
     │   ├── ThemeContext.js     # Contexto del tema claro/oscuro
     │   └── ThemeProvider.jsx   # Aplica el tema y recuerda la elección en localStorage
     │
+    ├── data/                   # Contenido fijo del front (hasta que lo provea la API)
+    │   └── empresa.js          # Textos institucionales: presentación, servicios, ubicación y contacto
+    │
     ├── hooks/                  # Lógica reutilizable
-    │   └── useTheme.js         # Acceso al tema actual y a toggleTheme
+    │   ├── useTheme.js         # Acceso al tema actual y a toggleTheme
+    │   ├── useHashScroll.js    # Scroll suave a la sección del ancla (#servicios, #contacto...)
+    │   └── useActiveSection.js # Sección visible en pantalla, para marcarla en el navbar
     │
     ├── layouts/                # Estructura común de cada módulo (navbar, sidebar, footer)
     │
@@ -35,8 +40,13 @@ sgm_frontend/
     ├── components/             # Piezas reutilizables entre páginas
     │   ├── ThemeToggle.jsx     # Botón de modo claro/oscuro (compartido)
     │   └── public/             # Componentes del portal público
-    │       ├── NavBar.jsx      # Header con navegación y menú de celular
-    │       └── Footer.jsx      # Footer con el acceso discreto al login
+    │       ├── NavBar.jsx          # Header con anclas a las secciones, enlace al catálogo y menú de celular
+    │       ├── Footer.jsx          # Footer con el acceso discreto al login
+    │       ├── SectionHeading.jsx  # Encabezado común de las secciones de la home
+    │       ├── HeroSection.jsx     # Presentación con acceso al catálogo
+    │       ├── ServicesSection.jsx # Texto institucional y tarjetas de servicios
+    │       ├── LocationSection.jsx # Dirección y mapa embebido de Google Maps
+    │       └── ContactSection.jsx  # Teléfonos por área con enlace a WhatsApp
     │
     └── services/               # Comunicación con el backend
         └── api.js              # Cliente HTTP base (apiFetch) que usan todos los services
@@ -47,6 +57,7 @@ sgm_frontend/
 - **Services por recurso:** un archivo por entidad del back (`maquinasService.js`, `alquileresService.js`, etc.), todos construidos sobre `apiFetch`. Ningún componente llama a `fetch` directamente.
 - **Componentes por módulo:** si un componente lo usa un solo módulo, va en `components/public/`, `components/field/` o `components/dashboard/`. Los compartidos van en la raíz de `components/`.
 - **Idioma:** nombres de archivos y código en inglés (`HomePage`, `FieldLayout`); textos visibles y rutas en español (`/campo`, `/admin`).
+- **Contenido institucional:** los textos de la home se leen de `data/empresa.js`; los componentes no tienen textos de la empresa escritos adentro. Si el contenido pasa a la API, solo cambia ese archivo.
 - **Nuevos directorios:** se crean cuando una issue los necesita, no antes. Los previstos son:
   - `assets/`: imágenes y logos importados desde el código.
   - `public/`: favicon y archivos estáticos.
