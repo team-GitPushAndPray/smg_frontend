@@ -1,10 +1,19 @@
+import ContactSection from '../../components/public/ContactSection'
+import HeroSection from '../../components/public/HeroSection'
+import LocationSection from '../../components/public/LocationSection'
+import ServicesSection from '../../components/public/ServicesSection'
+import { useHashScroll } from '../../hooks/useHashScroll'
+
+// Home del portal: secciones institucionales, navegables por ancla desde el header
 export default function HomePage() {
+  useHashScroll()
+
   return (
-    <section className="page-container flex flex-col items-center gap-2 py-24 text-center sm:py-32">
-      <h1 className="text-3xl font-semibold sm:text-4xl">
-        Sistema Integral de <span className="text-brand-600 dark:text-brand-500">Gestión de Maquinaria</span>
-      </h1>
-      <p className="text-neutral-600 dark:text-neutral-400">Portal público en construcción.</p>
-    </section>
+    <>
+      <HeroSection />
+      <ServicesSection />
+      <LocationSection />
+      <ContactSection />
+    </>
   )
 }
