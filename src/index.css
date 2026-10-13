@@ -233,6 +233,28 @@
   box-shadow: var(--glass-highlight), var(--glass-shadow);
 }
 
+/*
+ * Campo de texto: vidrio opaco para que lo escrito se lea bien. Igual que btn-secondary, no va dentro de un .glass.
+ * El padding lo define cada campo (los que llevan ícono necesitan más lugar a los costados)
+ */
+@utility field-glass {
+  @apply min-h-11 w-full rounded-control text-black placeholder:text-neutral-500 dark:text-white dark:placeholder:text-neutral-400;
+  background: var(--glass-bg-strong);
+  backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--glass-highlight), var(--glass-shadow);
+  transition: box-shadow 200ms var(--ease-glass);
+
+  &:focus-visible {
+    outline: 2px solid var(--focus-ring);
+    outline-offset: 2px;
+  }
+
+  &::-webkit-search-cancel-button {
+    appearance: none;
+  }
+}
+
 /* Contenedor de ícono con tinte del acento (cards de servicios, ubicación, contacto) */
 @utility icon-badge {
   @apply grid size-11 shrink-0 place-items-center rounded-control bg-brand-600/10 text-brand-700 dark:bg-brand-500/15 dark:text-brand-400;
