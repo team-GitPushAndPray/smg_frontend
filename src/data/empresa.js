@@ -92,3 +92,14 @@ export const cotizacion = {
   whatsapp: '5492996225551',
   mensaje: 'Hola, quisiera una cotización por',
 }
+
+/*
+ * Textos de la sección de equipo comercial. Las personas (foto, nombre, cargo, descripción y contacto)
+ * vienen de la API; acá solo va el encabezado y el mensaje precargado del WhatsApp.
+ * En `mensaje`, {nombre} se reemplaza por el nombre de pila del vendedor.
+ */
+export const equipoComercial = {
+  titulo: 'Hablá directo con quien te atiende',
+  bajada: 'Escribile por WhatsApp a la persona del área que necesites.',
+  mensaje: 'Hola {nombre}, quisiera hacer una consulta.',
+}
