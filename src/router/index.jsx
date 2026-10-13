@@ -5,12 +5,16 @@ import PublicLayout from '../layouts/PublicLayout'
 import DashboardHomePage from '../pages/dashboard/DashboardHomePage'
 import FieldHomePage from '../pages/field/FieldHomePage'
 import NotFoundPage from '../pages/NotFoundPage'
+import CatalogPage from '../pages/public/CatalogPage'
 import HomePage from '../pages/public/HomePage'
 
 export const router = createBrowserRouter([
   {
     element: <PublicLayout />,
-    children: [{ index: true, element: <HomePage /> }],
+    children: [
+      { index: true, element: <HomePage /> },
+      { path: 'catalogo', element: <CatalogPage /> },
+    ],
   },
   {
     path: 'campo',
