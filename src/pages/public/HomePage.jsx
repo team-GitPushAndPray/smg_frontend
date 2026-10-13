@@ -1,6 +1,7 @@
 import ContactSection from '../../components/public/ContactSection'
 import HeroSection from '../../components/public/HeroSection'
 import LocationSection from '../../components/public/LocationSection'
+import SalesTeamSection from '../../components/public/SalesTeamSection'
 import ServicesSection from '../../components/public/ServicesSection'
 import { useHashScroll } from '../../hooks/useHashScroll'
 
@@ -12,6 +13,7 @@ export default function HomePage() {
     <>
       <HeroSection />
       <ServicesSection />
+      <SalesTeamSection />
       <LocationSection />
       <ContactSection />
     </>
