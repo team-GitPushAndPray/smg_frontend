@@ -86,3 +86,9 @@ export const contacto = [
     telefonos: [{ numero: '(299) 586-4236', whatsapp: '5492995864236' }],
   },
 ]
+
+// WhatsApp al que se piden las cotizaciones desde el catálogo; el mensaje se completa con tipo, marca y modelo
+export const cotizacion = {
+  whatsapp: '5492996225551',
+  mensaje: 'Hola, quisiera una cotización por',
+}

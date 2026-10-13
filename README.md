@@ -25,31 +25,44 @@ sgm_frontend/
     │   └── ThemeProvider.jsx   # Aplica el tema y recuerda la elección en localStorage
     │
     ├── data/                   # Contenido fijo del front (hasta que lo provea la API)
-    │   └── empresa.js          # Textos institucionales: presentación, servicios, ubicación y contacto
+    │   └── empresa.js          # Textos institucionales: presentación, servicios, ubicación, contacto y WhatsApp de cotizaciones
     │
     ├── hooks/                  # Lógica reutilizable
     │   ├── useTheme.js         # Acceso al tema actual y a toggleTheme
     │   ├── useHashScroll.js    # Scroll suave a la sección del ancla (#servicios, #contacto...)
-    │   └── useActiveSection.js # Sección visible en pantalla, para marcarla en el navbar
+    │   ├── useActiveSection.js # Sección visible en pantalla, para marcarla en el navbar
+    │   └── useCatalogo.js      # Carga los equipos del catálogo público, con estado de carga/error y reintento
     │
     ├── layouts/                # Estructura común de cada módulo (navbar, sidebar, footer)
     │
     ├── pages/                  # Una página por ruta, separadas por módulo
-    │   └── NotFoundPage.jsx    # Página 404 compartida
+    │   ├── NotFoundPage.jsx    # Página 404 compartida
+    │   └── public/
+    │       ├── HomePage.jsx    # Home con las secciones institucionales
+    │       └── CatalogPage.jsx # Catálogo: tarjetas por equipo, búsqueda y filtro por tipo en tiempo real
     │
     ├── components/             # Piezas reutilizables entre páginas
     │   ├── ThemeToggle.jsx     # Botón de modo claro/oscuro (compartido)
     │   └── public/             # Componentes del portal público
     │       ├── NavBar.jsx          # Header con anclas a las secciones, enlace al catálogo y menú de celular
     │       ├── Footer.jsx          # Footer con el acceso discreto al login
-    │       ├── SectionHeading.jsx  # Encabezado común de las secciones de la home
+    │       ├── SectionHeading.jsx  # Encabezado común de las secciones (h2, o h1 en páginas propias)
     │       ├── HeroSection.jsx     # Presentación con acceso al catálogo
     │       ├── ServicesSection.jsx # Texto institucional y tarjetas de servicios
     │       ├── LocationSection.jsx # Dirección y mapa embebido de Google Maps
-    │       └── ContactSection.jsx  # Teléfonos por área con enlace a WhatsApp
+    │       ├── ContactSection.jsx  # Teléfonos por área con enlace a WhatsApp
+    │       ├── CatalogSearch.jsx   # Buscador del catálogo
+    │       ├── CategoryFilter.jsx  # Filtro por tipo de equipo, con la cantidad de cada uno
+    │       ├── EquipmentCard.jsx   # Tarjeta de un equipo con botón para cotizarlo por WhatsApp, y su versión de carga
+    │       └── CatalogMessage.jsx  # Avisos del catálogo: error, sin equipos y sin resultados
     │
-    └── services/               # Comunicación con el backend
-        └── api.js              # Cliente HTTP base (apiFetch) que usan todos los services
+    ├── services/               # Comunicación con el backend
+    │   ├── api.js              # Cliente HTTP base (apiFetch) que usan todos los services
+    │   └── catalogoService.js  # GET /catalogo: equipos disponibles para el portal público
+    │
+    └── utils/                  # Funciones auxiliares
+        ├── text.js             # Normaliza texto para buscar sin importar mayúsculas ni tildes
+        └── equipos.js          # Datos de un equipo listos para mostrar y categorías del listado
 ```
 
 ## Convenciones
@@ -61,4 +74,3 @@ sgm_frontend/
 - **Nuevos directorios:** se crean cuando una issue los necesita, no antes. Los previstos son:
   - `assets/`: imágenes y logos importados desde el código.
   - `public/`: favicon y archivos estáticos.
-  - `utils/`: funciones auxiliares (formato de fechas, precios).
