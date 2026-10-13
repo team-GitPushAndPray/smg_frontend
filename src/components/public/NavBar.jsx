@@ -1,17 +1,18 @@
 import { Menu, X } from 'lucide-react'
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Link, NavLink } from 'react-router'
 import { useActiveSection } from '../../hooks/useActiveSection'
+import { useVendedores } from '../../hooks/useVendedores'
 import ThemeToggle from '../ThemeToggle'
 
 // Secciones de la home a las que se navega por ancla
-const sections = [
+const allSections = [
   { id: 'inicio', label: 'Inicio' },
   { id: 'servicios', label: 'Servicios' },
+  { id: 'equipo', label: 'Equipo' },
   { id: 'ubicacion', label: 'Ubicación' },
   { id: 'contacto', label: 'Contacto' },
 ]
-const sectionIds = sections.map((section) => section.id)
 
 const linkBase = 'interactive flex h-11 items-center rounded-control px-4 font-medium'
 const linkActive = 'bg-brand-600/10 text-brand-700 dark:bg-brand-500/15 dark:text-brand-300'
@@ -26,7 +27,7 @@ function catalogLinkClass({ isActive }) {
     : `${base} hover:bg-brand-600/10 dark:hover:bg-brand-500/15`
 }
 
-function SectionLinks({ activeId, onNavigate }) {
+function SectionLinks({ sections, activeId, onNavigate }) {
   return sections.map((section) => {
     const isActive = section.id === activeId
     return (
@@ -46,6 +47,13 @@ function SectionLinks({ activeId, onNavigate }) {
 
 export default function NavBar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
+  const { hasEquipo } = useVendedores()
+  // Sin vendedores activos la sección de equipo no existe: su ancla tampoco se muestra
+  const sections = useMemo(
+    () => allSections.filter((section) => section.id !== 'equipo' || hasEquipo),
+    [hasEquipo],
+  )
+  const sectionIds = useMemo(() => sections.map((section) => section.id), [sections])
   const activeId = useActiveSection(sectionIds)
   const closeMenu = () => setIsMenuOpen(false)
 
@@ -82,7 +90,7 @@ export default function NavBar() {
             </Link>
 
             <ul className="hidden items-center gap-1 text-sm md:flex">
-              <SectionLinks activeId={activeId} />
+              <SectionLinks sections={sections} activeId={activeId} />
             </ul>
 
             <div className="flex items-center gap-1 justify-self-end">
@@ -111,7 +119,7 @@ export default function NavBar() {
 
           {isMenuOpen && (
             <ul id="menu-movil" className="flex flex-col gap-1 border-t border-(--glass-border) p-2.5 md:hidden">
-              <SectionLinks activeId={activeId} onNavigate={closeMenu} />
+              <SectionLinks sections={sections} activeId={activeId} onNavigate={closeMenu} />
               <li className="mt-1">
                 <NavLink to="/catalogo" onClick={closeMenu} className={catalogLinkClass}>
                   Catálogo
