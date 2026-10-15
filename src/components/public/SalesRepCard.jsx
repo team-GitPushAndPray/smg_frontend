@@ -33,10 +33,20 @@ function Avatar({ foto, nombre }) {
   )
 }
 
-// Tarjeta de un vendedor: foto, nombre, cargo, descripción y botón para escribirle por WhatsApp
-export default function SalesRepCard({ nombre, cargo, descripcion, foto, contacto }) {
+/*
+ * Tarjeta de un vendedor: foto, nombre, cargo, descripción y botón para escribirle por WhatsApp.
+ * `mensaje` es el texto precargado; {nombre} se reemplaza por el nombre de pila del vendedor
+ */
+export default function SalesRepCard({
+  nombre,
+  cargo,
+  descripcion,
+  foto,
+  contacto,
+  mensaje = equipoComercial.mensaje,
+}) {
   const nombrePila = nombre.trim().split(/\s+/)[0]
-  const whatsappUrl = getWhatsappUrl(contacto, equipoComercial.mensaje.replace('{nombre}', nombrePila))
+  const whatsappUrl = getWhatsappUrl(contacto, mensaje.replace('{nombre}', nombrePila))
 
   return (
     <li className="glass flex flex-col gap-5 p-6">

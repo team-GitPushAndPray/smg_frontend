@@ -6,6 +6,7 @@ import DashboardHomePage from '../pages/dashboard/DashboardHomePage'
 import FieldHomePage from '../pages/field/FieldHomePage'
 import NotFoundPage from '../pages/NotFoundPage'
 import CatalogPage from '../pages/public/CatalogPage'
+import EquipmentDetailPage from '../pages/public/EquipmentDetailPage'
 import HomePage from '../pages/public/HomePage'
 
 export const router = createBrowserRouter([
@@ -14,6 +15,7 @@ export const router = createBrowserRouter([
     children: [
       { index: true, element: <HomePage /> },
       { path: 'catalogo', element: <CatalogPage /> },
+      { path: 'catalogo/:id', element: <EquipmentDetailPage /> },
     ],
   },
   {

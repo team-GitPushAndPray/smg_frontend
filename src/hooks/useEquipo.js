@@ -1,0 +1,40 @@
+import { useEffect, useState } from 'react'
+import { getEquipo } from '../services/catalogoService'
+
+/*
+ * Carga un equipo del catálogo público por su id (el de la URL).
+ * `status` es 'loading', 'success', 'not-found' (no existe o ya no está disponible) o 'error'; `retry` vuelve a pedirlo.
+ * El resultado se guarda junto al id que lo pidió: al cambiar de equipo se ve 'loading' sin mostrar el anterior.
+ */
+export function useEquipo(id) {
+  const isValidId = /^\d+$/.test(id ?? '')
+  const [result, setResult] = useState({ id: null, status: 'loading', equipo: null })
+  const [attempt, setAttempt] = useState(0)
+
+  useEffect(() => {
+    if (!isValidId) return
+    const controller = new AbortController()
+
+    getEquipo(id, { signal: controller.signal })
+      .then((equipo) => {
+        if (!controller.signal.aborted) setResult({ id, status: 'success', equipo })
+      })
+      .catch((error) => {
+        if (controller.signal.aborted) return
+        const status = error.status === 404 ? 'not-found' : 'error'
+        setResult({ id, status, equipo: null })
+      })
+
+    return () => controller.abort()
+  }, [id, isValidId, attempt])
+
+  const retry = () => {
+    setResult({ id: null, status: 'loading', equipo: null })
+    setAttempt((value) => value + 1)
+  }
+
+  // Un id que no es un número no se le pide al back: no puede existir
+  if (!isValidId) return { status: 'not-found', equipo: null, retry }
+  if (result.id !== id) return { status: 'loading', equipo: null, retry }
+  return { status: result.status, equipo: result.equipo, retry }
+}

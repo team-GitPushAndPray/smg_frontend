@@ -12,7 +12,7 @@ sgm_frontend/
 └── src/
     ├── main.jsx                # Punto de entrada: monta <App /> en el DOM
     ├── App.jsx                 # Componente raíz: monta el router
-    ├── index.css               # Tailwind, paleta, tokens de vidrio, fondo global y clases .glass / .glass-strong
+    ├── index.css               # Tailwind, paleta, tokens de vidrio, fondo global, clases .glass / .glass-strong y botones
     │
     ├── config/                 # Configuración global
     │   └── env.js              # Lee y expone las variables de entorno (API_URL)
@@ -24,16 +24,17 @@ sgm_frontend/
     │   ├── ThemeContext.js     # Contexto del tema claro/oscuro
     │   ├── ThemeProvider.jsx   # Aplica el tema y recuerda la elección en localStorage
     │   ├── VendedoresContext.js  # Contexto del equipo comercial
-    │   └── VendedoresProvider.jsx # Carga el equipo comercial una vez para la home y el navbar
+    │   └── VendedoresProvider.jsx # Carga el equipo comercial una vez para la home, el detalle de equipo y el navbar
     │
     ├── data/                   # Contenido fijo del front (hasta que lo provea la API)
-    │   └── empresa.js          # Textos institucionales: presentación, servicios, equipo comercial, ubicación, contacto y WhatsApp de cotizaciones
+    │   └── empresa.js          # Textos institucionales: presentación, servicios, equipo comercial, ubicación, contacto, WhatsApp de cotizaciones y consulta por equipo
     │
     ├── hooks/                  # Lógica reutilizable
     │   ├── useTheme.js         # Acceso al tema actual y a toggleTheme
     │   ├── useHashScroll.js    # Scroll suave a la sección del ancla (#servicios, #contacto...)
     │   ├── useActiveSection.js # Sección visible en pantalla, para marcarla en el navbar
     │   ├── useCatalogo.js      # Carga los equipos del catálogo público, con estado de carga/error y reintento
+    │   ├── useEquipo.js        # Carga un equipo del catálogo por id, con estado de carga/no encontrado/error y reintento
     │   └── useVendedores.js    # Acceso al equipo comercial (estado, vendedores y reintento)
     │
     ├── layouts/                # Estructura común de cada módulo (navbar, sidebar, footer)
@@ -42,7 +43,8 @@ sgm_frontend/
     │   ├── NotFoundPage.jsx    # Página 404 compartida
     │   └── public/
     │       ├── HomePage.jsx    # Home con las secciones institucionales y el equipo comercial
-    │       └── CatalogPage.jsx # Catálogo: tarjetas por equipo, búsqueda y filtro por tipo en tiempo real
+    │       ├── CatalogPage.jsx # Catálogo: tarjetas por equipo, búsqueda y filtro por tipo en tiempo real
+    │       └── EquipmentDetailPage.jsx # Detalle de un equipo (/catalogo/:id): una sola página, el id de la URL decide qué equipo se carga
     │
     ├── components/             # Piezas reutilizables entre páginas
     │   ├── ThemeToggle.jsx     # Botón de modo claro/oscuro (compartido)
@@ -52,23 +54,26 @@ sgm_frontend/
     │       ├── SectionHeading.jsx  # Encabezado común de las secciones (h2, o h1 en páginas propias)
     │       ├── HeroSection.jsx     # Presentación con acceso al catálogo
     │       ├── ServicesSection.jsx # Texto institucional y tarjetas de servicios
-    │       ├── SalesTeamSection.jsx # Equipo comercial: una tarjeta por vendedor activo
+    │       ├── SalesTeamSection.jsx # Sección del equipo comercial en la home
+    │       ├── SalesRepList.jsx    # Grilla de vendedores con carga y error (home y detalle de equipo), con mensaje de WhatsApp configurable
     │       ├── SalesRepCard.jsx    # Tarjeta de un vendedor (foto o iniciales, cargo, descripción y WhatsApp), y su versión de carga
     │       ├── LocationSection.jsx # Dirección y mapa embebido de Google Maps
     │       ├── ContactSection.jsx  # Teléfonos por área con enlace a WhatsApp
     │       ├── CatalogSearch.jsx   # Buscador del catálogo
     │       ├── CategoryFilter.jsx  # Filtro por tipo de equipo, con la cantidad de cada uno
-    │       ├── EquipmentCard.jsx   # Tarjeta de un equipo con botón para cotizarlo por WhatsApp, y su versión de carga
+    │       ├── EquipmentCard.jsx   # Tarjeta de un equipo (toda clickeable hacia el detalle) con "Ver detalle" y "Cotizar", y su versión de carga
+    │       ├── EquipmentDetail.jsx # Detalle de un equipo: galería, datos, cotización y equipo comercial, y su versión de carga
+    │       ├── EquipmentGallery.jsx # Galería del detalle (provisional: ícono del tipo de equipo hasta que el back devuelva fotos)
     │       └── CatalogMessage.jsx  # Avisos de carga: error, sin equipos y sin resultados (catálogo y equipo comercial)
     │
     ├── services/               # Comunicación con el backend
     │   ├── api.js              # Cliente HTTP base (apiFetch) que usan todos los services
-    │   ├── catalogoService.js  # GET /catalogo: equipos disponibles para el portal público
+    │   ├── catalogoService.js  # GET /catalogo y GET /catalogo/id=:id: equipos disponibles y detalle de uno
     │   └── vendedoresService.js # GET /vendedores/public: vendedores activos, ordenados por cargo
     │
     └── utils/                  # Funciones auxiliares
         ├── text.js             # Normaliza texto para buscar sin importar mayúsculas ni tildes
-        ├── equipos.js          # Datos de un equipo listos para mostrar y categorías del listado
+        ├── equipos.js          # Datos de un equipo listos para mostrar, WhatsApp de cotización y categorías del listado
         └── vendedores.js       # Nombre del cargo, iniciales y enlace de WhatsApp de un vendedor
 ```
 

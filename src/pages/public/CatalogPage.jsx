@@ -125,6 +125,8 @@ export default function CatalogPage() {
             {visibleItems.map((item) => (
               <EquipmentCard
                 key={item.id}
+                id={item.id}
+                nombre={item.nombre}
                 tipo={item.tipo}
                 marca={item.marca}
                 modelo={item.modelo}

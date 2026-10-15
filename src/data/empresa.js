@@ -103,3 +103,13 @@ export const equipoComercial = {
   bajada: 'Escribile por WhatsApp a la persona del área que necesites.',
   mensaje: 'Hola {nombre}, quisiera hacer una consulta.',
 }
+
+/*
+ * Textos del detalle de un equipo: el botón de cotización y el bloque del equipo comercial.
+ * En `mensaje`, {nombre} se reemplaza por el nombre de pila del vendedor y {equipo} por tipo, marca y modelo.
+ */
+export const consultaEquipo = {
+  titulo: 'Consultá con el equipo comercial',
+  bajada: 'Escribile por WhatsApp a quien prefieras: el mensaje ya incluye el equipo que estás viendo.',
+  mensaje: 'Hola {nombre}, quisiera consultar por {equipo}.',
+}
