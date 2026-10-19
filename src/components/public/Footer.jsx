@@ -18,7 +18,7 @@ export default function Footer() {
 
         <div className="flex items-center justify-between gap-4 text-xs text-neutral-600 sm:flex-col sm:items-end sm:gap-1 dark:text-neutral-400">
           <p>© {year} SGM</p>
-          {/* Acceso discreto al login del dashboard */}
+          {/* Acceso discreto al login del panel de gestión */}
           <Link
             to="/admin/login"
             className="interactive -mx-2 inline-flex min-h-11 items-center gap-1.5 rounded-control px-2 hover:text-black sm:-mb-3 dark:hover:text-white"
