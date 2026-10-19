@@ -1,6 +1,5 @@
 import { CircleUserRound, LogOut } from 'lucide-react'
 import { useEffect, useId, useRef, useState } from 'react'
-import { Link } from 'react-router'
 import { useAuth } from '../../hooks/useAuth'
 import { getNombreCompleto, getRolLabel } from '../../utils/usuarios'
 
@@ -8,9 +7,9 @@ const triggerBase =
   'interactive grid size-11 place-items-center rounded-control text-neutral-700 hover:bg-black/5 hover:text-black dark:text-neutral-300 dark:hover:bg-white/10 dark:hover:text-white'
 const triggerOpen = 'bg-black/5 text-black dark:bg-white/10 dark:text-white'
 
-// Menú de la cuenta en la topbar: nombre, rol y cerrar sesión. Sin sesión, el ícono lleva al login
+// Menú de la cuenta en la topbar: nombre, rol y cerrar sesión. El panel siempre tiene sesión (lo protege <RutaPrivada>)
 export default function UserMenu() {
-  const { usuario, cargando, logout } = useAuth()
+  const { usuario, logout } = useAuth()
   const [isOpen, setIsOpen] = useState(false)
   const containerRef = useRef(null)
   const buttonRef = useRef(null)
@@ -34,22 +33,6 @@ export default function UserMenu() {
       document.removeEventListener('pointerdown', onPointerDown)
     }
   }, [isOpen])
-
-  if (cargando) {
-    return (
-      <button type="button" disabled aria-label="Cargando sesión" className={triggerBase}>
-        <CircleUserRound size={22} strokeWidth={1.75} aria-hidden="true" className="animate-pulse" />
-      </button>
-    )
-  }
-
-  if (!usuario) {
-    return (
-      <Link to="/admin/login" aria-label="Iniciar sesión" title="Iniciar sesión" className={triggerBase}>
-        <CircleUserRound size={22} strokeWidth={1.75} aria-hidden="true" />
-      </Link>
-    )
-  }
 
   return (
     <div ref={containerRef} className="relative">
