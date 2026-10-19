@@ -29,7 +29,7 @@ sgm_frontend/
     │   ├── AuthContext.js      # Contexto de la sesión del panel
     │   ├── AuthProvider.jsx    # Login, logout, restauración de la sesión con /auth/me, permisos por módulo y aviso ante un 403 de la API
     │   ├── ToastContext.js     # Contexto de los avisos (toasts)
-    │   ├── ToastProvider.jsx   # Pila de avisos no bloqueantes de toda la app (showToast)
+    │   ├── ToastProvider.jsx   # Pila de avisos no bloqueantes de toda la app (showToast: error, info o exito)
     │   ├── VendedoresContext.js  # Contexto del equipo comercial
     │   └── VendedoresProvider.jsx # Carga el equipo comercial una vez para la home, el detalle de equipo y el navbar
     │
@@ -39,12 +39,13 @@ sgm_frontend/
     ├── hooks/                  # Lógica reutilizable
     │   ├── useTheme.js         # Acceso al tema actual y a toggleTheme
     │   ├── useAuth.js          # Acceso a la sesión: usuario, cargando, login, logout, tieneModulo y puedeEditar
-    │   ├── useToast.js         # Acceso a showToast(mensaje, { tipo: 'error' | 'info' })
+    │   ├── useToast.js         # Acceso a showToast(mensaje, { tipo: 'error' | 'info' | 'exito' })
     │   ├── useHashScroll.js    # Scroll suave a la sección del ancla (#servicios, #contacto...)
     │   ├── useActiveSection.js # Sección visible en pantalla, para marcarla en el navbar
     │   ├── useCatalogo.js      # Carga los equipos del catálogo público, con estado de carga/error y reintento
     │   ├── useEquipo.js        # Carga un equipo del catálogo por id, con estado de carga/no encontrado/error y reintento
-    │   └── useVendedores.js    # Acceso al equipo comercial (estado, vendedores y reintento)
+    │   ├── useVendedores.js    # Acceso al equipo comercial (estado, vendedores y reintento)
+    │   └── useUsuarios.js      # Carga usuarios y roles juntos, con reintento, refresco en segundo plano y reemplazo de una fila
     │
     ├── layouts/                # Estructura común de cada módulo (navbar, sidebar, footer)
     │   ├── PublicLayout.jsx    # Portal público: header + footer
@@ -53,12 +54,12 @@ sgm_frontend/
     │
     ├── pages/                  # Una página por ruta, separadas por módulo
     │   ├── NotFoundPage.jsx    # Página 404 compartida
-    │   ├── admin/              # Panel de gestión (por ahora, placeholders)
+    │   ├── admin/              # Panel de gestión
     │   │   ├── LoginPage.jsx   # /admin/login: pantalla completa, sin sidebar; formulario de inicio de sesión (con sesión activa redirige a la sección de origen o a /admin)
     │   │   ├── AdminHomePage.jsx # /admin: saludo y una tarjeta por cada sección que el rol tiene
     │   │   ├── ForbiddenPage.jsx # 403 dentro del panel: sección que el rol no incluye
     │   │   ├── MachinesPage.jsx  # /admin/maquinas: placeholder con el nivel de permiso (Edición / Solo lectura)
-    │   │   ├── UsersPage.jsx     # /admin/configuracion/usuarios
+    │   │   ├── UsersPage.jsx     # /admin/configuracion/usuarios: ABM de usuarios (tabla, búsqueda, filtro por estado, alta, edición, baja y reactivación)
     │   │   └── RolesPage.jsx     # /admin/configuracion/roles
     │   └── public/
     │       ├── HomePage.jsx    # Home con las secciones institucionales y el equipo comercial
@@ -67,14 +68,21 @@ sgm_frontend/
     │
     ├── components/             # Piezas reutilizables entre páginas
     │   ├── ThemeToggle.jsx     # Botón de modo claro/oscuro (compartido)
-    │   ├── ToastList.jsx       # Avisos en pantalla: se cierran solos o con la X
+    │   ├── ToastList.jsx       # Avisos en pantalla: se cierran solos o con la X (quedan sobre los modales)
     │   ├── admin/              # Componentes del panel de gestión
     │   │   ├── AdminNav.jsx        # Menú del panel generado desde RUTAS_PANEL, filtrado por los módulos del rol, con grupos desplegables e ítem activo (sidebar y celular)
     │   │   ├── AdminTopbar.jsx     # Barra superior: saludo, "Ver sitio", tema, usuario y menú desplegable en celular
     │   │   ├── UserMenu.jsx        # Menú de la cuenta: nombre, rol y cerrar sesión
     │   │   ├── AdminBrand.jsx      # Marca del panel, lleva a /admin
     │   │   ├── PermissionBadge.jsx # Indicador del nivel de permiso sobre un módulo: Edición o Solo lectura
-    │   │   └── AdminPlaceholder.jsx # Contenido provisorio de las páginas del panel
+    │   │   ├── AdminPlaceholder.jsx # Contenido provisorio de las páginas del panel
+    │   │   ├── PanelMessage.jsx    # Aviso de una sección del panel: error de carga, sin datos o sin resultados
+    │   │   ├── Modal.jsx           # Modal base del panel: portal, foco atrapado, Escape y bloqueo mientras se envía
+    │   │   ├── ConfirmDialog.jsx   # Confirmación de una acción delicada, con carga y error
+    │   │   ├── UsersToolbar.jsx    # Buscador por nombre o email y filtro por estado de la pantalla de usuarios
+    │   │   ├── UsersTable.jsx      # Tabla de usuarios (tarjetas debajo de lg) con rol, estado y último acceso, y su versión de carga
+    │   │   ├── UserActionsMenu.jsx # Menú ⋯ de una fila: Editar y Dar de baja / Reactivar
+    │   │   └── UserFormModal.jsx   # Alta y edición de un usuario con validación y errores del back (409 en el email, 400 arriba)
     │   └── public/             # Componentes del portal público
     │       ├── NavBar.jsx          # Header con anclas a las secciones, enlace al catálogo, "Ir al panel" con sesión y menú de celular
     │       ├── Footer.jsx          # Footer con el acceso discreto al login
@@ -94,16 +102,17 @@ sgm_frontend/
     │       └── CatalogMessage.jsx  # Avisos de carga: error, sin equipos y sin resultados (catálogo y equipo comercial)
     │
     ├── services/               # Comunicación con el backend
-    │   ├── api.js              # Cliente HTTP base (apiFetch) que usan todos los services: token, 401, 403 y errores de conexión
+    │   ├── api.js              # Cliente HTTP base (apiFetch) que usan todos los services: token, 401, 403, errores de conexión y mensajes de validación del back
     │   ├── authService.js      # POST /auth/login y GET /auth/me
     │   ├── catalogoService.js  # GET /catalogo y GET /catalogo/id=:id: equipos disponibles y detalle de uno
-    │   └── vendedoresService.js # GET /vendedores/public: vendedores activos, ordenados por cargo
+    │   ├── vendedoresService.js # GET /vendedores/public: vendedores activos, ordenados por cargo
+    │   └── usuariosService.js  # ABM de usuarios (GET, POST y PATCH /usuarios, PATCH /usuarios/:id/estado) y GET /roles
     │
     └── utils/                  # Funciones auxiliares
         ├── text.js             # Normaliza texto para buscar sin importar mayúsculas ni tildes
         ├── equipos.js          # Datos de un equipo listos para mostrar, WhatsApp de cotización y categorías del listado
         ├── vendedores.js       # Nombre del cargo, iniciales y enlace de WhatsApp de un vendedor
-        └── usuarios.js         # Normalización de los módulos del usuario, nombre del rol y nombre completo
+        └── usuarios.js         # Normalización de los módulos del usuario, nombre del rol, nombre completo, último acceso y error genérico
 ```
 
 ## Convenciones
@@ -114,7 +123,8 @@ sgm_frontend/
 - **Idioma:** nombres de archivos y código en inglés (`HomePage`, `FieldLayout`); textos visibles y rutas en español (`/campo`, `/admin`).
 - **Secciones del panel:** para sumar una, se agrega su ítem en `RUTAS_PANEL` (`config/rutasPanel.js`) con su `modulo`, y su página en `paginasPanel` (`router/index.jsx`) con el mismo path. El sidebar, las tarjetas de Inicio y la protección por módulo se arman solos.
 - **Permisos:** se consultan con `tieneModulo(codigo)` y `puedeEditar(codigo)` de `useAuth()`, siempre con los códigos de `MODULOS`, nunca escritos a mano. Es experiencia de usuario: la seguridad real la da el back (401/403).
-- **Avisos:** para un mensaje no bloqueante se usa `showToast()` de `useToast()`, no un `alert()`.
+- **Avisos:** para un mensaje no bloqueante se usa `showToast()` de `useToast()`, no un `alert()`. Los errores 401 y 403 ya los avisa `apiFetch`: para el resto, `getErrorGenerico()` (`utils/usuarios.js`).
+- **Modales:** se usa `Modal` (`components/admin/Modal.jsx`), que se muestra mientras está montado. No se usa `<dialog>` nativo: su capa superior taparía los avisos.
 - **Contenido institucional:** los textos de la home se leen de `data/empresa.js`; los componentes no tienen textos de la empresa escritos adentro. Si el contenido pasa a la API, solo cambia ese archivo.
 - **Nuevos directorios:** se crean cuando una issue los necesita, no antes. Los previstos son:
   - `assets/`: imágenes y logos importados desde el código.
