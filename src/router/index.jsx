@@ -1,8 +1,12 @@
 import { createBrowserRouter } from 'react-router'
-import DashboardLayout from '../layouts/DashboardLayout'
+import AdminLayout from '../layouts/AdminLayout'
 import FieldLayout from '../layouts/FieldLayout'
 import PublicLayout from '../layouts/PublicLayout'
-import DashboardHomePage from '../pages/dashboard/DashboardHomePage'
+import AdminHomePage from '../pages/admin/AdminHomePage'
+import LoginPage from '../pages/admin/LoginPage'
+import MachinesPage from '../pages/admin/MachinesPage'
+import RolesPage from '../pages/admin/RolesPage'
+import UsersPage from '../pages/admin/UsersPage'
 import FieldHomePage from '../pages/field/FieldHomePage'
 import NotFoundPage from '../pages/NotFoundPage'
 import CatalogPage from '../pages/public/CatalogPage'
@@ -23,10 +27,18 @@ export const router = createBrowserRouter([
     element: <FieldLayout />,
     children: [{ index: true, element: <FieldHomePage /> }],
   },
+  // El login va fuera del panel: pantalla completa, sin sidebar ni topbar
+  { path: 'admin/login', element: <LoginPage /> },
   {
+    // Los paths del panel coinciden con los de config/rutasPanel.js, que arma el sidebar
     path: 'admin',
-    element: <DashboardLayout />,
-    children: [{ index: true, element: <DashboardHomePage /> }],
+    element: <AdminLayout />,
+    children: [
+      { index: true, element: <AdminHomePage /> },
+      { path: 'maquinas', element: <MachinesPage /> },
+      { path: 'configuracion/usuarios', element: <UsersPage /> },
+      { path: 'configuracion/roles', element: <RolesPage /> },
+    ],
   },
   { path: '*', element: <NotFoundPage /> },
 ])
