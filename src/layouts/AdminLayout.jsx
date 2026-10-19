@@ -1,11 +1,21 @@
-import { Outlet } from 'react-router'
+import { useEffect } from 'react'
+import { Outlet, useLocation } from 'react-router'
 import AdminBrand from '../components/admin/AdminBrand'
 import AdminNav from '../components/admin/AdminNav'
 import AdminTopbar from '../components/admin/AdminTopbar'
+import { useAuth } from '../hooks/useAuth'
 
-// Panel de gestión (desktop-first): sidebar + topbar + contenido. El login y los roles se agregan en sus propias issues.
+// Panel de gestión (desktop-first): sidebar + topbar + contenido. La protección de rutas y el menú por rol llegan en F-06.
 // En celular el sidebar se oculta y su menú se despliega desde la topbar
 export default function AdminLayout() {
+  const { pathname } = useLocation()
+  const { verificarSesion } = useAuth()
+
+  // En cada cambio de sección se confirma que el token siga guardado
+  useEffect(() => {
+    verificarSesion()
+  }, [pathname, verificarSesion])
+
   return (
     <div className="flex min-h-svh gap-4 p-3 sm:p-4">
       <aside className="sticky top-4 hidden h-[calc(100svh-2rem)] w-60 shrink-0 md:block lg:w-64">
