@@ -1,17 +1,18 @@
 import { RouterProvider } from 'react-router'
 import AuthProvider from './context/AuthProvider'
 import ThemeProvider from './context/ThemeProvider'
+import ToastProvider from './context/ToastProvider'
 import { router } from './router'
 
-// Al terminar la sesión se vuelve al login; con replace, "atrás" no regresa al panel
-const goToLogin = () => router.navigate('/admin/login', { replace: true })
-
+// Los avisos envuelven a la sesión: AuthProvider los usa para el 403 de la API
 function App() {
   return (
     <ThemeProvider>
-      <AuthProvider onSessionEnd={goToLogin}>
-        <RouterProvider router={router} />
-      </AuthProvider>
+      <ToastProvider>
+        <AuthProvider>
+          <RouterProvider router={router} />
+        </AuthProvider>
+      </ToastProvider>
     </ThemeProvider>
   )
 }
