@@ -69,6 +69,11 @@
 
   --focus-ring: var(--color-brand-600);
 
+  /* Campos de formulario dentro de una superficie de vidrio */
+  --field-bg: color-mix(in srgb, var(--color-white) 85%, transparent);
+  --field-border: var(--color-neutral-300);
+  --field-border-invalid: var(--color-brand-600);
+
   --bg-base: var(--color-neutral-50);
   --bg-blob-1: color-mix(in srgb, var(--color-brand-300) 45%, transparent);
   --bg-blob-2: color-mix(in srgb, var(--color-brand-500) 18%, transparent);
@@ -93,6 +98,10 @@
     0 2px 6px color-mix(in srgb, var(--color-black) 35%, transparent);
 
   --focus-ring: var(--color-brand-400);
+
+  --field-bg: color-mix(in srgb, var(--color-black) 55%, transparent);
+  --field-border: color-mix(in srgb, var(--color-white) 16%, transparent);
+  --field-border-invalid: var(--color-brand-400);
 
   --bg-base: var(--color-black);
   --bg-blob-1: color-mix(in srgb, var(--color-brand-700) 35%, transparent);
@@ -257,6 +266,30 @@
 
   &::-webkit-search-cancel-button {
     appearance: none;
+  }
+}
+
+/*
+ * Campo de formulario dentro de una superficie .glass (login, formularios del panel): fondo casi opaco
+ * y sin blur, para no apilar una tercera capa de vidrio. El padding lo define cada campo
+ */
+@utility field {
+  @apply min-h-11 w-full rounded-control text-black placeholder:text-neutral-500 dark:text-white dark:placeholder:text-neutral-400;
+  background: var(--field-bg);
+  border: 1px solid var(--field-border);
+  transition: border-color 200ms var(--ease-glass);
+
+  &:focus-visible {
+    outline: 2px solid var(--focus-ring);
+    outline-offset: 2px;
+  }
+
+  &[aria-invalid='true'] {
+    border-color: var(--field-border-invalid);
+  }
+
+  &:disabled {
+    opacity: 0.6;
   }
 }
 

@@ -11,7 +11,7 @@ sgm_frontend/
 ├── vite.config.js              # Configuración de Vite + plugins de React y Tailwind
 └── src/
     ├── main.jsx                # Punto de entrada: monta <App /> en el DOM
-    ├── App.jsx                 # Componente raíz: monta el router
+    ├── App.jsx                 # Componente raíz: monta el tema, la sesión y el router
     ├── index.css               # Tailwind, paleta, tokens de vidrio, fondo global, clases .glass / .glass-strong y botones
     │
     ├── config/                 # Configuración global
@@ -24,6 +24,8 @@ sgm_frontend/
     ├── context/                # Estado global
     │   ├── ThemeContext.js     # Contexto del tema claro/oscuro
     │   ├── ThemeProvider.jsx   # Aplica el tema y recuerda la elección en localStorage
+    │   ├── AuthContext.js      # Contexto de la sesión del panel
+    │   ├── AuthProvider.jsx    # Login, logout y restauración de la sesión con /auth/me al abrir la app
     │   ├── VendedoresContext.js  # Contexto del equipo comercial
     │   └── VendedoresProvider.jsx # Carga el equipo comercial una vez para la home, el detalle de equipo y el navbar
     │
@@ -32,6 +34,7 @@ sgm_frontend/
     │
     ├── hooks/                  # Lógica reutilizable
     │   ├── useTheme.js         # Acceso al tema actual y a toggleTheme
+    │   ├── useAuth.js          # Acceso a la sesión: usuario, cargando, login y logout
     │   ├── useHashScroll.js    # Scroll suave a la sección del ancla (#servicios, #contacto...)
     │   ├── useActiveSection.js # Sección visible en pantalla, para marcarla en el navbar
     │   ├── useCatalogo.js      # Carga los equipos del catálogo público, con estado de carga/error y reintento
@@ -40,13 +43,13 @@ sgm_frontend/
     │
     ├── layouts/                # Estructura común de cada módulo (navbar, sidebar, footer)
     │   ├── PublicLayout.jsx    # Portal público: header + footer
-    │   ├── AdminLayout.jsx     # Panel de gestión (/admin): sidebar + topbar + contenido
+    │   ├── AdminLayout.jsx     # Panel de gestión (/admin): sidebar + topbar + contenido; verifica el token en cada cambio de sección
     │   └── FieldLayout.jsx     # Módulo de campo (/campo), mobile-first
     │
     ├── pages/                  # Una página por ruta, separadas por módulo
     │   ├── NotFoundPage.jsx    # Página 404 compartida
     │   ├── admin/              # Panel de gestión (por ahora, placeholders)
-    │   │   ├── LoginPage.jsx   # /admin/login: pantalla completa, sin sidebar (el login real llega en F-05)
+    │   │   ├── LoginPage.jsx   # /admin/login: pantalla completa, sin sidebar; formulario de inicio de sesión (con sesión activa redirige a /admin)
     │   │   ├── AdminHomePage.jsx # /admin: inicio del panel
     │   │   ├── MachinesPage.jsx  # /admin/maquinas
     │   │   ├── UsersPage.jsx     # /admin/configuracion/usuarios
@@ -60,7 +63,8 @@ sgm_frontend/
     │   ├── ThemeToggle.jsx     # Botón de modo claro/oscuro (compartido)
     │   ├── admin/              # Componentes del panel de gestión
     │   │   ├── AdminNav.jsx        # Menú del panel generado desde RUTAS_PANEL, con grupos desplegables e ítem activo (sidebar y celular)
-    │   │   ├── AdminTopbar.jsx     # Barra superior: "Ver sitio", tema, usuario y menú desplegable en celular
+    │   │   ├── AdminTopbar.jsx     # Barra superior: saludo, "Ver sitio", tema, usuario y menú desplegable en celular
+    │   │   ├── UserMenu.jsx        # Menú de la cuenta: nombre, rol y cerrar sesión (sin sesión, lleva al login)
     │   │   ├── AdminBrand.jsx      # Marca del panel, lleva a /admin
     │   │   └── AdminPlaceholder.jsx # Contenido provisorio de las páginas del panel
     │   └── public/             # Componentes del portal público
@@ -82,19 +86,22 @@ sgm_frontend/
     │       └── CatalogMessage.jsx  # Avisos de carga: error, sin equipos y sin resultados (catálogo y equipo comercial)
     │
     ├── services/               # Comunicación con el backend
-    │   ├── api.js              # Cliente HTTP base (apiFetch) que usan todos los services
+    │   ├── api.js              # Cliente HTTP base (apiFetch) que usan todos los services: token, 401 y errores de conexión
+    │   ├── authService.js      # POST /auth/login y GET /auth/me
     │   ├── catalogoService.js  # GET /catalogo y GET /catalogo/id=:id: equipos disponibles y detalle de uno
     │   └── vendedoresService.js # GET /vendedores/public: vendedores activos, ordenados por cargo
     │
     └── utils/                  # Funciones auxiliares
         ├── text.js             # Normaliza texto para buscar sin importar mayúsculas ni tildes
         ├── equipos.js          # Datos de un equipo listos para mostrar, WhatsApp de cotización y categorías del listado
-        └── vendedores.js       # Nombre del cargo, iniciales y enlace de WhatsApp de un vendedor
+        ├── vendedores.js       # Nombre del cargo, iniciales y enlace de WhatsApp de un vendedor
+        └── usuarios.js         # Normalización de los módulos del usuario, nombre del rol y nombre completo
 ```
 
 ## Convenciones
 
 - **Services por recurso:** un archivo por entidad del back (`maquinasService.js`, `alquileresService.js`, etc.), todos construidos sobre `apiFetch`. Ningún componente llama a `fetch` directamente.
+- **Sesión:** `apiFetch` agrega el token a cada request y, ante un 401, cierra la sesión (y vuelve al login si se está en el panel). Solo el login usa `auth: false`. Los módulos del usuario se leen siempre como `{ codigo, puedeEditar }`: el formato del back se adapta únicamente en `normalizarModulos()` (`utils/usuarios.js`).
 - **Componentes por módulo:** si un componente lo usa un solo módulo, va en `components/public/`, `components/field/` o `components/admin/`. Los compartidos van en la raíz de `components/`.
 - **Idioma:** nombres de archivos y código en inglés (`HomePage`, `FieldLayout`); textos visibles y rutas en español (`/campo`, `/admin`).
 - **Secciones del panel:** para sumar una, se agrega su ítem en `RUTAS_PANEL` (`config/rutasPanel.js`) y su ruta bajo `/admin` en `router/index.jsx`, con el mismo path. El sidebar se arma solo; los códigos de módulo se usan siempre desde `MODULOS`, nunca escritos a mano.
