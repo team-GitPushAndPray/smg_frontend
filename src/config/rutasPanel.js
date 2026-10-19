@@ -1,8 +1,8 @@
 import { Settings, Shield, Truck, Users } from 'lucide-react'
 
 /*
- * Única fuente de verdad del panel de gestión: el sidebar se arma recorriendo RUTAS_PANEL
- * (y más adelante se filtra según los módulos del rol).
+ * Única fuente de verdad del panel de gestión: el sidebar, las tarjetas de Inicio y las rutas protegidas
+ * se arman recorriendo RUTAS_PANEL, filtrado según los módulos del rol del usuario.
  */
 
 // Códigos de módulo: son el contrato con el back. Si cambian (por ejemplo a MAYÚSCULAS), se tocan solo acá
@@ -11,13 +11,20 @@ export const MODULOS = Object.freeze({
   CONFIGURACION: 'configuracion',
 })
 
-// Los ítems con `grupo` se muestran juntos en un desplegable del sidebar
+// Los ítems con `grupo` se muestran juntos en un desplegable del sidebar. `descripcion` es el texto de su tarjeta en Inicio
 export const RUTAS_PANEL = [
-  { path: '/admin/maquinas', modulo: MODULOS.MAQUINAS, label: 'Máquinas', icon: Truck },
+  {
+    path: '/admin/maquinas',
+    modulo: MODULOS.MAQUINAS,
+    label: 'Máquinas',
+    descripcion: 'Alta, edición y estado de la maquinaria.',
+    icon: Truck,
+  },
   {
     path: '/admin/configuracion/usuarios',
     modulo: MODULOS.CONFIGURACION,
     label: 'Usuarios',
+    descripcion: 'Empleados con acceso al panel de gestión.',
     icon: Users,
     grupo: 'Configuración',
   },
@@ -25,6 +32,7 @@ export const RUTAS_PANEL = [
     path: '/admin/configuracion/roles',
     modulo: MODULOS.CONFIGURACION,
     label: 'Roles y permisos',
+    descripcion: 'Qué módulos puede usar cada rol.',
     icon: Shield,
     grupo: 'Configuración',
   },
