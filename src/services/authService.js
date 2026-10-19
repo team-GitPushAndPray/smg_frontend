@@ -20,3 +20,11 @@ export async function getMe({ signal } = {}) {
   const usuario = await apiFetch('/auth/me', { signal })
   return { ...usuario, modulos: normalizarModulos(usuario?.modulos) }
 }
+
+// Cambio de la contraseña propia. 204 sin body; 400 si la actual no es correcta o el body no pasa la validación
+export async function cambiarPassword(passwordActual, passwordNueva) {
+  await apiFetch('/auth/password', {
+    method: 'PATCH',
+    body: { passwordActual, passwordNueva },
+  })
+}
