@@ -1,7 +1,8 @@
-import { Menu, X } from 'lucide-react'
+import { LayoutDashboard, Menu, X } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
 import { Link, NavLink } from 'react-router'
 import { useActiveSection } from '../../hooks/useActiveSection'
+import { useAuth } from '../../hooks/useAuth'
 import { useVendedores } from '../../hooks/useVendedores'
 import ThemeToggle from '../ThemeToggle'
 
@@ -47,6 +48,8 @@ function SectionLinks({ sections, activeId, onNavigate }) {
 
 export default function NavBar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
+  // Con sesión iniciada se ofrece volver al panel; sin sesión solo queda el acceso discreto del footer
+  const { usuario } = useAuth()
   const { hasEquipo } = useVendedores()
   // Sin vendedores activos la sección de equipo no existe: su ancla tampoco se muestra
   const sections = useMemo(
@@ -94,6 +97,17 @@ export default function NavBar() {
             </ul>
 
             <div className="flex items-center gap-1 justify-self-end">
+              {/* En tablet no entra el texto junto a las anclas: queda solo el ícono */}
+              {usuario && (
+                <Link
+                  to="/admin"
+                  title="Ir al panel"
+                  className={`${linkBase} ${linkIdle} hidden gap-2 text-sm md:flex md:px-3 lg:px-4`}
+                >
+                  <LayoutDashboard size={18} strokeWidth={1.75} aria-hidden="true" />
+                  <span className="md:sr-only lg:not-sr-only">Ir al panel</span>
+                </Link>
+              )}
               <div className="mr-1 hidden text-sm md:block">
                 <NavLink to="/catalogo" className={catalogLinkClass}>
                   Catálogo
@@ -125,6 +139,14 @@ export default function NavBar() {
                   Catálogo
                 </NavLink>
               </li>
+              {usuario && (
+                <li>
+                  <Link to="/admin" onClick={closeMenu} className={`${linkBase} ${linkIdle} gap-2`}>
+                    <LayoutDashboard size={18} strokeWidth={1.75} aria-hidden="true" />
+                    Ir al panel
+                  </Link>
+                </li>
+              )}
             </ul>
           )}
         </nav>

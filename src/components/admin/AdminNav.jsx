@@ -2,6 +2,7 @@ import { ChevronDown, LayoutDashboard } from 'lucide-react'
 import { useId, useState } from 'react'
 import { NavLink, matchPath, useLocation } from 'react-router'
 import { ICONOS_GRUPO, RUTAS_PANEL } from '../../config/rutasPanel'
+import { useAuth } from '../../hooks/useAuth'
 
 const linkBase = 'interactive flex min-h-11 items-center gap-3 rounded-control px-3 text-sm font-medium'
 const linkActive = 'bg-brand-600/10 text-brand-700 dark:bg-brand-500/15 dark:text-brand-300'
@@ -80,9 +81,11 @@ function NavGroup({ label, routes, onNavigate }) {
 // Inicio queda fijo: no depende de ningún módulo, así que no forma parte de RUTAS_PANEL
 const homeRoute = { path: '/admin', label: 'Inicio', icon: LayoutDashboard, end: true }
 
-// Menú del panel generado desde RUTAS_PANEL. Lo usan el sidebar de escritorio y el menú de celular
+// Menú del panel generado desde RUTAS_PANEL, solo con los módulos del rol. Lo usan el sidebar de escritorio y el menú de celular.
+// Un grupo sin ítems permitidos no llega a armarse, así que se oculta entero
 export default function AdminNav({ onNavigate }) {
-  const entries = groupRoutes(RUTAS_PANEL)
+  const { tieneModulo } = useAuth()
+  const entries = groupRoutes(RUTAS_PANEL.filter((route) => tieneModulo(route.modulo)))
 
   return (
     <ul className="flex flex-col gap-1">

@@ -53,11 +53,9 @@ export default function AdminTopbar() {
         </div>
 
         {/* En celular el saludo no entra: el nombre se ve en el menú de usuario */}
-        {usuario && (
-          <p className="hidden truncate px-3 text-neutral-700 md:block dark:text-neutral-300">
-            Hola, <span className="font-semibold text-black dark:text-white">{usuario.nombre}</span>
-          </p>
-        )}
+        <p className="hidden truncate px-3 text-neutral-700 md:block dark:text-neutral-300">
+          Hola, <span className="font-semibold text-black dark:text-white">{usuario.nombre}</span>
+        </p>
 
         <div className="ml-auto flex items-center gap-1">
           <Link
