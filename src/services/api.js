@@ -46,6 +46,12 @@ export function setForbiddenHandler(handler) {
   onForbidden = handler
 }
 
+// Las validaciones del back (400) mandan `message` como lista: se muestra el primero, que es el más específico
+function getBackMessage(data) {
+  const message = data?.message
+  return Array.isArray(message) ? message[0] : message
+}
+
 function createError(message, status, data = null) {
   const error = new Error(message)
   error.status = status
@@ -89,7 +95,7 @@ export async function apiFetch(path, { headers, body, auth = true, ...options } 
 
     const message = SERVER_DOWN_STATUS.has(response.status)
       ? NETWORK_ERROR_MESSAGE
-      : (data?.message ?? `Error ${response.status} en ${path}`)
+      : (getBackMessage(data) ?? `Error ${response.status} en ${path}`)
     throw createError(message, response.status, data)
   }
 

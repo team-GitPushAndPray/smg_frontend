@@ -5,7 +5,7 @@ import { ToastContext } from './ToastContext'
 /*
  * Avisos no bloqueantes (toasts) para toda la app.
  * Uso: const { showToast } = useToast(); showToast('Mensaje', { tipo: 'info' })
- * `tipo` es 'error' (por defecto) o 'info'. Si el mismo aviso ya está en pantalla, no se repite.
+ * `tipo` es 'error' (por defecto), 'info' o 'exito'. Si el mismo aviso ya está en pantalla, no se repite.
  */
 export default function ToastProvider({ children }) {
   const [toasts, setToasts] = useState([])

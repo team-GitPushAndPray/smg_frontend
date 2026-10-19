@@ -1,4 +1,4 @@
-import { CircleAlert, Info, X } from 'lucide-react'
+import { CircleAlert, CircleCheck, Info, X } from 'lucide-react'
 import { useEffect } from 'react'
 
 // Tiempo en pantalla de cada aviso antes de cerrarse solo
@@ -7,6 +7,8 @@ const DURATION_MS = 5000
 const icons = {
   error: { Icon: CircleAlert, className: 'text-brand-700 dark:text-brand-400' },
   info: { Icon: Info, className: 'text-neutral-700 dark:text-neutral-300' },
+  // Sin verde en la paleta: el éxito se distingue por el ícono, en el color del texto
+  exito: { Icon: CircleCheck, className: 'text-black dark:text-white' },
 }
 
 function Toast({ toast, onClose }) {
@@ -34,13 +36,14 @@ function Toast({ toast, onClose }) {
   )
 }
 
-// Pila de avisos: abajo y al centro en celular, abajo a la derecha desde tablet. No tapa clics fuera de los avisos
+// Pila de avisos: abajo y al centro en celular, abajo a la derecha desde tablet. No tapa clics fuera de los avisos.
+// z-60: queda sobre los modales (z-50), así un error se ve aunque haya un formulario abierto
 export default function ToastList({ toasts, onClose }) {
   return (
     <ul
       aria-live="polite"
       aria-label="Avisos"
-      className="pointer-events-none fixed inset-x-3 bottom-3 z-50 flex flex-col gap-2 sm:inset-x-auto sm:right-4 sm:bottom-4 sm:w-96"
+      className="pointer-events-none fixed inset-x-3 bottom-3 z-60 flex flex-col gap-2 sm:inset-x-auto sm:right-4 sm:bottom-4 sm:w-96"
     >
       {toasts.map((toast) => (
         <Toast key={toast.id} toast={toast} onClose={onClose} />

@@ -47,13 +47,21 @@
   /* Curva de las transiciones (genera ease-glass) */
   --ease-glass: cubic-bezier(0.22, 1, 0.36, 1);
 
-  /* Entrada de los avisos (genera animate-toast-in) */
+  /* Entrada de los avisos, de los modales y de su velo (genera animate-toast-in, animate-dialog-in y animate-fade-in) */
   --animate-toast-in: toast-in 300ms var(--ease-glass);
+  --animate-dialog-in: toast-in 250ms var(--ease-glass);
+  --animate-fade-in: fade-in 200ms var(--ease-glass);
 
   @keyframes toast-in {
     from {
       opacity: 0;
       transform: translateY(0.5rem) scale(0.98);
+    }
+  }
+
+  @keyframes fade-in {
+    from {
+      opacity: 0;
     }
   }
 }
@@ -84,6 +92,9 @@
   --field-border: var(--color-neutral-300);
   --field-border-invalid: var(--color-brand-600);
 
+  /* Velo detrás de los modales */
+  --overlay-bg: color-mix(in srgb, var(--color-black) 35%, transparent);
+
   --bg-base: var(--color-neutral-50);
   --bg-blob-1: color-mix(in srgb, var(--color-brand-300) 45%, transparent);
   --bg-blob-2: color-mix(in srgb, var(--color-brand-500) 18%, transparent);
@@ -112,6 +123,8 @@
   --field-bg: color-mix(in srgb, var(--color-black) 55%, transparent);
   --field-border: color-mix(in srgb, var(--color-white) 16%, transparent);
   --field-border-invalid: var(--color-brand-400);
+
+  --overlay-bg: color-mix(in srgb, var(--color-black) 60%, transparent);
 
   --bg-base: var(--color-black);
   --bg-blob-1: color-mix(in srgb, var(--color-brand-700) 35%, transparent);
