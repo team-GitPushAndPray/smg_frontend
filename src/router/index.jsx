@@ -1,4 +1,5 @@
 import { createBrowserRouter } from 'react-router'
+import { RUTAS_PANEL } from '../config/rutasPanel'
 import AdminLayout from '../layouts/AdminLayout'
 import FieldLayout from '../layouts/FieldLayout'
 import PublicLayout from '../layouts/PublicLayout'
@@ -12,6 +13,21 @@ import NotFoundPage from '../pages/NotFoundPage'
 import CatalogPage from '../pages/public/CatalogPage'
 import EquipmentDetailPage from '../pages/public/EquipmentDetailPage'
 import HomePage from '../pages/public/HomePage'
+import RutaModulo from './RutaModulo'
+import RutaPrivada from './RutaPrivada'
+
+// Página de cada sección del panel, por el mismo path que tiene en RUTAS_PANEL
+const paginasPanel = {
+  '/admin/maquinas': <MachinesPage />,
+  '/admin/configuracion/usuarios': <UsersPage />,
+  '/admin/configuracion/roles': <RolesPage />,
+}
+
+// Cada sección exige el módulo que le asigna RUTAS_PANEL: el sidebar y la protección salen de la misma fuente
+const rutasPanel = RUTAS_PANEL.map(({ path, modulo }) => ({
+  path: path.replace(/^\/admin\//, ''),
+  element: <RutaModulo modulo={modulo}>{paginasPanel[path]}</RutaModulo>,
+}))
 
 export const router = createBrowserRouter([
   {
@@ -30,15 +46,14 @@ export const router = createBrowserRouter([
   // El login va fuera del panel: pantalla completa, sin sidebar ni topbar
   { path: 'admin/login', element: <LoginPage /> },
   {
-    // Los paths del panel coinciden con los de config/rutasPanel.js, que arma el sidebar
+    // Todo el panel requiere sesión. Inicio lo ve cualquier usuario logueado; el resto, según su módulo
     path: 'admin',
-    element: <AdminLayout />,
-    children: [
-      { index: true, element: <AdminHomePage /> },
-      { path: 'maquinas', element: <MachinesPage /> },
-      { path: 'configuracion/usuarios', element: <UsersPage /> },
-      { path: 'configuracion/roles', element: <RolesPage /> },
-    ],
+    element: (
+      <RutaPrivada>
+        <AdminLayout />
+      </RutaPrivada>
+    ),
+    children: [{ index: true, element: <AdminHomePage /> }, ...rutasPanel],
   },
   { path: '*', element: <NotFoundPage /> },
 ])

@@ -1,6 +1,6 @@
 import { ArrowLeft, CircleAlert, Eye, EyeOff, LoaderCircle, LockKeyhole } from 'lucide-react'
 import { useState } from 'react'
-import { Link, Navigate } from 'react-router'
+import { Link, Navigate, useLocation } from 'react-router'
 import ThemeToggle from '../../components/ThemeToggle'
 import { useAuth } from '../../hooks/useAuth'
 
@@ -57,7 +57,7 @@ function LoginForm() {
       return
     }
 
-    // Al guardarse el usuario, LoginPage redirige a /admin
+    // Al guardarse el usuario, LoginPage redirige al panel
     setIsSubmitting(true)
     try {
       await login(data.email, data.password)
@@ -143,11 +143,19 @@ function LoginForm() {
   )
 }
 
-// Pantalla completa, sin layout. Con una sesión activa redirige al panel
+// Sección del panel a la que se quería entrar antes de pasar por el login (la guarda <RutaPrivada>)
+function getDestination(state) {
+  const from = state?.from
+  const isPanelRoute = /^\/admin(\/|$)/.test(from?.pathname ?? '') && !from.pathname.startsWith('/admin/login')
+  return isPanelRoute ? from : '/admin'
+}
+
+// Pantalla completa, sin layout. Con una sesión activa redirige al panel (a la sección de origen, si había)
 export default function LoginPage() {
   const { usuario, cargando } = useAuth()
+  const { state } = useLocation()
 
-  if (usuario) return <Navigate to="/admin" replace />
+  if (usuario) return <Navigate to={getDestination(state)} replace />
 
   return (
     <div className="flex min-h-svh flex-col p-3 sm:p-4">
