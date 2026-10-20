@@ -1,7 +1,7 @@
 /*
- * Único lugar donde se adapta el formato de los módulos del usuario.
- * Hoy el back los manda como strings ("maquinas"); más adelante llegarán como { codigo, puedeEditar }.
- * El resto del front siempre trabaja con objetos: cuando cambie el back, no hay que tocar nada más.
+ * Único lugar donde se adapta el formato de los módulos (del usuario y de cada rol).
+ * El back los manda como { codigo, puedeEditar } y pasan tal cual; un string suelto ("MAQUINAS"),
+ * el formato anterior, se toma como acceso con edición. El resto del front siempre trabaja con objetos.
  */
 export function normalizarModulos(modulos) {
   if (!Array.isArray(modulos)) return []
