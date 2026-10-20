@@ -1,16 +1,22 @@
-import { CircleUserRound, LogOut } from 'lucide-react'
+import { CircleUserRound, KeyRound, LogOut } from 'lucide-react'
 import { useEffect, useId, useRef, useState } from 'react'
 import { useAuth } from '../../hooks/useAuth'
+import { useToast } from '../../hooks/useToast'
 import { getNombreCompleto, getRolLabel } from '../../utils/usuarios'
+import ChangePasswordModal from './ChangePasswordModal'
 
 const triggerBase =
   'interactive grid size-11 place-items-center rounded-control text-neutral-700 hover:bg-black/5 hover:text-black dark:text-neutral-300 dark:hover:bg-white/10 dark:hover:text-white'
 const triggerOpen = 'bg-black/5 text-black dark:bg-white/10 dark:text-white'
+const menuItem =
+  'interactive flex min-h-11 items-center gap-3 rounded-control px-3 text-sm font-medium text-neutral-700 hover:bg-black/5 hover:text-black dark:text-neutral-300 dark:hover:bg-white/10 dark:hover:text-white'
 
-// Menú de la cuenta en la topbar: nombre, rol y cerrar sesión. El panel siempre tiene sesión (lo protege <RutaPrivada>)
+// Menú de la cuenta en la topbar: nombre, rol, cambiar contraseña y cerrar sesión. El panel siempre tiene sesión (lo protege <RutaPrivada>)
 export default function UserMenu() {
   const { usuario, logout } = useAuth()
+  const { showToast } = useToast()
   const [isOpen, setIsOpen] = useState(false)
+  const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false)
   const containerRef = useRef(null)
   const buttonRef = useRef(null)
   const menuId = useId()
@@ -34,6 +40,18 @@ export default function UserMenu() {
     }
   }, [isOpen])
 
+  // El ítem del menú desaparece al abrirse el modal: el foco pasa antes al botón de la cuenta para volver ahí al cerrarlo
+  const openPasswordModal = () => {
+    buttonRef.current?.focus()
+    setIsOpen(false)
+    setIsPasswordModalOpen(true)
+  }
+
+  const onPasswordSaved = () => {
+    setIsPasswordModalOpen(false)
+    showToast('Contraseña actualizada', { tipo: 'exito' })
+  }
+
   return (
     <div ref={containerRef} className="relative">
       <button
@@ -56,15 +74,19 @@ export default function UserMenu() {
             <p className="truncate text-sm text-neutral-600 dark:text-neutral-400">{getRolLabel(usuario.rol)}</p>
           </div>
           <hr className="my-1 border-neutral-200 dark:border-neutral-800" />
-          <button
-            type="button"
-            onClick={logout}
-            className="interactive flex min-h-11 items-center gap-3 rounded-control px-3 text-sm font-medium text-neutral-700 hover:bg-black/5 hover:text-black dark:text-neutral-300 dark:hover:bg-white/10 dark:hover:text-white"
-          >
+          <button type="button" onClick={openPasswordModal} className={menuItem}>
+            <KeyRound size={18} strokeWidth={1.75} aria-hidden="true" />
+            Cambiar contraseña
+          </button>
+          <button type="button" onClick={logout} className={menuItem}>
             <LogOut size={18} strokeWidth={1.75} aria-hidden="true" />
             Cerrar sesión
           </button>
         </div>
+      )}
+
+      {isPasswordModalOpen && (
+        <ChangePasswordModal onClose={() => setIsPasswordModalOpen(false)} onSaved={onPasswordSaved} />
       )}
     </div>
   )
