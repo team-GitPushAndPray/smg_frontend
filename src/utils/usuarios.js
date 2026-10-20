@@ -39,7 +39,7 @@ export function formatUltimoAcceso(fecha) {
   return Number.isNaN(date.getTime()) ? 'Nunca' : fechaHora.format(date)
 }
 
-// Largo mínimo de la contraseña al crear un usuario (el back acepta 6; el front pide más)
+// Largo mínimo de una contraseña, al crear un usuario y al cambiar la propia (el back acepta 6; el front pide más)
 export const MIN_PASSWORD = 8
 
 /*

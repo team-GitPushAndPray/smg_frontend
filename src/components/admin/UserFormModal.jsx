@@ -1,8 +1,9 @@
-import { ChevronDown, CircleAlert, Eye, EyeOff, LoaderCircle } from 'lucide-react'
+import { ChevronDown, CircleAlert, LoaderCircle } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { useToast } from '../../hooks/useToast'
 import { crearUsuario, editarUsuario } from '../../services/usuariosService'
 import { getErrorGenerico, getRolLabel, MIN_PASSWORD } from '../../utils/usuarios'
+import { Field, PasswordInput } from './FormField'
 import Modal from './Modal'
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
@@ -66,38 +67,6 @@ function getRolOptions(roles, usuario) {
   return roles.filter((rol) => !rol.esSistema && (rol.activo !== false || rol.id === usuario?.rol?.id))
 }
 
-function FieldError({ id, message }) {
-  if (!message) return null
-  return (
-    <p id={id} className="text-sm text-brand-700 dark:text-brand-400">
-      {message}
-    </p>
-  )
-}
-
-// Campo con label, error debajo y, opcionalmente, una ayuda. `children` recibe las props de accesibilidad del input
-function Field({ name, label, optional, hint, error, className = '', children }) {
-  const errorId = `usuario-${name}-error`
-  const hintId = `usuario-${name}-hint`
-  const describedBy = [error && errorId, hint && hintId].filter(Boolean).join(' ') || undefined
-
-  return (
-    <div className={`flex flex-col gap-1.5 ${className}`}>
-      <label htmlFor={`usuario-${name}`} className="text-sm font-medium">
-        {label}
-        {optional && <span className="font-normal text-neutral-600 dark:text-neutral-400"> (opcional)</span>}
-      </label>
-      {children({ id: `usuario-${name}`, name, 'aria-invalid': Boolean(error), 'aria-describedby': describedBy })}
-      {hint && !error && (
-        <p id={hintId} className="text-sm text-neutral-600 dark:text-neutral-400">
-          {hint}
-        </p>
-      )}
-      <FieldError id={errorId} message={error} />
-    </div>
-  )
-}
-
 /*
  * Alta y edición de un usuario. Con `usuario` se edita (precargado y sin contraseña: la cambia cada uno desde su cuenta).
  * Errores: 409 se marca en el email, 400 muestra el mensaje del back arriba del formulario y el resto va a un aviso.
@@ -110,7 +79,6 @@ export default function UserFormModal({ usuario, roles, onClose, onSaved }) {
   const [fieldErrors, setFieldErrors] = useState({})
   const [formError, setFormError] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const [isPasswordVisible, setIsPasswordVisible] = useState(false)
   const rolOptions = getRolOptions(roles, usuario)
   const formRef = useRef(null)
   // Campo a enfocar cuando el back lo rechaza: espera al render que vuelve a habilitar los campos
@@ -287,32 +255,13 @@ export default function UserFormModal({ usuario, roles, onClose, onSaved }) {
               className="sm:col-span-2"
             >
               {(props) => (
-                <div className="relative">
-                  <input
-                    {...props}
-                    type={isPasswordVisible ? 'text' : 'password'}
-                    autoComplete="new-password"
-                    value={values.password}
-                    onChange={onChange}
-                    disabled={isSubmitting}
-                    className="field pr-12 pl-3.5"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setIsPasswordVisible((visible) => !visible)}
-                    disabled={isSubmitting}
-                    aria-label={isPasswordVisible ? 'Ocultar contraseña' : 'Mostrar contraseña'}
-                    aria-pressed={isPasswordVisible}
-                    title={isPasswordVisible ? 'Ocultar contraseña' : 'Mostrar contraseña'}
-                    className="interactive absolute inset-y-0 right-0 grid w-11 place-items-center rounded-control text-neutral-600 hover:text-black dark:text-neutral-400 dark:hover:text-white"
-                  >
-                    {isPasswordVisible ? (
-                      <EyeOff size={18} strokeWidth={1.75} aria-hidden="true" />
-                    ) : (
-                      <Eye size={18} strokeWidth={1.75} aria-hidden="true" />
-                    )}
-                  </button>
-                </div>
+                <PasswordInput
+                  {...props}
+                  autoComplete="new-password"
+                  value={values.password}
+                  onChange={onChange}
+                  disabled={isSubmitting}
+                />
               )}
             </Field>
           )}

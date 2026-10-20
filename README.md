@@ -72,13 +72,15 @@ sgm_frontend/
     │   ├── admin/              # Componentes del panel de gestión
     │   │   ├── AdminNav.jsx        # Menú del panel generado desde RUTAS_PANEL, filtrado por los módulos del rol, con grupos desplegables e ítem activo (sidebar y celular)
     │   │   ├── AdminTopbar.jsx     # Barra superior: saludo, "Ver sitio", tema, usuario y menú desplegable en celular
-    │   │   ├── UserMenu.jsx        # Menú de la cuenta: nombre, rol y cerrar sesión
+    │   │   ├── UserMenu.jsx        # Menú de la cuenta: nombre, rol, cambiar contraseña y cerrar sesión
+│   │   ├── ChangePasswordModal.jsx # Cambio de la contraseña propia (cualquier rol), con validación y error de contraseña actual incorrecta
     │   │   ├── AdminBrand.jsx      # Marca del panel, lleva a /admin
     │   │   ├── PermissionBadge.jsx # Indicador del nivel de permiso sobre un módulo: Edición o Solo lectura
     │   │   ├── AdminPlaceholder.jsx # Contenido provisorio de las páginas del panel
     │   │   ├── PanelMessage.jsx    # Aviso de una sección del panel: error de carga, sin datos o sin resultados
     │   │   ├── Modal.jsx           # Modal base del panel: portal, foco atrapado, Escape y bloqueo mientras se envía
     │   │   ├── ConfirmDialog.jsx   # Confirmación de una acción delicada, con carga y error
+│   │   ├── FormField.jsx       # Campo de formulario (label, ayuda y error) e input de contraseña con mostrar/ocultar
     │   │   ├── UsersToolbar.jsx    # Buscador por nombre o email y filtro por estado de la pantalla de usuarios
     │   │   ├── UsersTable.jsx      # Tabla de usuarios (tarjetas debajo de lg) con rol, estado y último acceso, y su versión de carga
     │   │   ├── UserActionsMenu.jsx # Menú ⋯ de una fila: Editar y Dar de baja / Reactivar
@@ -103,7 +105,7 @@ sgm_frontend/
     │
     ├── services/               # Comunicación con el backend
     │   ├── api.js              # Cliente HTTP base (apiFetch) que usan todos los services: token, 401, 403, errores de conexión y mensajes de validación del back
-    │   ├── authService.js      # POST /auth/login y GET /auth/me
+    │   ├── authService.js      # POST /auth/login, GET /auth/me y PATCH /auth/password
     │   ├── catalogoService.js  # GET /catalogo y GET /catalogo/id=:id: equipos disponibles y detalle de uno
     │   ├── vendedoresService.js # GET /vendedores/public: vendedores activos, ordenados por cargo
     │   └── usuariosService.js  # ABM de usuarios (GET, POST y PATCH /usuarios, PATCH /usuarios/:id/estado) y GET /roles
