@@ -24,9 +24,3 @@ export function editarUsuario(id, cambios) {
 export function cambiarEstado(id, activo) {
   return apiFetch(`/usuarios/${id}/estado`, { method: 'PATCH', body: { activo } })
 }
-
-// Roles con { id, nombre, descripcion, activo, esSistema, modulos }. `esSistema` marca al superAdmin
-export async function listarRoles({ signal } = {}) {
-  const roles = await apiFetch('/roles', { signal })
-  return Array.isArray(roles) ? roles : []
-}

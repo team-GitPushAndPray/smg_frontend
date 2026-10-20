@@ -45,7 +45,8 @@ sgm_frontend/
     │   ├── useCatalogo.js      # Carga los equipos del catálogo público, con estado de carga/error y reintento
     │   ├── useEquipo.js        # Carga un equipo del catálogo por id, con estado de carga/no encontrado/error y reintento
     │   ├── useVendedores.js    # Acceso al equipo comercial (estado, vendedores y reintento)
-    │   └── useUsuarios.js      # Carga usuarios y roles juntos, con reintento, refresco en segundo plano y reemplazo de una fila
+    │   ├── useUsuarios.js      # Carga usuarios y roles juntos, con reintento, refresco en segundo plano y reemplazo de una fila
+    │   └── useRoles.js         # Carga roles y módulos juntos (filas y columnas de la matriz), con reintento, refresco y actualización de un rol
     │
     ├── layouts/                # Estructura común de cada módulo (navbar, sidebar, footer)
     │   ├── PublicLayout.jsx    # Portal público: header + footer
@@ -59,8 +60,8 @@ sgm_frontend/
     │   │   ├── AdminHomePage.jsx # /admin: saludo y una tarjeta por cada sección que el rol tiene
     │   │   ├── ForbiddenPage.jsx # 403 dentro del panel: sección que el rol no incluye
     │   │   ├── MachinesPage.jsx  # /admin/maquinas: placeholder con el nivel de permiso (Edición / Solo lectura)
-    │   │   ├── UsersPage.jsx     # /admin/configuracion/usuarios: ABM de usuarios (tabla, búsqueda, filtro por estado, alta, edición, baja y reactivación)
-    │   │   └── RolesPage.jsx     # /admin/configuracion/roles
+    │   │   ├── UsersPage.jsx     # /admin/configuracion/usuarios: ABM de usuarios (tabla, búsqueda, filtro por estado, alta, edición, baja y reactivación); solo lectura con Configuración en "Ver"
+    │   │   └── RolesPage.jsx     # /admin/configuracion/roles: matriz de permisos roles × módulos, alta y edición de roles, activación y desactivación; solo lectura con Configuración en "Ver"
     │   └── public/
     │       ├── HomePage.jsx    # Home con las secciones institucionales y el equipo comercial
     │       ├── CatalogPage.jsx # Catálogo: tarjetas por equipo, búsqueda y filtro por tipo en tiempo real
@@ -84,7 +85,11 @@ sgm_frontend/
     │   │   ├── UsersToolbar.jsx    # Buscador por nombre o email y filtro por estado de la pantalla de usuarios
     │   │   ├── UsersTable.jsx      # Tabla de usuarios (tarjetas debajo de lg) con rol, estado y último acceso, y su versión de carga
     │   │   ├── UserActionsMenu.jsx # Menú ⋯ de una fila: Editar y Dar de baja / Reactivar
-    │   │   └── UserFormModal.jsx   # Alta y edición de un usuario con validación y errores del back (409 en el email, 400 arriba)
+    │   │   ├── UserFormModal.jsx   # Alta y edición de un usuario con validación y errores del back (409 en el email, 400 arriba)
+    │   │   ├── PermissionsMatrix.jsx # Matriz de permisos (filas = roles, columnas = módulos) con la columna del rol fija al hacer scroll, y su versión de carga
+    │   │   ├── AccessLevelControl.jsx # Control segmentado Sin acceso · Ver · Editar de una celda, y su versión de solo lectura (incluye "Acceso total")
+    │   │   ├── RoleActionsMenu.jsx # Menú ⋯ de un rol (Editar y Desactivar / Activar), en un portal para que el scroll de la matriz no lo recorte
+    │   │   └── RoleFormModal.jsx   # Alta y edición de un rol (nombre y descripción) con errores del back (409 y 400 en el nombre, lista de 400 arriba)
     │   └── public/             # Componentes del portal público
     │       ├── NavBar.jsx          # Header con anclas a las secciones, enlace al catálogo, "Ir al panel" con sesión y menú de celular
     │       ├── Footer.jsx          # Footer con el acceso discreto al login
@@ -108,13 +113,15 @@ sgm_frontend/
     │   ├── authService.js      # POST /auth/login, GET /auth/me y PATCH /auth/password
     │   ├── catalogoService.js  # GET /catalogo y GET /catalogo/id=:id: equipos disponibles y detalle de uno
     │   ├── vendedoresService.js # GET /vendedores/public: vendedores activos, ordenados por cargo
-    │   └── usuariosService.js  # ABM de usuarios (GET, POST y PATCH /usuarios, PATCH /usuarios/:id/estado) y GET /roles
+    │   ├── usuariosService.js  # ABM de usuarios (GET, POST y PATCH /usuarios, PATCH /usuarios/:id/estado)
+    │   └── rolesService.js     # Roles y permisos: GET /roles, GET /modulos, POST y PATCH /roles, PUT /roles/:id/modulos
     │
     └── utils/                  # Funciones auxiliares
         ├── text.js             # Normaliza texto para buscar sin importar mayúsculas ni tildes
         ├── equipos.js          # Datos de un equipo listos para mostrar, WhatsApp de cotización y categorías del listado
         ├── vendedores.js       # Nombre del cargo, iniciales y enlace de WhatsApp de un vendedor
-        └── usuarios.js         # Normalización de los módulos del usuario, nombre del rol, nombre completo, último acceso y error genérico
+        ├── usuarios.js         # Normalización de los módulos (del usuario y de cada rol), nombre del rol, nombre completo, último acceso y error genérico
+        └── roles.js            # Niveles de acceso de la matriz (Sin acceso, Ver, Editar) y armado de la lista completa de módulos de un rol
 ```
 
 ## Convenciones
@@ -124,7 +131,7 @@ sgm_frontend/
 - **Componentes por módulo:** si un componente lo usa un solo módulo, va en `components/public/`, `components/field/` o `components/admin/`. Los compartidos van en la raíz de `components/`.
 - **Idioma:** nombres de archivos y código en inglés (`HomePage`, `FieldLayout`); textos visibles y rutas en español (`/campo`, `/admin`).
 - **Secciones del panel:** para sumar una, se agrega su ítem en `RUTAS_PANEL` (`config/rutasPanel.js`) con su `modulo`, y su página en `paginasPanel` (`router/index.jsx`) con el mismo path. El sidebar, las tarjetas de Inicio y la protección por módulo se arman solos.
-- **Permisos:** se consultan con `tieneModulo(codigo)` y `puedeEditar(codigo)` de `useAuth()`, siempre con los códigos de `MODULOS`, nunca escritos a mano. Es experiencia de usuario: la seguridad real la da el back (401/403).
+- **Permisos:** se consultan con `tieneModulo(codigo)` y `puedeEditar(codigo)` de `useAuth()`, siempre con los códigos de `MODULOS` (en MAYÚSCULAS, como los manda el back), nunca escritos a mano. Cada módulo tiene dos niveles: ver (solo consulta) y editar (alta, edición y baja); sin edición, la pantalla se muestra de solo lectura. Es experiencia de usuario: la seguridad real la da el back (401/403).
 - **Avisos:** para un mensaje no bloqueante se usa `showToast()` de `useToast()`, no un `alert()`. Los errores 401 y 403 ya los avisa `apiFetch`: para el resto, `getErrorGenerico()` (`utils/usuarios.js`).
 - **Modales:** se usa `Modal` (`components/admin/Modal.jsx`), que se muestra mientras está montado. No se usa `<dialog>` nativo: su capa superior taparía los avisos.
 - **Contenido institucional:** los textos de la home se leen de `data/empresa.js`; los componentes no tienen textos de la empresa escritos adentro. Si el contenido pasa a la API, solo cambia ese archivo.

@@ -74,8 +74,9 @@ function StatusBadge({ activo }) {
   )
 }
 
-// El superAdmin no tiene ⋯: no se edita ni se da de baja desde acá
-function Actions({ usuario, esSistema, isSelf, isPending, onEdit, onToggleEstado }) {
+// El superAdmin no tiene ⋯: no se edita ni se da de baja desde acá. En solo lectura no hay acciones
+function Actions({ usuario, esSistema, isSelf, isPending, canEdit, onEdit, onToggleEstado }) {
+  if (!canEdit) return null
   if (esSistema) {
     return (
       <span
@@ -101,16 +102,17 @@ function Actions({ usuario, esSistema, isSelf, isPending, onEdit, onToggleEstado
 
 /*
  * Usuarios del panel: tabla desde lg y tarjetas por debajo (con el sidebar abierto, la tabla no entra en tablet).
- * `rolesSistema` son los ids de los roles con `esSistema`; `sesionId`, el usuario logueado; `pendingId`, el que está cambiando de estado
+ * `rolesSistema` son los ids de los roles con `esSistema`; `sesionId`, el usuario logueado; `pendingId`, el que está cambiando de estado.
+ * `canEdit` en false la deja de solo lectura (sin la columna de acciones)
  */
-export default function UsersTable({ usuarios, rolesSistema, sesionId, pendingId, onEdit, onToggleEstado }) {
+export default function UsersTable({ usuarios, rolesSistema, sesionId, pendingId, canEdit, onEdit, onToggleEstado }) {
   const rows = usuarios.map((usuario) => ({
     usuario,
     esSistema: rolesSistema.has(usuario.rol?.id),
     isSelf: usuario.id === sesionId,
     isPending: usuario.id === pendingId,
   }))
-  const actionProps = { onEdit, onToggleEstado }
+  const actionProps = { canEdit, onEdit, onToggleEstado }
 
   return (
     <div className="relative isolate">
@@ -131,9 +133,11 @@ export default function UsersTable({ usuarios, rolesSistema, sesionId, pendingId
                 {columna}
               </th>
             ))}
-            <th scope="col" className="w-px py-3.5 pr-4">
-              <span className="sr-only">Acciones</span>
-            </th>
+            {canEdit && (
+              <th scope="col" className="w-px py-3.5 pr-4">
+                <span className="sr-only">Acciones</span>
+              </th>
+            )}
           </tr>
         </thead>
         <tbody className="divide-y divide-black/5 dark:divide-white/10">
@@ -155,15 +159,17 @@ export default function UsersTable({ usuarios, rolesSistema, sesionId, pendingId
               <td className={`px-4 py-3 whitespace-nowrap tabular-nums ${textSoft[estadoKey(usuario)]}`}>
                 {formatUltimoAcceso(usuario.ultimoAcceso)}
               </td>
-              <td className="py-2 pr-4">
-                <Actions
-                  usuario={usuario}
-                  esSistema={esSistema}
-                  isSelf={isSelf}
-                  isPending={isPending}
-                  {...actionProps}
-                />
-              </td>
+              {canEdit && (
+                <td className="py-2 pr-4">
+                  <Actions
+                    usuario={usuario}
+                    esSistema={esSistema}
+                    isSelf={isSelf}
+                    isPending={isPending}
+                    {...actionProps}
+                  />
+                </td>
+              )}
             </tr>
           ))}
         </tbody>

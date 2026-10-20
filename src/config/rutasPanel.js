@@ -5,10 +5,11 @@ import { Settings, Shield, Truck, Users } from 'lucide-react'
  * se arman recorriendo RUTAS_PANEL, filtrado según los módulos del rol del usuario.
  */
 
-// Códigos de módulo: son el contrato con el back. Si cambian (por ejemplo a MAYÚSCULAS), se tocan solo acá
+// Códigos de módulo: son el contrato con el back (llegan en MAYÚSCULAS). Si cambian, se tocan solo acá
 export const MODULOS = Object.freeze({
-  MAQUINAS: 'maquinas',
-  CONFIGURACION: 'configuracion',
+  MAQUINAS: 'MAQUINAS',
+  CONFIGURACION: 'CONFIGURACION',
+  VENDEDORES: 'VENDEDORES',
 })
 
 // Los ítems con `grupo` se muestran juntos en un desplegable del sidebar. `descripcion` es el texto de su tarjeta en Inicio

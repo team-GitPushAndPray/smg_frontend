@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
-import { listarRoles, listarUsuarios } from '../services/usuariosService'
+import { listarRoles } from '../services/rolesService'
+import { listarUsuarios } from '../services/usuariosService'
 
 /*
  * Usuarios del panel y roles disponibles, pedidos juntos: los roles hacen falta para el select

@@ -2,9 +2,11 @@ import { CloudOff, Plus, RotateCw, SearchX, Users } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import ConfirmDialog from '../../components/admin/ConfirmDialog'
 import PanelMessage from '../../components/admin/PanelMessage'
+import PermissionBadge from '../../components/admin/PermissionBadge'
 import UserFormModal from '../../components/admin/UserFormModal'
 import UsersTable, { UsersTableSkeleton } from '../../components/admin/UsersTable'
 import UsersToolbar from '../../components/admin/UsersToolbar'
+import { MODULOS } from '../../config/rutasPanel'
 import { useAuth } from '../../hooks/useAuth'
 import { useToast } from '../../hooks/useToast'
 import { useUsuarios } from '../../hooks/useUsuarios'
@@ -22,9 +24,11 @@ function countLabel(cantidad) {
   return cantidad === 1 ? '1 usuario' : `${cantidad} usuarios`
 }
 
-// Configuración › Usuarios: alta, edición, baja y reactivación de los usuarios del panel
+// Configuración › Usuarios: alta, edición, baja y reactivación de los usuarios del panel.
+// Con Configuración en "Ver" la pantalla es de solo lectura: sin alta ni menú ⋯
 export default function UsersPage() {
-  const { usuario: sesion } = useAuth()
+  const { usuario: sesion, puedeEditar } = useAuth()
+  const canEdit = puedeEditar(MODULOS.CONFIGURACION)
   const { showToast } = useToast()
   const { status, usuarios, roles, retry, refresh, reemplazarUsuario } = useUsuarios()
   const [query, setQuery] = useState('')
@@ -143,7 +147,11 @@ export default function UsersPage() {
       <PanelMessage
         icon={Users}
         title="Todavía no hay usuarios"
-        description="Creá el primero con «Nuevo usuario» para darle acceso al panel."
+        description={
+          canEdit
+            ? 'Creá el primero con «Nuevo usuario» para darle acceso al panel.'
+            : 'Cuando un administrador cree usuarios, se van a ver acá.'
+        }
       />
     )
   } else {
@@ -165,6 +173,7 @@ export default function UsersPage() {
             rolesSistema={rolesSistema}
             sesionId={sesion.id}
             pendingId={pendingId}
+            canEdit={canEdit}
             onEdit={(usuario) => setForm({ usuario })}
             onToggleEstado={onToggleEstado}
           />
@@ -187,19 +196,24 @@ export default function UsersPage() {
     <section className="flex flex-col gap-6">
       <header className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div className="flex flex-col gap-1">
-          <h1 className="text-2xl font-semibold sm:text-3xl">Usuarios</h1>
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+            <h1 className="text-2xl font-semibold sm:text-3xl">Usuarios</h1>
+            {!canEdit && <PermissionBadge puedeEditar={false} />}
+          </div>
           <p className="text-neutral-600 dark:text-neutral-400">Empleados con acceso al panel de gestión.</p>
         </div>
         {/* Sin los roles cargados no se puede elegir uno: el alta espera a que termine la carga */}
-        <button
-          type="button"
-          onClick={() => setForm({ usuario: null })}
-          disabled={status !== 'success'}
-          className="btn-primary shrink-0"
-        >
-          <Plus size={18} strokeWidth={1.75} aria-hidden="true" />
-          Nuevo usuario
-        </button>
+        {canEdit && (
+          <button
+            type="button"
+            onClick={() => setForm({ usuario: null })}
+            disabled={status !== 'success'}
+            className="btn-primary shrink-0"
+          >
+            <Plus size={18} strokeWidth={1.75} aria-hidden="true" />
+            Nuevo usuario
+          </button>
+        )}
       </header>
 
       {content}
