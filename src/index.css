@@ -95,6 +95,12 @@
   /* Velo detrás de los modales */
   --overlay-bg: color-mix(in srgb, var(--color-black) 35%, transparent);
 
+  /* Opción elegida de un control segmentado (niveles de la matriz de permisos) */
+  --segment-active-bg: var(--color-white);
+  --segment-active-shadow:
+    0 1px 3px color-mix(in srgb, var(--color-black) 10%, transparent),
+    0 1px 1px color-mix(in srgb, var(--color-black) 4%, transparent);
+
   --bg-base: var(--color-neutral-50);
   --bg-blob-1: color-mix(in srgb, var(--color-brand-300) 45%, transparent);
   --bg-blob-2: color-mix(in srgb, var(--color-brand-500) 18%, transparent);
@@ -125,6 +131,9 @@
   --field-border-invalid: var(--color-brand-400);
 
   --overlay-bg: color-mix(in srgb, var(--color-black) 60%, transparent);
+
+  --segment-active-bg: color-mix(in srgb, var(--color-white) 16%, transparent);
+  --segment-active-shadow: 0 1px 3px color-mix(in srgb, var(--color-black) 40%, transparent);
 
   --bg-base: var(--color-black);
   --bg-blob-1: color-mix(in srgb, var(--color-brand-700) 35%, transparent);
