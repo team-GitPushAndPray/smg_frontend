@@ -39,6 +39,7 @@ sgm_frontend/
     ├── hooks/                  # Lógica reutilizable
     │   ├── useTheme.js         # Acceso al tema actual y a toggleTheme
     │   ├── useAuth.js          # Acceso a la sesión: usuario, cargando, login, logout, tieneModulo y puedeEditar
+    │   ├── usePermiso.js       # Nivel de acceso sobre un módulo: { puedeVer, puedeEditar }
     │   ├── useToast.js         # Acceso a showToast(mensaje, { tipo: 'error' | 'info' | 'exito' })
     │   ├── useHashScroll.js    # Scroll suave a la sección del ancla (#servicios, #contacto...)
     │   ├── useActiveSection.js # Sección visible en pantalla, para marcarla en el navbar
@@ -59,7 +60,7 @@ sgm_frontend/
     │   │   ├── LoginPage.jsx   # /admin/login: pantalla completa, sin sidebar; formulario de inicio de sesión (con sesión activa redirige a la sección de origen o a /admin)
     │   │   ├── AdminHomePage.jsx # /admin: saludo y una tarjeta por cada sección que el rol tiene
     │   │   ├── ForbiddenPage.jsx # 403 dentro del panel: sección que el rol no incluye
-    │   │   ├── MachinesPage.jsx  # /admin/maquinas: placeholder con el nivel de permiso (Edición / Solo lectura)
+    │   │   ├── MachinesPage.jsx  # /admin/maquinas: placeholder con el nivel de permiso (Edición / Solo lectura) leído con usePermiso
     │   │   ├── UsersPage.jsx     # /admin/configuracion/usuarios: ABM de usuarios (tabla, búsqueda, filtro por estado, alta, edición, baja y reactivación); solo lectura con Configuración en "Ver"
     │   │   └── RolesPage.jsx     # /admin/configuracion/roles: matriz de permisos roles × módulos, alta y edición de roles, activación y desactivación; solo lectura con Configuración en "Ver"
     │   └── public/
@@ -114,11 +115,13 @@ sgm_frontend/
     │   ├── catalogoService.js  # GET /catalogo y GET /catalogo/id=:id: equipos disponibles y detalle de uno
     │   ├── vendedoresService.js # GET /vendedores/public: vendedores activos, ordenados por cargo
     │   ├── usuariosService.js  # ABM de usuarios (GET, POST y PATCH /usuarios, PATCH /usuarios/:id/estado)
-    │   └── rolesService.js     # Roles y permisos: GET /roles, GET /modulos, POST y PATCH /roles, PUT /roles/:id/modulos
+    │   ├── rolesService.js     # Roles y permisos: GET /roles, GET /modulos, POST y PATCH /roles, PUT /roles/:id/modulos
+    │   ├── equiposService.js   # Equipos del panel: GET /equipos (con filtros), GET /equipos/:id, POST y PATCH /equipos
+    │   └── categoriasService.js # GET /categorias: categorías de equipo
     │
     └── utils/                  # Funciones auxiliares
         ├── text.js             # Normaliza texto para buscar sin importar mayúsculas ni tildes
-        ├── equipos.js          # Datos de un equipo listos para mostrar, WhatsApp de cotización y categorías del listado
+        ├── equipos.js          # Datos de un equipo listos para mostrar, WhatsApp de cotización, categorías del listado, estados (etiqueta, ícono y color) y mensajes de error del módulo máquinas
         ├── vendedores.js       # Nombre del cargo, iniciales y enlace de WhatsApp de un vendedor
         ├── usuarios.js         # Normalización de los módulos (del usuario y de cada rol), nombre del rol, nombre completo, último acceso y error genérico
         └── roles.js            # Niveles de acceso de la matriz (Sin acceso, Ver, Editar) y armado de la lista completa de módulos de un rol
@@ -126,13 +129,13 @@ sgm_frontend/
 
 ## Convenciones
 
-- **Services por recurso:** un archivo por entidad del back (`maquinasService.js`, `alquileresService.js`, etc.), todos construidos sobre `apiFetch`. Ningún componente llama a `fetch` directamente.
+- **Services por recurso:** un archivo por entidad del back (`equiposService.js`, `alquileresService.js`, etc.), todos construidos sobre `apiFetch`. Ningún componente llama a `fetch` directamente.
 - **Sesión:** `apiFetch` agrega el token a cada request; ante un 401 cierra la sesión y ante un 403 muestra un aviso sin cerrarla. Si la sesión termina estando en el panel, `<RutaPrivada>` lleva al login. Solo el login usa `auth: false`. Los módulos del usuario se leen siempre como `{ codigo, puedeEditar }`: el formato del back se adapta únicamente en `normalizarModulos()` (`utils/usuarios.js`).
 - **Componentes por módulo:** si un componente lo usa un solo módulo, va en `components/public/`, `components/field/` o `components/admin/`. Los compartidos van en la raíz de `components/`.
 - **Idioma:** nombres de archivos y código en inglés (`HomePage`, `FieldLayout`); textos visibles y rutas en español (`/campo`, `/admin`).
 - **Secciones del panel:** para sumar una, se agrega su ítem en `RUTAS_PANEL` (`config/rutasPanel.js`) con su `modulo`, y su página en `paginasPanel` (`router/index.jsx`) con el mismo path. El sidebar, las tarjetas de Inicio y la protección por módulo se arman solos.
-- **Permisos:** se consultan con `tieneModulo(codigo)` y `puedeEditar(codigo)` de `useAuth()`, siempre con los códigos de `MODULOS` (en MAYÚSCULAS, como los manda el back), nunca escritos a mano. Cada módulo tiene dos niveles: ver (solo consulta) y editar (alta, edición y baja); sin edición, la pantalla se muestra de solo lectura. Es experiencia de usuario: la seguridad real la da el back (401/403).
-- **Avisos:** para un mensaje no bloqueante se usa `showToast()` de `useToast()`, no un `alert()`. Los errores 401 y 403 ya los avisa `apiFetch`: para el resto, `getErrorGenerico()` (`utils/usuarios.js`).
+- **Permisos:** en una pantalla se leen con `usePermiso(codigo)`, que devuelve `{ puedeVer, puedeEditar }` (por debajo usa `tieneModulo` y `puedeEditar` de `useAuth()`), siempre con los códigos de `MODULOS` (en MAYÚSCULAS, como los manda el back), nunca escritos a mano. Cada módulo tiene dos niveles: ver (solo consulta) y editar (alta, edición y baja); sin edición, la pantalla se muestra de solo lectura. Es experiencia de usuario: la seguridad real la da el back (401/403).
+- **Avisos:** para un mensaje no bloqueante se usa `showToast()` de `useToast()`, no un `alert()`. Los errores 401 y 403 ya los avisa `apiFetch`: para el resto, `getErrorGenerico()` (`utils/usuarios.js`); en el módulo máquinas, `getErrorEquipo()` (`utils/equipos.js`), que además traduce 400, 404 y 409.
 - **Modales:** se usa `Modal` (`components/admin/Modal.jsx`), que se muestra mientras está montado. No se usa `<dialog>` nativo: su capa superior taparía los avisos.
 - **Contenido institucional:** los textos de la home se leen de `data/empresa.js`; los componentes no tienen textos de la empresa escritos adentro. Si el contenido pasa a la API, solo cambia ese archivo.
 - **Nuevos directorios:** se crean cuando una issue los necesita, no antes. Los previstos son:

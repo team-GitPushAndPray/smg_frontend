@@ -61,7 +61,7 @@ function createError(message, status, data = null) {
 
 /**
  * Cliente HTTP base para el backend. Los services de cada módulo
- * (ej: maquinasService) se construyen sobre esta función.
+ * (ej: equiposService) se construyen sobre esta función.
  * Si hay token guardado, viaja en el header Authorization. Con `auth: false` la request
  * no lleva token y un 401 no cierra la sesión (el propio login: su 401 es "credenciales inválidas").
  * Un 403 (el rol no tiene permiso) muestra un aviso y la sesión sigue abierta.
