@@ -16,12 +16,12 @@ sgm_frontend/
     │
     ├── config/                 # Configuración global
     │   ├── env.js              # Lee y expone las variables de entorno (API_URL)
-    │   └── rutasPanel.js       # Única fuente de verdad del panel: códigos de módulo (MODULOS) y secciones (RUTAS_PANEL) para sidebar, Inicio y rutas protegidas
+    │   └── rutasPanel.js       # Única fuente de verdad del panel: códigos de módulo (MODULOS), secciones (RUTAS_PANEL) para sidebar, Inicio y rutas protegidas, y pantallas internas de Máquinas (RUTAS_MAQUINAS)
     │
     ├── router/                 # Definición de rutas
     │   ├── index.jsx           # Rutas de cada módulo con su layout, login del panel (sin layout) + 404. Las del panel se generan desde RUTAS_PANEL
     │   ├── RutaPrivada.jsx     # Exige sesión en todo /admin: loader mientras se restaura, si no hay sesión va al login guardando el origen; verifica el token en cada cambio de sección
-    │   └── RutaModulo.jsx      # Exige el módulo de la sección; si el rol no lo tiene, muestra la 403
+    │   └── RutaModulo.jsx      # Exige el módulo de la sección (y, con requiereEdicion, poder editarlo); si no, muestra la 403
     │
     ├── context/                # Estado global
     │   ├── ThemeContext.js     # Contexto del tema claro/oscuro
@@ -47,6 +47,9 @@ sgm_frontend/
     │   ├── useEquipo.js        # Carga un equipo del catálogo por id, con estado de carga/no encontrado/error y reintento
     │   ├── useVendedores.js    # Acceso al equipo comercial (estado, vendedores y reintento)
     │   ├── useUsuarios.js      # Carga usuarios y roles juntos, con reintento, refresco en segundo plano y reemplazo de una fila
+    │   ├── useFiltrosInventario.js # Filtros y página del inventario de máquinas guardados en la URL (sobreviven a recargar y a volver atrás)
+    │   ├── useEquipos.js       # Carga una página del inventario según los filtros, conservando la anterior mientras llega la nueva, con reintento
+    │   ├── useCategorias.js    # Carga las categorías de equipo para filtros y formularios
     │   └── useRoles.js         # Carga roles y módulos juntos (filas y columnas de la matriz), con reintento, refresco y actualización de un rol
     │
     ├── layouts/                # Estructura común de cada módulo (navbar, sidebar, footer)
@@ -59,8 +62,10 @@ sgm_frontend/
     │   ├── admin/              # Panel de gestión
     │   │   ├── LoginPage.jsx   # /admin/login: pantalla completa, sin sidebar; formulario de inicio de sesión (con sesión activa redirige a la sección de origen o a /admin)
     │   │   ├── AdminHomePage.jsx # /admin: saludo y una tarjeta por cada sección que el rol tiene
-    │   │   ├── ForbiddenPage.jsx # 403 dentro del panel: sección que el rol no incluye
-    │   │   ├── MachinesPage.jsx  # /admin/maquinas: placeholder con el nivel de permiso (Edición / Solo lectura) leído con usePermiso
+    │   │   ├── ForbiddenPage.jsx # 403 dentro del panel: sección que el rol no incluye (o que puede ver pero no editar)
+    │   │   ├── MachinesPage.jsx  # /admin/maquinas: inventario con buscador (espera de 400 ms), filtros, dados de baja y paginación del back, todo en la URL; solo lectura sin edición en Máquinas
+    │   │   ├── MachineDetailPage.jsx # /admin/maquinas/:id: placeholder del detalle de un equipo
+    │   │   ├── MachineFormPage.jsx # /admin/maquinas/nuevo y /admin/maquinas/:id/editar: placeholder del alta y la edición (requieren editar Máquinas)
     │   │   ├── UsersPage.jsx     # /admin/configuracion/usuarios: ABM de usuarios (tabla, búsqueda, filtro por estado, alta, edición, baja y reactivación); solo lectura con Configuración en "Ver"
     │   │   └── RolesPage.jsx     # /admin/configuracion/roles: matriz de permisos roles × módulos, alta y edición de roles, activación y desactivación; solo lectura con Configuración en "Ver"
     │   └── public/
@@ -90,7 +95,12 @@ sgm_frontend/
     │   │   ├── PermissionsMatrix.jsx # Matriz de permisos (filas = roles, columnas = módulos) con la columna del rol fija al hacer scroll, y su versión de carga
     │   │   ├── AccessLevelControl.jsx # Control segmentado Sin acceso · Ver · Editar de una celda, y su versión de solo lectura (incluye "Acceso total")
     │   │   ├── RoleActionsMenu.jsx # Menú ⋯ de un rol (Editar y Desactivar / Activar), en un portal para que el scroll de la matriz no lo recorte
-    │   │   └── RoleFormModal.jsx   # Alta y edición de un rol (nombre y descripción) con errores del back (409 y 400 en el nombre, lista de 400 arriba)
+    │   │   ├── RoleFormModal.jsx   # Alta y edición de un rol (nombre y descripción) con errores del back (409 y 400 en el nombre, lista de 400 arriba)
+    │   │   ├── InventarioToolbar.jsx # Buscador, filtros por tipo, estado y categoría, switch "Ver dados de baja" y limpiar filtros del inventario
+    │   │   ├── InventarioTable.jsx # Tabla del inventario (tarjetas debajo de xl) con horas, estado y menú de acciones, y su versión de carga
+    │   │   ├── EquipoActionsMenu.jsx # Menú ⋯ de un equipo según el permiso (Ver detalle, Editar, Actualizar horas, Cambiar estado, Dar de baja), en un portal
+    │   │   ├── EstadoEquipoBadge.jsx # Badge del estado de un equipo (ícono, texto y color)
+    │   │   └── Pagination.jsx      # Paginación de un listado: rango mostrado, total y botones de página (anterior/siguiente en celular)
     │   └── public/             # Componentes del portal público
     │       ├── NavBar.jsx          # Header con anclas a las secciones, enlace al catálogo, "Ir al panel" con sesión y menú de celular
     │       ├── Footer.jsx          # Footer con el acceso discreto al login
@@ -116,12 +126,12 @@ sgm_frontend/
     │   ├── vendedoresService.js # GET /vendedores/public: vendedores activos, ordenados por cargo
     │   ├── usuariosService.js  # ABM de usuarios (GET, POST y PATCH /usuarios, PATCH /usuarios/:id/estado)
     │   ├── rolesService.js     # Roles y permisos: GET /roles, GET /modulos, POST y PATCH /roles, PUT /roles/:id/modulos
-    │   ├── equiposService.js   # Equipos del panel: GET /equipos (con filtros), GET /equipos/:id, POST y PATCH /equipos
+    │   ├── equiposService.js   # Equipos del panel: GET /equipos (paginado, con filtros), GET /equipos/:id, POST y PATCH /equipos
     │   └── categoriasService.js # GET /categorias: categorías de equipo
     │
     └── utils/                  # Funciones auxiliares
         ├── text.js             # Normaliza texto para buscar sin importar mayúsculas ni tildes
-        ├── equipos.js          # Datos de un equipo listos para mostrar, WhatsApp de cotización, categorías del listado, estados (etiqueta, ícono y color) y mensajes de error del módulo máquinas
+        ├── equipos.js          # Datos de un equipo listos para mostrar, WhatsApp de cotización, categorías del listado, tipos, estados (etiqueta, ícono y color), formato de horas y mensajes de error del módulo máquinas
         ├── vendedores.js       # Nombre del cargo, iniciales y enlace de WhatsApp de un vendedor
         ├── usuarios.js         # Normalización de los módulos (del usuario y de cada rol), nombre del rol, nombre completo, último acceso y error genérico
         └── roles.js            # Niveles de acceso de la matriz (Sin acceso, Ver, Editar) y armado de la lista completa de módulos de un rol
