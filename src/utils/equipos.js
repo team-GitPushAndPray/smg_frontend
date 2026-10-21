@@ -31,6 +31,29 @@ export const ESTADOS_EQUIPO = Object.freeze({
   },
 })
 
+// Tipos de equipo, con la clave que acepta el filtro `tipo` del back
+export const TIPOS_EQUIPO = Object.freeze({
+  maquina: 'Máquina',
+  aditamento: 'Aditamento',
+})
+
+const horas = new Intl.NumberFormat('es-AR', { maximumFractionDigits: 1 })
+const fechaCorta = new Intl.DateTimeFormat('es-AR', { day: '2-digit', month: '2-digit', year: 'numeric' })
+
+// Horas de motor de una máquina ("3.950 h"). Los aditamentos no tienen motor: "—"
+export function formatHorasMotor(equipo) {
+  if (equipo.tipo !== 'maquina' || equipo.horasMotorActual == null) return '—'
+  return `${horas.format(equipo.horasMotorActual)} h`
+}
+
+// Fecha de la última carga de horas ("14/10/2026"). "—" en aditamentos y "Sin registro" si nunca se cargaron
+export function formatHorasActualizadas(equipo) {
+  if (equipo.tipo !== 'maquina') return '—'
+  if (!equipo.horasActualizadasEn) return 'Sin registro'
+  const date = new Date(equipo.horasActualizadasEn)
+  return Number.isNaN(date.getTime()) ? 'Sin registro' : fechaCorta.format(date)
+}
+
 const EQUIPO_INEXISTENTE = 'El equipo no existe'
 
 /*

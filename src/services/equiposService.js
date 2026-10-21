@@ -16,10 +16,16 @@ function toQuery(filtros = {}) {
   return query ? `?${query}` : ''
 }
 
-// `filtros`: objeto con los parámetros del listado (por ejemplo { estado, categoriaId }), todos opcionales
+/*
+ * Listado paginado, ordenado por código interno (lo define el back). `filtros`, todos opcionales:
+ * { search, tipo, estado, categoriaId, activo, page, limit }. Devuelve { equipos, meta: { total, page, limit } }
+ */
 export async function listarEquipos(filtros, { signal } = {}) {
-  const equipos = await apiFetch(`/equipos${toQuery(filtros)}`, { signal })
-  return Array.isArray(equipos) ? equipos : []
+  const respuesta = await apiFetch(`/equipos${toQuery(filtros)}`, { signal })
+  return {
+    equipos: Array.isArray(respuesta?.data) ? respuesta.data : [],
+    meta: { total: respuesta?.meta?.total ?? 0, page: respuesta?.meta?.page ?? 1, limit: respuesta?.meta?.limit ?? 0 },
+  }
 }
 
 export function obtenerEquipo(id, { signal } = {}) {

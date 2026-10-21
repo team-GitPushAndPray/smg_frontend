@@ -1,10 +1,12 @@
 import { createBrowserRouter } from 'react-router'
-import { RUTAS_PANEL } from '../config/rutasPanel'
+import { MODULOS, RUTAS_PANEL } from '../config/rutasPanel'
 import AdminLayout from '../layouts/AdminLayout'
 import FieldLayout from '../layouts/FieldLayout'
 import PublicLayout from '../layouts/PublicLayout'
 import AdminHomePage from '../pages/admin/AdminHomePage'
 import LoginPage from '../pages/admin/LoginPage'
+import MachineDetailPage from '../pages/admin/MachineDetailPage'
+import MachineFormPage from '../pages/admin/MachineFormPage'
 import MachinesPage from '../pages/admin/MachinesPage'
 import RolesPage from '../pages/admin/RolesPage'
 import UsersPage from '../pages/admin/UsersPage'
@@ -28,6 +30,34 @@ const rutasPanel = RUTAS_PANEL.map(({ path, modulo }) => ({
   path: path.replace(/^\/admin\//, ''),
   element: <RutaModulo modulo={modulo}>{paginasPanel[path]}</RutaModulo>,
 }))
+
+// Pantallas de Máquinas fuera del sidebar (RUTAS_MAQUINAS): el alta y la edición exigen poder editar el módulo
+const rutasMaquinas = [
+  {
+    path: 'maquinas/nuevo',
+    element: (
+      <RutaModulo modulo={MODULOS.MAQUINAS} requiereEdicion>
+        <MachineFormPage />
+      </RutaModulo>
+    ),
+  },
+  {
+    path: 'maquinas/:id',
+    element: (
+      <RutaModulo modulo={MODULOS.MAQUINAS}>
+        <MachineDetailPage />
+      </RutaModulo>
+    ),
+  },
+  {
+    path: 'maquinas/:id/editar',
+    element: (
+      <RutaModulo modulo={MODULOS.MAQUINAS} requiereEdicion>
+        <MachineFormPage />
+      </RutaModulo>
+    ),
+  },
+]
 
 export const router = createBrowserRouter([
   {
@@ -53,7 +83,7 @@ export const router = createBrowserRouter([
         <AdminLayout />
       </RutaPrivada>
     ),
-    children: [{ index: true, element: <AdminHomePage /> }, ...rutasPanel],
+    children: [{ index: true, element: <AdminHomePage /> }, ...rutasPanel, ...rutasMaquinas],
   },
   { path: '*', element: <NotFoundPage /> },
 ])
