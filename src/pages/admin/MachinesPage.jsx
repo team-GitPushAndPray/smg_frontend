@@ -2,22 +2,21 @@ import { Plus } from 'lucide-react'
 import AdminPlaceholder from '../../components/admin/AdminPlaceholder'
 import PermissionBadge from '../../components/admin/PermissionBadge'
 import { MODULOS } from '../../config/rutasPanel'
-import { useAuth } from '../../hooks/useAuth'
+import { usePermiso } from '../../hooks/usePermiso'
 import { useToast } from '../../hooks/useToast'
 
 // Provisorio hasta el módulo real: muestra el nivel de permiso para validar el mecanismo de roles
 export default function MachinesPage() {
-  const { puedeEditar } = useAuth()
+  const { puedeEditar } = usePermiso(MODULOS.MAQUINAS)
   const { showToast } = useToast()
-  const canEdit = puedeEditar(MODULOS.MAQUINAS)
 
   return (
     <AdminPlaceholder
       title="Máquinas"
       description="Alta, edición y estado de la maquinaria."
-      badge={<PermissionBadge puedeEditar={canEdit} />}
+      badge={<PermissionBadge puedeEditar={puedeEditar} />}
       actions={
-        canEdit && (
+        puedeEditar && (
           <button
             type="button"
             onClick={() => showToast('El alta de máquinas llega con el módulo de Máquinas.', { tipo: 'info' })}
