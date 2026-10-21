@@ -4,7 +4,7 @@ import { getToken, removeToken, saveToken, setForbiddenHandler, setUnauthorizedH
 import { getMe, postLogin } from '../services/authService'
 import { AuthContext } from './AuthContext'
 
-const FORBIDDEN_MESSAGE = 'No tenés permiso para realizar esta acción'
+const FORBIDDEN_MESSAGE = 'No tenés permisos para realizar esta acción'
 
 /*
  * Sesión del panel de gestión. El token se guarda en localStorage y, al abrir la app,
