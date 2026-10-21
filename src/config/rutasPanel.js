@@ -39,6 +39,13 @@ export const RUTAS_PANEL = [
   },
 ]
 
+// Pantallas del módulo Máquinas además del inventario (RUTAS_PANEL): las usan el router y los enlaces de la tabla
+export const RUTAS_MAQUINAS = Object.freeze({
+  nuevo: '/admin/maquinas/nuevo',
+  detalle: (id) => `/admin/maquinas/${id}`,
+  editar: (id) => `/admin/maquinas/${id}/editar`,
+})
+
 // Ícono del encabezado de cada grupo del sidebar
 export const ICONOS_GRUPO = {
   Configuración: Settings,
