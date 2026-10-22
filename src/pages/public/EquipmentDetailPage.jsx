@@ -4,6 +4,7 @@ import { Link, useParams } from 'react-router'
 import CatalogMessage from '../../components/public/CatalogMessage'
 import EquipmentDetail, { EquipmentDetailSkeleton } from '../../components/public/EquipmentDetail'
 import { useEquipo } from '../../hooks/useEquipo'
+import { getEquipo } from '../../services/catalogoService'
 
 /*
  * Detalle de un equipo del catálogo (/catalogo/:id).
@@ -11,7 +12,7 @@ import { useEquipo } from '../../hooks/useEquipo'
  */
 export default function EquipmentDetailPage() {
   const { id } = useParams()
-  const { status, equipo, retry } = useEquipo(id)
+  const { status, equipo, retry } = useEquipo(id, getEquipo)
 
   // El layout se comparte con el catálogo: cada equipo se ve desde arriba
   useEffect(() => {

@@ -1,12 +1,13 @@
 import { useEffect, useState } from 'react'
-import { getEquipo } from '../services/catalogoService'
 
 /*
- * Carga un equipo del catálogo público por su id (el de la URL).
- * `status` es 'loading', 'success', 'not-found' (no existe o ya no está disponible) o 'error'; `retry` vuelve a pedirlo.
+ * Carga un equipo por su id (el de la URL) con la función del service que corresponda: getEquipo (catálogo público)
+ * u obtenerEquipo (panel). Tiene que ser la función importada del service, no una creada en el render.
+ * `status` es 'loading', 'success', 'not-found' (404: no existe o, en el catálogo, ya no está disponible) o 'error';
+ * `retry` vuelve a pedirlo.
  * El resultado se guarda junto al id que lo pidió: al cambiar de equipo se ve 'loading' sin mostrar el anterior.
  */
-export function useEquipo(id) {
+export function useEquipo(id, cargarEquipo) {
   const isValidId = /^\d+$/.test(id ?? '')
   const [result, setResult] = useState({ id: null, status: 'loading', equipo: null })
   const [attempt, setAttempt] = useState(0)
@@ -15,7 +16,7 @@ export function useEquipo(id) {
     if (!isValidId) return
     const controller = new AbortController()
 
-    getEquipo(id, { signal: controller.signal })
+    cargarEquipo(id, { signal: controller.signal })
       .then((equipo) => {
         if (!controller.signal.aborted) setResult({ id, status: 'success', equipo })
       })
@@ -26,7 +27,7 @@ export function useEquipo(id) {
       })
 
     return () => controller.abort()
-  }, [id, isValidId, attempt])
+  }, [id, isValidId, attempt, cargarEquipo])
 
   const retry = () => {
     setResult({ id: null, status: 'loading', equipo: null })

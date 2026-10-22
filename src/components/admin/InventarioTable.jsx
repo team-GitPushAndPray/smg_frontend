@@ -1,4 +1,4 @@
-import { formatHorasActualizadas, formatHorasMotor, TIPOS_EQUIPO } from '../../utils/equipos'
+import { formatHorasActualizadas, formatHorasMotor, getNombreEquipo, TIPOS_EQUIPO } from '../../utils/equipos'
 import EquipoActionsMenu from './EquipoActionsMenu'
 import EstadoEquipoBadge from './EstadoEquipoBadge'
 
@@ -22,11 +22,6 @@ const COLUMNAS = [
 const textStrong = 'text-black dark:text-white'
 const textSoft = 'text-neutral-700 dark:text-neutral-300'
 const textMuted = 'text-neutral-600 dark:text-neutral-400'
-
-// El "nombre" de un equipo es el de su categoría
-function getNombre(equipo) {
-  return equipo.nombre ?? equipo.categoria?.nombre ?? 'Sin categoría'
-}
 
 /*
  * Inventario de equipos: tabla desde xl (con el sidebar abierto, en lg no entran las 9 columnas) y tarjetas por debajo.
@@ -62,7 +57,7 @@ export default function InventarioTable({ equipos, canEdit, dadosDeBaja, onActua
                 <td className={`py-3 pr-3 pl-6 font-medium whitespace-nowrap tabular-nums ${textStrong}`}>
                   {equipo.codigoInterno}
                 </td>
-                <td className={`max-w-48 truncate px-3 py-3 font-medium ${textStrong}`}>{getNombre(equipo)}</td>
+                <td className={`max-w-48 truncate px-3 py-3 font-medium ${textStrong}`}>{getNombreEquipo(equipo)}</td>
                 <td className={`max-w-40 truncate px-3 py-3 ${textSoft}`}>{equipo.marca || '—'}</td>
                 <td className={`max-w-40 truncate px-3 py-3 ${textSoft}`}>{equipo.modelo || '—'}</td>
                 <td className={`px-3 py-3 whitespace-nowrap tabular-nums ${textSoft}`}>{formatHorasMotor(equipo)}</td>
@@ -91,7 +86,7 @@ export default function InventarioTable({ equipos, canEdit, dadosDeBaja, onActua
                   {equipo.codigoInterno}
                   {TIPOS_EQUIPO[equipo.tipo] && ` · ${TIPOS_EQUIPO[equipo.tipo]}`}
                 </p>
-                <p className={`truncate font-medium ${textStrong}`}>{getNombre(equipo)}</p>
+                <p className={`truncate font-medium ${textStrong}`}>{getNombreEquipo(equipo)}</p>
                 <p className={`truncate text-sm ${textSoft}`}>
                   {[equipo.marca, equipo.modelo].filter(Boolean).join(' ') || '—'}
                 </p>
