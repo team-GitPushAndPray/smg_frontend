@@ -16,7 +16,7 @@ sgm_frontend/
     │
     ├── config/                 # Configuración global
     │   ├── env.js              # Lee y expone las variables de entorno (API_URL)
-    │   └── rutasPanel.js       # Única fuente de verdad del panel: códigos de módulo (MODULOS), secciones (RUTAS_PANEL) para sidebar, Inicio y rutas protegidas, y pantallas internas de Máquinas (RUTAS_MAQUINAS)
+    │   └── rutasPanel.js       # Única fuente de verdad del panel: códigos de módulo (MODULOS), secciones (RUTAS_PANEL) para sidebar, Inicio y rutas protegidas, y pantallas de Máquinas (RUTAS_MAQUINAS: inventario, alta, detalle y edición)
     │
     ├── router/                 # Definición de rutas
     │   ├── index.jsx           # Rutas de cada módulo con su layout, login del panel (sin layout) + 404. Las del panel se generan desde RUTAS_PANEL
@@ -44,7 +44,7 @@ sgm_frontend/
     │   ├── useHashScroll.js    # Scroll suave a la sección del ancla (#servicios, #contacto...)
     │   ├── useActiveSection.js # Sección visible en pantalla, para marcarla en el navbar
     │   ├── useCatalogo.js      # Carga los equipos del catálogo público, con estado de carga/error y reintento
-    │   ├── useEquipo.js        # Carga un equipo del catálogo por id, con estado de carga/no encontrado/error y reintento
+    │   ├── useEquipo.js        # Carga un equipo por id (catálogo o panel, según la función del service que recibe), con estado de carga/no encontrado/error y reintento
     │   ├── useVendedores.js    # Acceso al equipo comercial (estado, vendedores y reintento)
     │   ├── useUsuarios.js      # Carga usuarios y roles juntos, con reintento, refresco en segundo plano y reemplazo de una fila
     │   ├── useFiltrosInventario.js # Filtros y página del inventario de máquinas guardados en la URL (sobreviven a recargar y a volver atrás)
@@ -64,7 +64,7 @@ sgm_frontend/
     │   │   ├── AdminHomePage.jsx # /admin: saludo y una tarjeta por cada sección que el rol tiene
     │   │   ├── ForbiddenPage.jsx # 403 dentro del panel: sección que el rol no incluye (o que puede ver pero no editar)
     │   │   ├── MachinesPage.jsx  # /admin/maquinas: inventario con buscador (espera de 400 ms), filtros, dados de baja y paginación del back, todo en la URL; solo lectura sin edición en Máquinas
-    │   │   ├── MachineDetailPage.jsx # /admin/maquinas/:id: placeholder del detalle de un equipo
+    │   │   ├── MachineDetailPage.jsx # /admin/maquinas/:id: detalle de un equipo (también dado de baja), con "Equipo no encontrado" y reintento; "Editar" solo con edición y equipo activo
     │   │   ├── MachineFormPage.jsx # /admin/maquinas/nuevo y /admin/maquinas/:id/editar: placeholder del alta y la edición (requieren editar Máquinas)
     │   │   ├── UsersPage.jsx     # /admin/configuracion/usuarios: ABM de usuarios (tabla, búsqueda, filtro por estado, alta, edición, baja y reactivación); solo lectura con Configuración en "Ver"
     │   │   └── RolesPage.jsx     # /admin/configuracion/roles: matriz de permisos roles × módulos, alta y edición de roles, activación y desactivación; solo lectura con Configuración en "Ver"
@@ -84,7 +84,7 @@ sgm_frontend/
     │   │   ├── AdminBrand.jsx      # Marca del panel, lleva a /admin
     │   │   ├── PermissionBadge.jsx # Indicador del nivel de permiso sobre un módulo: Edición o Solo lectura
     │   │   ├── AdminPlaceholder.jsx # Contenido provisorio de las páginas del panel
-    │   │   ├── PanelMessage.jsx    # Aviso de una sección del panel: error de carga, sin datos o sin resultados
+    │   │   ├── PanelMessage.jsx    # Aviso de una sección del panel: error de carga, sin datos, sin resultados o no encontrado
     │   │   ├── Modal.jsx           # Modal base del panel: portal, foco atrapado, Escape y bloqueo mientras se envía
     │   │   ├── ConfirmDialog.jsx   # Confirmación de una acción delicada, con carga y error
 │   │   ├── FormField.jsx       # Campo de formulario (label, ayuda y error) e input de contraseña con mostrar/ocultar
@@ -99,7 +99,8 @@ sgm_frontend/
     │   │   ├── InventarioToolbar.jsx # Buscador, filtros por tipo, estado y categoría, switch "Ver dados de baja" y limpiar filtros del inventario
     │   │   ├── InventarioTable.jsx # Tabla del inventario (tarjetas debajo de xl) con horas, estado y menú de acciones, y su versión de carga
     │   │   ├── EquipoActionsMenu.jsx # Menú ⋯ de un equipo según el permiso (Ver detalle, Editar, Actualizar horas, Cambiar estado, Dar de baja), en un portal
-    │   │   ├── EstadoEquipoBadge.jsx # Badge del estado de un equipo (ícono, texto y color)
+    │   │   ├── EstadoEquipoBadge.jsx # Badge del estado de un equipo (ícono, texto y color); acepta la clave o la etiqueta del estado
+    │   │   ├── EquipoDetail.jsx    # Detalle de un equipo del panel: encabezado con "Editar", aviso de dado de baja, datos generales y datos de máquina, y su versión de carga
     │   │   └── Pagination.jsx      # Paginación de un listado: rango mostrado, total y botones de página (anterior/siguiente en celular)
     │   └── public/             # Componentes del portal público
     │       ├── NavBar.jsx          # Header con anclas a las secciones, enlace al catálogo, "Ir al panel" con sesión y menú de celular
@@ -131,7 +132,7 @@ sgm_frontend/
     │
     └── utils/                  # Funciones auxiliares
         ├── text.js             # Normaliza texto para buscar sin importar mayúsculas ni tildes
-        ├── equipos.js          # Datos de un equipo listos para mostrar, WhatsApp de cotización, categorías del listado, tipos, estados (etiqueta, ícono y color), formato de horas y mensajes de error del módulo máquinas
+        ├── equipos.js          # Datos de un equipo listos para mostrar, WhatsApp de cotización, categorías del listado, tipos, estados (etiqueta, ícono y color, por clave o etiqueta), nombre del equipo, formato de horas ("Sin registrar" si no hay carga) y mensajes de error del módulo máquinas
         ├── vendedores.js       # Nombre del cargo, iniciales y enlace de WhatsApp de un vendedor
         ├── usuarios.js         # Normalización de los módulos (del usuario y de cada rol), nombre del rol, nombre completo, último acceso y error genérico
         └── roles.js            # Niveles de acceso de la matriz (Sin acceso, Ver, Editar) y armado de la lista completa de módulos de un rol
