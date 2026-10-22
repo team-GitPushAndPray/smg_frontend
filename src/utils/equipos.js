@@ -1,5 +1,6 @@
 import { Ban, CircleCheck, KeyRound, Wrench } from 'lucide-react'
 import { cotizacion } from '../data/empresa'
+import { normalizeText } from './text'
 import { getErrorGenerico } from './usuarios'
 import { getWhatsappUrl } from './vendedores'
 
@@ -31,6 +32,16 @@ export const ESTADOS_EQUIPO = Object.freeze({
   },
 })
 
+/*
+ * Configuración del estado de un equipo. El listado manda la clave ("en_taller") y el detalle, la etiqueta
+ * ("En taller"): se aceptan las dos. Devuelve null si el front no conoce el estado
+ */
+export function getEstadoEquipo(estado) {
+  if (Object.hasOwn(ESTADOS_EQUIPO, estado)) return ESTADOS_EQUIPO[estado]
+  const buscado = normalizeText(estado)
+  return Object.values(ESTADOS_EQUIPO).find(({ label }) => normalizeText(label) === buscado) ?? null
+}
+
 // Tipos de equipo, con la clave que acepta el filtro `tipo` del back
 export const TIPOS_EQUIPO = Object.freeze({
   maquina: 'Máquina',
@@ -40,18 +51,27 @@ export const TIPOS_EQUIPO = Object.freeze({
 const horas = new Intl.NumberFormat('es-AR', { maximumFractionDigits: 1 })
 const fechaCorta = new Intl.DateTimeFormat('es-AR', { day: '2-digit', month: '2-digit', year: 'numeric' })
 
+// Dato de una máquina que el back manda en null porque nunca se cargó
+export const SIN_REGISTRAR = 'Sin registrar'
+
 // Horas de motor de una máquina ("3.950 h"). Los aditamentos no tienen motor: "—"
 export function formatHorasMotor(equipo) {
-  if (equipo.tipo !== 'maquina' || equipo.horasMotorActual == null) return '—'
+  if (equipo.tipo !== 'maquina') return '—'
+  if (equipo.horasMotorActual == null) return SIN_REGISTRAR
   return `${horas.format(equipo.horasMotorActual)} h`
 }
 
-// Fecha de la última carga de horas ("14/10/2026"). "—" en aditamentos y "Sin registro" si nunca se cargaron
+// Fecha de la última carga de horas ("14/10/2026"). "—" en aditamentos y "Sin registrar" si nunca se cargaron
 export function formatHorasActualizadas(equipo) {
   if (equipo.tipo !== 'maquina') return '—'
-  if (!equipo.horasActualizadasEn) return 'Sin registro'
+  if (!equipo.horasActualizadasEn) return SIN_REGISTRAR
   const date = new Date(equipo.horasActualizadasEn)
-  return Number.isNaN(date.getTime()) ? 'Sin registro' : fechaCorta.format(date)
+  return Number.isNaN(date.getTime()) ? SIN_REGISTRAR : fechaCorta.format(date)
+}
+
+// El "nombre" de un equipo es el de su categoría
+export function getNombreEquipo(equipo) {
+  return equipo.nombre ?? equipo.categoria?.nombre ?? 'Sin categoría'
 }
 
 const EQUIPO_INEXISTENTE = 'El equipo no existe'
