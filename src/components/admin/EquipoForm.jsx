@@ -49,11 +49,20 @@ function getData(values) {
   return data
 }
 
-function validate(data, conHoras) {
+// En la edición, la ubicación y la descripción que ya estaban cargadas se pueden cambiar, pero no borrar
+function getOpcionalesFijos(equipo) {
+  return { ubicacion: Boolean(equipo?.ubicacion?.trim()), descripcion: Boolean(equipo?.descripcion?.trim()) }
+}
+
+function validate(data, { conHoras, fijos }) {
   const errors = {}
   if (!data.codigoInterno) errors.codigoInterno = 'Ingresá el código interno.'
   if (!data.categoriaId) errors.categoriaId = 'Elegí una categoría.'
   if (!data.marca) errors.marca = 'Ingresá la marca.'
+  if (fijos.ubicacion && !data.ubicacion) errors.ubicacion = 'La ubicación ya estaba cargada: no se puede dejar vacía.'
+  if (fijos.descripcion && !data.descripcion) {
+    errors.descripcion = 'La descripción ya estaba cargada: no se puede dejar vacía.'
+  }
   if (data.tipo !== 'maquina') return errors
 
   if (!data.modelo) errors.modelo = 'Ingresá el modelo.'
@@ -116,13 +125,16 @@ function Seccion({ id, title, description, children }) {
 
 /*
  * Formulario de un equipo del módulo Máquinas, pensado para el alta y la edición. Con `equipo` arranca precargado,
- * el tipo no se puede cambiar y no muestra las horas de motor (el PATCH no las acepta: tienen su propia acción).
+ * el tipo no se puede cambiar, no muestra las horas de motor (el PATCH no las acepta: tienen su propia acción) y
+ * la ubicación y la descripción ya cargadas no se pueden vaciar.
  * Valida en el front y llama a `onSubmit(datos)` con los nombres del DTO; en un aditamento, sin campos de máquina.
- * Si `onSubmit` falla: 409 se marca en el código interno, 400 muestra los mensajes del back arriba y el resto va a un aviso
+ * Si `onSubmit` termina sin salir de la pantalla (por ejemplo, no había cambios), el formulario vuelve a habilitarse.
+ * Si falla: 409 se marca en el código interno, 400 muestra los mensajes del back arriba y el resto va a un aviso
  */
 export default function EquipoForm({ equipo, submitLabel, cancelTo, onSubmit }) {
   const isEdit = Boolean(equipo)
   const conHoras = !isEdit
+  const fijos = getOpcionalesFijos(equipo)
   const { showToast } = useToast()
   const { status: categoriasStatus, categorias, retry: retryCategorias } = useCategorias()
   const [values, setValues] = useState(() => getInitialValues(equipo))
@@ -159,7 +171,7 @@ export default function EquipoForm({ equipo, submitLabel, cancelTo, onSubmit }) 
   const handleSubmit = async (event) => {
     event.preventDefault()
     const data = getData(values)
-    const errors = validate(data, conHoras)
+    const errors = validate(data, { conHoras, fijos })
     setFieldErrors(errors)
     setFormErrors([])
     if (Object.keys(errors).length > 0) {
@@ -171,6 +183,7 @@ export default function EquipoForm({ equipo, submitLabel, cancelTo, onSubmit }) 
     setIsSubmitting(true)
     try {
       await onSubmit(getDatos(data, conHoras))
+      setIsSubmitting(false)
     } catch (error) {
       setIsSubmitting(false)
       if (error.status === 409) {
@@ -313,7 +326,7 @@ export default function EquipoForm({ equipo, submitLabel, cancelTo, onSubmit }) 
             )}
           </Field>
 
-          <Field name="ubicacion" label="Ubicación" optional error={fieldErrors.ubicacion}>
+          <Field name="ubicacion" label="Ubicación" optional={!fijos.ubicacion} error={fieldErrors.ubicacion}>
             {(props) => (
               <input
                 {...props}
@@ -331,7 +344,7 @@ export default function EquipoForm({ equipo, submitLabel, cancelTo, onSubmit }) 
           <Field
             name="descripcion"
             label="Descripción"
-            optional
+            optional={!fijos.descripcion}
             error={fieldErrors.descripcion}
             className="sm:col-span-2"
           >
@@ -436,5 +449,37 @@ export default function EquipoForm({ equipo, submitLabel, cancelTo, onSubmit }) 
         </button>
       </div>
     </form>
+  )
+}
+
+const skeletonBar = 'animate-pulse rounded-control bg-black/5 dark:bg-white/10'
+
+function SkeletonSeccion({ count }) {
+  return (
+    <div className={sectionClass}>
+      <span className={`h-6 w-40 ${skeletonBar}`} />
+      <div className="grid gap-5 sm:grid-cols-2">
+        {Array.from({ length: count }, (_, index) => (
+          <div key={index} className="flex flex-col gap-2">
+            <span className={`h-4 w-24 ${skeletonBar}`} />
+            <span className={`h-11 ${skeletonBar}`} />
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+// Marcador con la forma del formulario mientras carga el equipo a editar
+export function EquipoFormSkeleton() {
+  return (
+    <div aria-hidden="true" className="flex flex-col gap-6">
+      <div className={sectionClass}>
+        <span className={`h-6 w-40 ${skeletonBar}`} />
+        <span className={`h-12 w-full sm:w-64 ${skeletonBar}`} />
+      </div>
+      <SkeletonSeccion count={4} />
+      <SkeletonSeccion count={3} />
+    </div>
   )
 }
