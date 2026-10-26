@@ -74,6 +74,39 @@ export function getNombreEquipo(equipo) {
   return equipo.nombre ?? equipo.categoria?.nombre ?? 'Sin categoría'
 }
 
+const texto = (valor) => valor?.trim() ?? ''
+
+// Datos guardados de un equipo con los nombres y tipos que manda EquipoForm, para compararlos
+function getDatosGuardados(equipo) {
+  return {
+    codigoInterno: texto(equipo.codigoInterno),
+    categoriaId: equipo.categoria?.id != null ? Number(equipo.categoria.id) : null,
+    marca: texto(equipo.marca),
+    ubicacion: texto(equipo.ubicacion),
+    descripcion: texto(equipo.descripcion),
+    modelo: texto(equipo.modelo),
+    anio: equipo.anio != null ? Number(equipo.anio) : null,
+    nSerie: texto(equipo.nSerie),
+  }
+}
+
+/*
+ * Body del PATCH de un equipo: solo los campos de `datos` (lo que manda EquipoForm) que difieren de lo guardado.
+ * El tipo no se edita, así que nunca viaja; en un aditamento los campos de máquina ni siquiera llegan.
+ * El código interno se guarda en mayúsculas: cambiar solo mayúsculas/minúsculas no cuenta como cambio
+ */
+export function getCambiosEquipo(equipo, datos) {
+  const guardados = getDatosGuardados(equipo)
+  const cambios = {}
+  for (const [campo, valor] of Object.entries(datos)) {
+    if (campo === 'tipo') continue
+    const igual =
+      campo === 'codigoInterno' ? valor.toUpperCase() === guardados.codigoInterno.toUpperCase() : valor === guardados[campo]
+    if (!igual) cambios[campo] = valor
+  }
+  return cambios
+}
+
 const EQUIPO_INEXISTENTE = 'El equipo no existe'
 
 /*
