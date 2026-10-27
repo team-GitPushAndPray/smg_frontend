@@ -1,6 +1,7 @@
 import { ArrowLeft, CloudOff, PackageX, RotateCw } from 'lucide-react'
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router'
+import EquipoAccionModal from '../../components/admin/EquipoAccionModal'
 import EquipoDetail, { EquipoDetailSkeleton } from '../../components/admin/EquipoDetail'
 import PanelMessage from '../../components/admin/PanelMessage'
 import { MODULOS, RUTAS_MAQUINAS } from '../../config/rutasPanel'
@@ -9,13 +10,17 @@ import { usePermiso } from '../../hooks/usePermiso'
 import { obtenerEquipo } from '../../services/equiposService'
 
 /*
- * Detalle de un equipo del panel (/admin/maquinas/:id), activo o dado de baja.
- * Las fotos y el historial del equipo todavía no forman parte de esta pantalla
+ * Detalle de un equipo del panel (/admin/maquinas/:id), activo o dado de baja. Después de actualizar horas,
+ * cambiar el estado o dar de baja, el equipo se vuelve a pedir sin pasar por la carga (tras la baja se queda acá,
+ * con el aviso de dado de baja). Las fotos y el historial del equipo todavía no forman parte de esta pantalla
  */
 export default function MachineDetailPage() {
   const { id } = useParams()
   const { puedeEditar } = usePermiso(MODULOS.MAQUINAS)
-  const { status, equipo, retry } = useEquipo(id, obtenerEquipo)
+  const { status, equipo, retry, reload } = useEquipo(id, obtenerEquipo)
+  // Acción con modal abierta: { tipo: 'horas' | 'estado' | 'baja', equipo }
+  const [accion, setAccion] = useState(null)
+  const abrir = (tipo) => (equipoElegido) => setAccion({ tipo, equipo: equipoElegido })
 
   // Desde el inventario se llega con la página scrolleada: cada equipo se ve desde arriba
   useEffect(() => {
@@ -61,7 +66,15 @@ export default function MachineDetailPage() {
       </PanelMessage>
     )
   } else {
-    content = <EquipoDetail equipo={equipo} canEdit={puedeEditar} />
+    content = (
+      <EquipoDetail
+        equipo={equipo}
+        canEdit={puedeEditar}
+        onActualizarHoras={abrir('horas')}
+        onCambiarEstado={abrir('estado')}
+        onDarDeBaja={abrir('baja')}
+      />
+    )
   }
 
   return (
@@ -75,6 +88,8 @@ export default function MachineDetailPage() {
       </Link>
 
       {content}
+
+      <EquipoAccionModal accion={accion} onClose={() => setAccion(null)} onDone={reload} />
     </article>
   )
 }
