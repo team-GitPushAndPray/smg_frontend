@@ -29,10 +29,19 @@ function getPosition(button, menu) {
 /*
  * Menú ⋯ de una fila del inventario. "Ver detalle" lo tienen todos; con `canEdit` se suman Editar,
  * Actualizar horas (solo máquinas), Cambiar estado y Dar de baja. Un equipo `dadoDeBaja` solo tiene "Ver detalle".
+ * Con `enDetalle` (el ⋯ junto a "Editar" en el detalle) quedan solo las tres acciones con modal.
  * Va en un portal a <body> con posición fija: la tabla tiene scroll horizontal y recortaría un menú desplegado adentro.
  * Se cierra con Escape, Tab, un clic afuera o cualquier scroll (así nunca queda separado de su botón)
  */
-export default function EquipoActionsMenu({ equipo, canEdit, dadoDeBaja, onActualizarHoras, onCambiarEstado, onDarDeBaja }) {
+export default function EquipoActionsMenu({
+  equipo,
+  canEdit,
+  dadoDeBaja,
+  enDetalle = false,
+  onActualizarHoras,
+  onCambiarEstado,
+  onDarDeBaja,
+}) {
   const [isOpen, setIsOpen] = useState(false)
   const buttonRef = useRef(null)
   const menuRef = useRef(null)
@@ -88,8 +97,8 @@ export default function EquipoActionsMenu({ equipo, canEdit, dadoDeBaja, onActua
         onClick={() => setIsOpen((open) => !open)}
         aria-expanded={isOpen}
         aria-controls={isOpen ? menuId : undefined}
-        aria-label={`Acciones del equipo ${equipo.codigoInterno}`}
-        title="Acciones"
+        aria-label={enDetalle ? 'Más acciones' : `Acciones del equipo ${equipo.codigoInterno}`}
+        title={enDetalle ? 'Más acciones' : 'Acciones'}
         className={`interactive grid size-11 shrink-0 place-items-center rounded-control text-neutral-700 hover:bg-black/5 hover:text-black dark:text-neutral-300 dark:hover:bg-white/10 dark:hover:text-white ${isOpen ? 'bg-black/5 text-black dark:bg-white/10 dark:text-white' : ''}`}
       >
         <Ellipsis size={20} strokeWidth={1.75} aria-hidden="true" />
@@ -99,24 +108,28 @@ export default function EquipoActionsMenu({ equipo, canEdit, dadoDeBaja, onActua
       {isOpen &&
         createPortal(
           <div ref={menuRef} id={menuId} className="glass-strong fixed z-30 flex w-56 flex-col p-1.5">
-            <Link
-              to={RUTAS_MAQUINAS.detalle(equipo.id)}
-              onClick={() => setIsOpen(false)}
-              className={`${itemBase} ${itemIdle}`}
-            >
-              <Eye size={18} strokeWidth={1.75} aria-hidden="true" />
-              Ver detalle
-            </Link>
+            {!enDetalle && (
+              <Link
+                to={RUTAS_MAQUINAS.detalle(equipo.id)}
+                onClick={() => setIsOpen(false)}
+                className={`${itemBase} ${itemIdle}`}
+              >
+                <Eye size={18} strokeWidth={1.75} aria-hidden="true" />
+                Ver detalle
+              </Link>
+            )}
             {showEdicion && (
               <>
-                <Link
-                  to={RUTAS_MAQUINAS.editar(equipo.id)}
-                  onClick={() => setIsOpen(false)}
-                  className={`${itemBase} ${itemIdle}`}
-                >
-                  <PencilLine size={18} strokeWidth={1.75} aria-hidden="true" />
-                  Editar
-                </Link>
+                {!enDetalle && (
+                  <Link
+                    to={RUTAS_MAQUINAS.editar(equipo.id)}
+                    onClick={() => setIsOpen(false)}
+                    className={`${itemBase} ${itemIdle}`}
+                  >
+                    <PencilLine size={18} strokeWidth={1.75} aria-hidden="true" />
+                    Editar
+                  </Link>
+                )}
                 {equipo.tipo === 'maquina' && (
                   <button type="button" onClick={() => choose(onActualizarHoras)} className={`${itemBase} ${itemIdle}`}>
                     <Gauge size={18} strokeWidth={1.75} aria-hidden="true" />

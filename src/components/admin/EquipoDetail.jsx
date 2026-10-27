@@ -8,6 +8,7 @@ import {
   SIN_REGISTRAR,
   TIPOS_EQUIPO,
 } from '../../utils/equipos'
+import EquipoActionsMenu from './EquipoActionsMenu'
 import EstadoEquipoBadge from './EstadoEquipoBadge'
 import PermissionBadge from './PermissionBadge'
 
@@ -52,10 +53,11 @@ function Seccion({ id, title, children }) {
 
 /*
  * Detalle de un equipo del panel: encabezado, datos generales y, si es una máquina, sus datos de máquina.
+ * Junto a "Editar" va un ⋯ con las acciones que abren un modal (llegan como callbacks, igual que en el inventario).
  * Un equipo dado de baja (`activo: false`) se sigue mostrando, porque se conserva por su historial, pero con un aviso
- * y sin "Editar". Sin edición en el módulo (por ejemplo, taller) se ve todo, de solo lectura
+ * y sin acciones. Sin edición en el módulo (por ejemplo, taller) se ve todo, de solo lectura
  */
-export default function EquipoDetail({ equipo, canEdit }) {
+export default function EquipoDetail({ equipo, canEdit, onActualizarHoras, onCambiarEstado, onDarDeBaja }) {
   const dadoDeBaja = equipo.activo === false
   const esMaquina = equipo.tipo === 'maquina'
   const marcaModelo = [equipo.marca, equipo.modelo].filter(Boolean).join(' ')
@@ -75,10 +77,21 @@ export default function EquipoDetail({ equipo, canEdit }) {
           {marcaModelo && <p className={textMuted}>{marcaModelo}</p>}
         </div>
         {canEdit && !dadoDeBaja && (
-          <Link to={RUTAS_MAQUINAS.editar(equipo.id)} className="btn-primary shrink-0">
-            <PencilLine size={18} strokeWidth={1.75} aria-hidden="true" />
-            Editar
-          </Link>
+          <div className="flex shrink-0 items-center gap-2">
+            <Link to={RUTAS_MAQUINAS.editar(equipo.id)} className="btn-primary flex-1 sm:flex-none">
+              <PencilLine size={18} strokeWidth={1.75} aria-hidden="true" />
+              Editar
+            </Link>
+            <EquipoActionsMenu
+              equipo={equipo}
+              canEdit
+              dadoDeBaja={false}
+              enDetalle
+              onActualizarHoras={onActualizarHoras}
+              onCambiarEstado={onCambiarEstado}
+              onDarDeBaja={onDarDeBaja}
+            />
+          </div>
         )}
       </header>
 
