@@ -42,6 +42,12 @@ export function getEstadoEquipo(estado) {
   return Object.values(ESTADOS_EQUIPO).find(({ label }) => normalizeText(label) === buscado) ?? null
 }
 
+// Clave del estado de un equipo ("en_taller"), venga como clave o como etiqueta. null si el front no lo conoce
+export function getClaveEstado(estado) {
+  const config = getEstadoEquipo(estado)
+  return Object.keys(ESTADOS_EQUIPO).find((clave) => ESTADOS_EQUIPO[clave] === config) ?? null
+}
+
 // Tipos de equipo, con la clave que acepta el filtro `tipo` del back
 export const TIPOS_EQUIPO = Object.freeze({
   maquina: 'Máquina',
@@ -49,6 +55,11 @@ export const TIPOS_EQUIPO = Object.freeze({
 })
 
 const horas = new Intl.NumberFormat('es-AR', { maximumFractionDigits: 1 })
+
+// Número de horas con separador de miles ("3.950"), sin la unidad
+export function formatHoras(valor) {
+  return horas.format(valor)
+}
 const fechaCorta = new Intl.DateTimeFormat('es-AR', { day: '2-digit', month: '2-digit', year: 'numeric' })
 
 // Dato de una máquina que el back manda en null porque nunca se cargó
