@@ -1,6 +1,7 @@
 import { Archive, CloudOff, Plus, RotateCw, SearchX, Truck } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router'
+import EquipoAccionModal from '../../components/admin/EquipoAccionModal'
 import InventarioTable, { InventarioTableSkeleton } from '../../components/admin/InventarioTable'
 import InventarioToolbar from '../../components/admin/InventarioToolbar'
 import Pagination from '../../components/admin/Pagination'
@@ -11,7 +12,6 @@ import { useCategorias } from '../../hooks/useCategorias'
 import { EQUIPOS_POR_PAGINA, useEquipos } from '../../hooks/useEquipos'
 import { useFiltrosInventario } from '../../hooks/useFiltrosInventario'
 import { usePermiso } from '../../hooks/usePermiso'
-import { useToast } from '../../hooks/useToast'
 
 // Espera desde la última tecla antes de buscar, para no consultar al back con cada letra
 const SEARCH_DELAY = 400
@@ -24,11 +24,11 @@ function countLabel(cantidad) {
 /*
  * Máquinas: inventario de máquinas y aditamentos con buscador, filtros y paginación del back.
  * Filtros y página viven en la URL (useFiltrosInventario). Sin edición en el módulo (por ejemplo, taller)
- * la pantalla es de solo lectura: sin "Nuevo equipo" y con "Ver detalle" como única acción
+ * la pantalla es de solo lectura: sin "Nuevo equipo" y con "Ver detalle" como única acción.
+ * Después de actualizar horas, cambiar el estado o dar de baja, se vuelve a pedir la página actual
  */
 export default function MachinesPage() {
   const { puedeEditar } = usePermiso(MODULOS.MAQUINAS)
-  const { showToast } = useToast()
   const { filtros, hasFilters, setFiltros, setPage, limpiarFiltros } = useFiltrosInventario()
   const { status, equipos, meta, dadosDeBaja, isLoading, hasData, retry } = useEquipos(filtros)
   const { status: categoriasStatus, categorias } = useCategorias()
@@ -73,8 +73,9 @@ export default function MachinesPage() {
     if (pageOutOfRange) setPage(totalPages)
   }, [pageOutOfRange, totalPages, setPage])
 
-  // Las acciones con modal llegan en las próximas etapas: por ahora solo avisan
-  const proximamente = () => showToast('Esta acción todavía no está disponible.', { tipo: 'info' })
+  // Acción con modal abierta: { tipo: 'horas' | 'estado' | 'baja', equipo }
+  const [accion, setAccion] = useState(null)
+  const abrir = (tipo) => (equipo) => setAccion({ tipo, equipo })
 
   // Solo el switch de bajas, sin otros filtros: el "sin resultados" ofrece volver a los activos
   const soloBajas = filtros.bajas && !filtros.search && !filtros.tipo && !filtros.estado && !filtros.categoriaId
@@ -139,9 +140,9 @@ export default function MachinesPage() {
           equipos={equipos}
           canEdit={puedeEditar}
           dadosDeBaja={dadosDeBaja}
-          onActualizarHoras={proximamente}
-          onCambiarEstado={proximamente}
-          onDarDeBaja={proximamente}
+          onActualizarHoras={abrir('horas')}
+          onCambiarEstado={abrir('estado')}
+          onDarDeBaja={abrir('baja')}
         />
         <Pagination
           page={filtros.page}
@@ -195,6 +196,8 @@ export default function MachinesPage() {
       >
         {content}
       </div>
+
+      <EquipoAccionModal accion={accion} onClose={() => setAccion(null)} onDone={retry} />
     </section>
   )
 }
