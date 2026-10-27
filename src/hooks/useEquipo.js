@@ -4,7 +4,8 @@ import { useEffect, useState } from 'react'
  * Carga un equipo por su id (el de la URL) con la función del service que corresponda: getEquipo (catálogo público)
  * u obtenerEquipo (panel). Tiene que ser la función importada del service, no una creada en el render.
  * `status` es 'loading', 'success', 'not-found' (404: no existe o, en el catálogo, ya no está disponible) o 'error';
- * `retry` vuelve a pedirlo.
+ * `retry` vuelve a pedirlo. `reload` lo vuelve a pedir sin pasar por 'loading' (después de modificarlo): mientras
+ * tanto se sigue viendo el que estaba y, si falla, se lo conserva.
  * El resultado se guarda junto al id que lo pidió: al cambiar de equipo se ve 'loading' sin mostrar el anterior.
  */
 export function useEquipo(id, cargarEquipo) {
@@ -23,7 +24,7 @@ export function useEquipo(id, cargarEquipo) {
       .catch((error) => {
         if (controller.signal.aborted) return
         const status = error.status === 404 ? 'not-found' : 'error'
-        setResult({ id, status, equipo: null })
+        setResult((actual) => (actual.id === id && actual.status === 'success' ? actual : { id, status, equipo: null }))
       })
 
     return () => controller.abort()
@@ -34,8 +35,10 @@ export function useEquipo(id, cargarEquipo) {
     setAttempt((value) => value + 1)
   }
 
+  const reload = () => setAttempt((value) => value + 1)
+
   // Un id que no es un número no se le pide al back: no puede existir
-  if (!isValidId) return { status: 'not-found', equipo: null, retry }
-  if (result.id !== id) return { status: 'loading', equipo: null, retry }
-  return { status: result.status, equipo: result.equipo, retry }
+  if (!isValidId) return { status: 'not-found', equipo: null, retry, reload }
+  if (result.id !== id) return { status: 'loading', equipo: null, retry, reload }
+  return { status: result.status, equipo: result.equipo, retry, reload }
 }
