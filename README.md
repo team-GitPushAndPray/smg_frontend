@@ -31,7 +31,7 @@ sgm_frontend/
     │   ├── ToastContext.js     # Contexto de los avisos (toasts)
     │   ├── ToastProvider.jsx   # Pila de avisos no bloqueantes de toda la app (showToast: error, info o exito)
     │   ├── ChecklistContext.js # Contexto del checklist de campo
-    │   ├── ChecklistProvider.jsx # Estado del asistente del checklist (reducer): tipo, paso y datos, borrador automático en localStorage, responsable recordado precargado en cada checklist nuevo y confirmación al cerrar la pestaña
+    │   ├── ChecklistProvider.jsx # Estado del asistente del checklist (reducer): tipo, paso y datos, fotos en memoria (no van al borrador; si el retomado tenía, se piden de nuevo), borrador automático en localStorage, responsable recordado precargado en cada checklist nuevo y confirmación al cerrar la pestaña
     │   ├── VendedoresContext.js  # Contexto del equipo comercial
     │   └── VendedoresProvider.jsx # Carga el equipo comercial una vez para la home, el detalle de equipo y el navbar
     │
@@ -123,7 +123,8 @@ sgm_frontend/
     │   │   ├── ChecklistStart.jsx  # Paso 1: el equipo y un botón por cada opción que manda el back, y su versión de carga
     │   │   ├── EquipoSummary.jsx   # Encabezado del equipo: código interno, categoría y marca, y horas actuales si es máquina
     │   │   ├── ItemCard.jsx        # Un ítem del checklist: nombre y los tres estados (✓ Normal, ✕ Anormal, — No aplica); respondida cambia de fondo
-    │   │   └── steps/              # Pasos del asistente: HorasStep (horas del horómetro: no menos que las actuales y confirmación si suben más de 200 hs); ItemsStep (lista de ítems con contador fijo, marcado en bloque de los pendientes y botón que lleva al primero que falta); CierreStep (observaciones con ayuda según el tipo, contador y aviso si hay ítems Anormales sin contar, y nombre y apellido obligatorios); ProvisionalNote marca lo que todavía no tiene su issue (las fotos)
+    │   │   ├── FotoSlot.jsx        # Lugar de una foto: "Sacar foto" abre la cámara trasera, la comprime ("Procesando…") y muestra la miniatura con ✕ y "Sacar otra"; avisa "Volvé a sacar la foto" al retomar un borrador
+    │   │   └── steps/              # Pasos del asistente: HorasStep (horas del horómetro: no menos que las actuales y confirmación si suben más de 200 hs); ItemsStep (lista de ítems con contador fijo, marcado en bloque de los pendientes y botón que lleva al primero que falta); CierreStep (observaciones con ayuda según el tipo, contador y aviso si hay ítems Anormales sin contar, foto del equipo y nombre y apellido obligatorios)
     │   └── public/             # Componentes del portal público
     │       ├── NavBar.jsx          # Header con anclas a las secciones, enlace al catálogo, "Ir al panel" con sesión y menú de celular
     │       ├── Footer.jsx          # Footer con el acceso discreto al login
@@ -159,7 +160,8 @@ sgm_frontend/
         ├── vendedores.js       # Nombre del cargo, iniciales y enlace de WhatsApp de un vendedor
         ├── usuarios.js         # Normalización de los módulos (del usuario y de cada rol), nombre del rol, nombre completo, último acceso y error genérico
         ├── roles.js            # Niveles de acceso de la matriz (Sin acceso, Ver, Editar) y armado de la lista completa de módulos de un rol
-        └── checklists.js       # Formulario de checklist con los nombres del front, ícono por tipo, pasos según máquina o aditamento, validación de las horas del horómetro, estados de los ítems y marcado en bloque de los pendientes, ítems anormales y su aviso, ayuda de las observaciones según el tipo, validación del nombre y apellido, borrador en localStorage (checklist:<token>:<tipo>) y responsable recordado (checklist:responsable)
+        ├── imagenes.js         # Compresión de una imagen en el navegador (lado mayor y JPEG con la calidad que entre en el peso buscado)
+        └── checklists.js       # Formulario de checklist con los nombres del front, ícono por tipo, pasos según máquina o aditamento, validación de las horas del horómetro, estados de los ítems y marcado en bloque de los pendientes, ítems anormales y su aviso, ayuda de las observaciones según el tipo, validación del nombre y apellido, cantidad de fotos (MAX_FOTOS) y su compresión, borrador en localStorage (checklist:<token>:<tipo>) y responsable recordado (checklist:responsable)
 ```
 
 ## Convenciones
