@@ -116,12 +116,13 @@ sgm_frontend/
     │   │   ├── FieldScreen.jsx     # Pantalla base: encabezado fijo arriba, contenido y acción principal fija abajo
     │   │   ├── FieldMessage.jsx    # Aviso de pantalla completa (QR no válido, sin conexión) sin salidas a otras partes del sistema
     │   │   ├── MainAction.jsx      # Botón principal de un paso: deshabilitado dice qué falta; bloqueado mientras se envía
+    │   │   ├── FieldDialog.jsx     # Pregunta que frena el flujo (dialog nativo, sale desde abajo): botones grandes uno debajo del otro
     │   │   ├── WizardHeader.jsx    # "Atrás", "Paso X de N" y barra de progreso
     │   │   ├── ChecklistWizard.jsx # Asistente: un paso por pantalla (4 en máquinas, 3 en aditamentos), primero ofrece seguir el borrador
     │   │   ├── DraftPrompt.jsx     # "Tenés un checklist sin terminar": seguir donde quedaste o empezar de nuevo
     │   │   ├── ChecklistStart.jsx  # Paso 1: el equipo y un botón por cada opción que manda el back, y su versión de carga
     │   │   ├── EquipoSummary.jsx   # Encabezado del equipo: código interno, categoría y marca, y horas actuales si es máquina
-    │   │   └── steps/              # Pasos del asistente (provisorios hasta sus issues): HorasStep, ItemsStep, CierreStep y ProvisionalNote
+    │   │   └── steps/              # Pasos del asistente: HorasStep (horas del horómetro: no menos que las actuales y confirmación si suben más de 200 hs); ItemsStep, CierreStep y ProvisionalNote, provisorios hasta sus issues
     │   └── public/             # Componentes del portal público
     │       ├── NavBar.jsx          # Header con anclas a las secciones, enlace al catálogo, "Ir al panel" con sesión y menú de celular
     │       ├── Footer.jsx          # Footer con el acceso discreto al login
@@ -157,7 +158,7 @@ sgm_frontend/
         ├── vendedores.js       # Nombre del cargo, iniciales y enlace de WhatsApp de un vendedor
         ├── usuarios.js         # Normalización de los módulos (del usuario y de cada rol), nombre del rol, nombre completo, último acceso y error genérico
         ├── roles.js            # Niveles de acceso de la matriz (Sin acceso, Ver, Editar) y armado de la lista completa de módulos de un rol
-        └── checklists.js       # Formulario de checklist con los nombres del front, ícono por tipo, pasos según máquina o aditamento y borrador en localStorage (checklist:<token>:<tipo>)
+        └── checklists.js       # Formulario de checklist con los nombres del front, ícono por tipo, pasos según máquina o aditamento, validación de las horas del horómetro y borrador en localStorage (checklist:<token>:<tipo>)
 ```
 
 ## Convenciones

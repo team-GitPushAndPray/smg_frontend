@@ -371,3 +371,28 @@
 @utility campo-option {
   @apply interactive campo-card flex min-h-18 w-full items-center gap-4 px-4 py-3 text-left hover:border-brand-700;
 }
+
+/*
+ * Campo de texto grande (horas del horómetro): borde de 2px con contraste suficiente sobre blanco.
+ * Con error, el borde pasa al rojo; el mensaje de abajo lleva ícono y texto, no depende solo del color
+ */
+@utility campo-input {
+  @apply interactive min-h-16 w-full rounded-control border-2 border-neutral-500 bg-white px-4 text-black placeholder:text-neutral-500;
+
+  &[aria-invalid='true'] {
+    @apply border-brand-700;
+  }
+}
+
+/*
+ * Pregunta que frena el flujo (dialog nativo con showModal): sale desde abajo, al alcance del pulgar,
+ * sobre un velo sólido. Sin vidrio, como el resto del módulo
+ */
+@utility campo-dialog {
+  @apply mx-auto mt-auto mb-0 w-full max-w-md animate-dialog-in rounded-t-card bg-white px-4 pt-6 pb-[calc(1rem+env(safe-area-inset-bottom))] text-black;
+
+  &::backdrop {
+    @apply animate-fade-in;
+    background: color-mix(in srgb, var(--color-black) 50%, transparent);
+  }
+}
