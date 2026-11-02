@@ -334,3 +334,40 @@
 @utility page-section {
   @apply page-container scroll-mt-24 py-16 sm:py-24;
 }
+
+/*
+ * Módulo de campo (QR): se usa al sol, con una mano y a veces con guantes. Sin vidrio: fondos sólidos,
+ * alto contraste, texto de 16px como mínimo y áreas táctiles de 48px o más.
+ * Va siempre en modo claro (FieldLayout lo fuerza), por eso estas clases no tienen variante oscura
+ */
+@utility campo-page {
+  @apply min-h-svh bg-neutral-100 text-base text-black;
+}
+
+/* Superficie de contenido: blanca, borde visible y sombra apenas marcada */
+@utility campo-card {
+  @apply rounded-card border border-neutral-300 bg-white;
+  box-shadow: 0 1px 2px color-mix(in srgb, var(--color-black) 6%, transparent);
+}
+
+/*
+ * Botón principal: va fijo abajo, a lo ancho y al alcance del pulgar. Deshabilitado dice qué falta,
+ * así que en vez de transparentarse pasa a gris sólido y se sigue leyendo
+ */
+@utility campo-btn-primary {
+  @apply interactive flex min-h-14 w-full items-center justify-center gap-2 rounded-control bg-brand-700 px-5 text-lg font-semibold text-white hover:bg-brand-800;
+
+  &:disabled {
+    @apply bg-neutral-200 text-neutral-700 opacity-100;
+  }
+}
+
+/* Botón secundario de pantalla completa: mismo tamaño que el principal, sin relleno */
+@utility campo-btn-secondary {
+  @apply interactive flex min-h-14 w-full items-center justify-center gap-2 rounded-control border-2 border-neutral-300 bg-white px-5 text-lg font-semibold text-black hover:border-neutral-400;
+}
+
+/* Opción grande que se elige con un toque (tipo de revisión) */
+@utility campo-option {
+  @apply interactive campo-card flex min-h-18 w-full items-center gap-4 px-4 py-3 text-left hover:border-brand-700;
+}
