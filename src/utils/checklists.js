@@ -1,4 +1,4 @@
-import { ClipboardCheck, ClipboardList, Truck, Undo2, Wrench } from 'lucide-react'
+import { Check, ClipboardCheck, ClipboardList, Minus, Truck, Undo2, Wrench, X } from 'lucide-react'
 import { formatHoras } from './equipos'
 
 /*
@@ -64,7 +64,42 @@ export function validarHoras(valor, actuales) {
   return { estado: 'ok', horas, salto: actuales == null ? 0 : horas - actuales }
 }
 
-// Lo que el mecánico va cargando, con la forma que después pide el POST del checklist
+/*
+ * Estados de un ítem, con el valor que espera el back. En pantalla llevan color, ícono y texto: el estado
+ * no depende solo del color
+ */
+export const ESTADOS_ITEM = Object.freeze([
+  { valor: 'NORMAL', etiqueta: 'Normal', icono: Check },
+  { valor: 'ANORMAL', etiqueta: 'Anormal', icono: X },
+  { valor: 'NO_APLICA', etiqueta: 'No aplica', icono: Minus },
+])
+
+const VALORES_ESTADO = new Set(ESTADOS_ITEM.map(({ valor }) => valor))
+
+// Estado respondido de un ítem, o null si falta (un valor raro que vuelva del borrador cuenta como pendiente)
+export function getEstadoItem(respuestas, itemId) {
+  const estado = respuestas[itemId]
+  return VALORES_ESTADO.has(estado) ? estado : null
+}
+
+// En entrega y devolución hay ítems que no corresponden a todos los equipos: ahí se pueden marcar en bloque como No aplica
+const TIPOS_CON_NO_APLICA_MASIVO = new Set(['ENTREGA', 'DEVOLUCION'])
+
+export function permiteNoAplicaMasivo(tipo) {
+  return TIPOS_CON_NO_APLICA_MASIVO.has(tipo)
+}
+
+// Respuestas con los ítems pendientes marcados con `estado`; lo que ya estaba respondido no cambia
+export function marcarPendientes(respuestas, items, estado) {
+  const nuevas = { ...respuestas }
+  items.forEach(({ id }) => {
+    if (!getEstadoItem(respuestas, id)) nuevas[id] = estado
+  })
+  return nuevas
+}
+
+// Lo que el mecánico va cargando, con la forma que después pide el POST del checklist.
+// `respuestas` es { [item.id]: estado }; al enviar se pasa a la lista de { plantilla_item_id, estado }
 export const DATOS_CHECKLIST_INICIALES = Object.freeze({
   horas: '',
   respuestas: {},

@@ -37,6 +37,14 @@
   --color-neutral-900: #18181b;
   --color-neutral-950: #0f0f10;
 
+  /*
+   * Verde de estado: solo para "Normal" en los ítems del checklist de campo, donde el estado lleva color,
+   * ícono y texto. No es un acento: las acciones y lo activo siguen en rojo. ok-700 da AA sobre blanco y con texto blanco
+   */
+  --color-ok-50: #f0fdf4;
+  --color-ok-200: #bbf7d0;
+  --color-ok-700: #15803d;
+
   /* Tipografía del sistema Apple */
   --font-sans: -apple-system, BlinkMacSystemFont, 'SF Pro Display', Inter, system-ui, sans-serif;
 
@@ -357,7 +365,9 @@
 @utility campo-btn-primary {
   @apply interactive flex min-h-14 w-full items-center justify-center gap-2 rounded-control bg-brand-700 px-5 text-lg font-semibold text-white hover:bg-brand-800;
 
-  &:disabled {
+  /* Incompleto se ve igual que deshabilitado, pero se puede tocar: lleva a lo que falta */
+  &:disabled,
+  &[data-incompleto] {
     @apply bg-neutral-200 text-neutral-700 opacity-100;
   }
 }
@@ -370,6 +380,60 @@
 /* Opción grande que se elige con un toque (tipo de revisión) */
 @utility campo-option {
   @apply interactive campo-card flex min-h-18 w-full items-center gap-4 px-4 py-3 text-left hover:border-brand-700;
+}
+
+/*
+ * Tarjeta de un ítem del checklist. Pendiente es blanca; respondida toma un tinte leve de su estado, para
+ * distinguir de un vistazo lo que falta. `data-resaltado` la marca cuando el botón principal lleva hasta ella
+ */
+@utility campo-item {
+  @apply campo-card ease-glass flex flex-col gap-3 p-3 transition-colors duration-200;
+
+  &[data-estado='NORMAL'] {
+    @apply border-ok-200 bg-ok-50;
+  }
+  &[data-estado='ANORMAL'] {
+    @apply border-brand-200 bg-brand-50;
+  }
+  &[data-estado='NO_APLICA'] {
+    @apply bg-neutral-100;
+  }
+  &[data-resaltado] {
+    outline: 3px solid var(--color-brand-700);
+    outline-offset: 2px;
+  }
+}
+
+/*
+ * Botón de estado de un ítem (Normal, Anormal, No aplica): ícono arriba y texto abajo, así los tres entran
+ * en una línea a 360px. Sin elegir es blanco con el ícono en el color del estado; elegido se rellena con ese color
+ */
+@utility campo-estado {
+  @apply interactive flex min-h-16 min-w-0 flex-1 flex-col items-center justify-center gap-1 rounded-control border-2 border-neutral-300 bg-white px-1 py-2 font-semibold whitespace-nowrap text-black hover:border-neutral-400;
+
+  &[data-estado='NORMAL'] {
+    --estado: var(--color-ok-700);
+  }
+  &[data-estado='ANORMAL'] {
+    --estado: var(--color-brand-700);
+  }
+  &[data-estado='NO_APLICA'] {
+    --estado: var(--color-neutral-700);
+  }
+
+  & > svg {
+    color: var(--estado);
+  }
+
+  &[aria-pressed='true'] {
+    border-color: var(--estado);
+    background: var(--estado);
+    color: var(--color-white);
+
+    & > svg {
+      color: var(--color-white);
+    }
+  }
 }
 
 /*
