@@ -383,6 +383,18 @@
 }
 
 /*
+ * Lugar de una foto sin cargar: un área grande que se toca entera para abrir la cámara, con borde punteado
+ * para que se lea como "acá falta algo". Mientras se procesa queda deshabilitado, pero se sigue leyendo
+ */
+@utility campo-foto {
+  @apply interactive campo-card flex min-h-48 w-full flex-col items-center justify-center gap-2 border-2 border-dashed border-neutral-500 p-4 text-center hover:border-brand-700;
+
+  &:disabled {
+    @apply opacity-100;
+  }
+}
+
+/*
  * Tarjeta de un ítem del checklist. Pendiente es blanca; respondida toma un tinte leve de su estado, para
  * distinguir de un vistazo lo que falta. `data-resaltado` la marca cuando el botón principal lleva hasta ella
  */

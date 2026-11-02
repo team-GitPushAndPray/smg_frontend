@@ -5,13 +5,14 @@ import {
   getAyudaObservaciones,
   getItemsAnormales,
   LARGO_NOMBRE,
+  MAX_FOTOS,
   MAX_OBSERVACIONES,
   textoAvisoAnormales,
   validarNombre,
 } from '../../../utils/checklists'
 import FieldScreen from '../FieldScreen'
+import FotoSlot from '../FotoSlot'
 import MainAction from '../MainAction'
-import ProvisionalNote from './ProvisionalNote'
 
 /*
  * Nombre o apellido del responsable: con mayúscula automática y el teclado de nombres. "Muy corto" se muestra al
@@ -72,13 +73,19 @@ function textoFaltaResponsable(nombreOk, apellidoOk) {
   return nombreOk ? 'Completá tu apellido' : 'Completá tu nombre'
 }
 
+// Qué falta para enviar, para el botón principal deshabilitado: primero la foto, que está antes en la pantalla
+function textoFalta({ fotoOk, nombreOk, apellidoOk }) {
+  if (!fotoOk) return 'Sacá la foto del equipo'
+  return textoFaltaResponsable(nombreOk, apellidoOk)
+}
+
 /*
  * Último paso: observaciones (opcionales), fotos y quién hizo la revisión. Si hay ítems Anormales y las observaciones
- * están vacías, un aviso pide contar qué les pasa, sin frenar. Sin nombre y apellido no se avanza.
- * Todo va a los datos del asistente y, con ellos, al borrador
+ * están vacías, un aviso pide contar qué les pasa, sin frenar. Sin la foto o sin nombre y apellido no se avanza.
+ * Los datos van al borrador; las fotos quedan solo en memoria (si se retoma un borrador, se piden de nuevo)
  */
 export default function CierreStep({ header }) {
-  const { opcion, datos, actualizarDatos } = useChecklist()
+  const { opcion, datos, actualizarDatos, fotos, fotosPerdidas, ponerFoto, quitarFoto } = useChecklist()
   const observacionesId = useId()
   const ayudaId = useId()
   const contadorId = useId()
@@ -89,13 +96,14 @@ export default function CierreStep({ header }) {
   const mostrarAviso = anormales.length > 0 && datos.observaciones.trim() === ''
   const nombreOk = validarNombre(datos.nombre) === 'ok'
   const apellidoOk = validarNombre(datos.apellido) === 'ok'
+  const fotoOk = fotos.length > 0
 
-  // Provisorio: la revisión y el envío llegan en su issue; las fotos (F-27) también van a ser obligatorias
+  // Provisorio: la revisión y el envío llegan en su issue
   const accion =
-    nombreOk && apellidoOk ? (
+    fotoOk && nombreOk && apellidoOk ? (
       <MainAction label="Revisar y enviar" icon={ChevronRight} />
     ) : (
-      <MainAction label={textoFaltaResponsable(nombreOk, apellidoOk)} disabled />
+      <MainAction label={textoFalta({ fotoOk, nombreOk, apellidoOk })} disabled />
     )
 
   return (
@@ -130,8 +138,18 @@ export default function CierreStep({ header }) {
         )}
       </section>
 
-      <section aria-label="Fotos">
-        <ProvisionalNote>Acá vas a sumar las fotos.</ProvisionalNote>
+      {/* Un lugar por foto posible: con una foto, el de agregar desaparece y queda "Sacar otra" */}
+      <section aria-label="Fotos" className="flex flex-col gap-4">
+        {Array.from({ length: MAX_FOTOS }, (_, indice) => (
+          <FotoSlot
+            key={indice}
+            foto={fotos[indice] ?? null}
+            nombre={`foto-${indice + 1}.jpg`}
+            perdida={fotosPerdidas}
+            onFoto={(foto) => ponerFoto(indice, foto)}
+            onQuitar={() => quitarFoto(indice)}
+          />
+        ))}
       </section>
 
       <section aria-labelledby={responsableId} className="flex flex-col gap-3">
