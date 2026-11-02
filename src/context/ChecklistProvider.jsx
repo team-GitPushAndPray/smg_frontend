@@ -5,15 +5,17 @@ import {
   getPasosChecklist,
   guardarBorrador,
   leerBorrador,
+  leerResponsable,
 } from '../utils/checklists'
 import { ChecklistContext } from './ChecklistContext'
 
 /*
  * Estado del asistente: el tipo elegido, el paso actual (por su id: 'inicio', 'horas', 'items' o 'cierre')
- * y los datos cargados. `borrador` es el que quedó sin terminar, mientras se decide si seguirlo o empezar de nuevo
+ * y los datos cargados. `borrador` es el que quedó sin terminar, mientras se decide si seguirlo o empezar de nuevo.
+ * `datosIniciales` son los de un checklist nuevo: vacíos, salvo el responsable recordado en el celular
  */
-function crearEstado({ pasos, borrador }) {
-  return { pasos, borrador, tipo: null, paso: 'inicio', datos: DATOS_CHECKLIST_INICIALES }
+function crearEstado({ pasos, borrador, datosIniciales }) {
+  return { pasos, borrador, datosIniciales, tipo: null, paso: 'inicio', datos: datosIniciales }
 }
 
 function reducer(state, action) {
@@ -25,13 +27,13 @@ function reducer(state, action) {
       return { ...state, borrador: null, tipo, datos, paso: state.pasos.includes(paso) ? paso : 'inicio' }
     }
     case 'descartar-borrador':
-      return crearEstado({ pasos: state.pasos, borrador: null })
+      return crearEstado({ ...state, borrador: null })
     case 'elegir-tipo':
       // Volver a elegir el mismo tipo conserva lo cargado; otro tipo empieza de cero
       return {
         ...state,
         tipo: action.tipo,
-        datos: action.tipo === state.tipo ? state.datos : DATOS_CHECKLIST_INICIALES,
+        datos: action.tipo === state.tipo ? state.datos : state.datosIniciales,
         paso: state.pasos[1],
       }
     case 'avanzar':
@@ -48,7 +50,8 @@ function reducer(state, action) {
 /*
  * Flujo de un checklist de campo, compartido entre los pasos del asistente. Recibe el formulario que devolvió
  * el back para el token del QR. Cada cambio se guarda como borrador en localStorage y, si al abrir el link
- * había uno sin terminar, se ofrece seguirlo. Con un checklist empezado, cerrar o recargar la pestaña pide confirmación.
+ * había uno sin terminar, se ofrece seguirlo. Un checklist nuevo arranca con el nombre y apellido del último envío.
+ * Con un checklist empezado, cerrar o recargar la pestaña pide confirmación.
  * Montarlo con key={token}: el estado es de un solo equipo
  */
 export default function ChecklistProvider({ token, formulario, children }) {
@@ -56,7 +59,11 @@ export default function ChecklistProvider({ token, formulario, children }) {
   const tipos = useMemo(() => opciones.map(({ tipo }) => tipo), [opciones])
 
   const [state, dispatch] = useReducer(reducer, null, () =>
-    crearEstado({ pasos: getPasosChecklist(equipo.esMaquina), borrador: leerBorrador(token, tipos) }),
+    crearEstado({
+      pasos: getPasosChecklist(equipo.esMaquina),
+      borrador: leerBorrador(token, tipos),
+      datosIniciales: { ...DATOS_CHECKLIST_INICIALES, ...leerResponsable() },
+    }),
   )
   const { pasos, borrador, tipo, paso, datos } = state
 
