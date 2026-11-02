@@ -129,6 +129,19 @@ export function validarNombre(valor) {
   return 'ok'
 }
 
+/*
+ * Fotos de evidencia del checklist. El back acepta de 1 a 4 de hasta 1,5 MB, pero por ahora se pide una sola:
+ * la pantalla dibuja MAX_FOTOS lugares, así que para habilitar más alcanza con cambiar este número
+ */
+export const MAX_FOTOS = 1
+
+// Una foto de celular pesa de 3 a 6 MB: se achica antes de enviarla (lado mayor de 1280 px, JPEG desde calidad 0,7)
+export const COMPRESION_FOTO = Object.freeze({
+  ladoMayor: 1280,
+  calidades: [0.7, 0.6, 0.5],
+  pesoObjetivo: 400 * 1024,
+})
+
 // Lo que el mecánico va cargando, con la forma que después pide el POST del checklist.
 // `respuestas` es { [item.id]: estado }; al enviar se pasa a la lista de { plantilla_item_id, estado }
 export const DATOS_CHECKLIST_INICIALES = Object.freeze({
@@ -141,7 +154,8 @@ export const DATOS_CHECKLIST_INICIALES = Object.freeze({
 
 /*
  * Borrador automático en localStorage, uno por token y tipo: checklist:<token>:<tipo>.
- * Hay uno solo por equipo a la vez: al guardar el de un tipo se borran los de los otros
+ * Hay uno solo por equipo a la vez: al guardar el de un tipo se borran los de los otros.
+ * Las fotos no van (no entran en localStorage): solo `conFotos`, si había alguna, para pedir que las vuelva a sacar
  */
 const VERSION_BORRADOR = 1
 
@@ -167,7 +181,7 @@ function borrarClave(clave) {
 
 /*
  * Borrador más reciente de un equipo, entre los tipos que hoy le ofrece el back. Uno con otra versión o
- * dañado se descarta. Devuelve { tipo, paso, datos, actualizadoEn } o null
+ * dañado se descarta. Devuelve { tipo, paso, datos, conFotos, actualizadoEn } o null
  */
 export function leerBorrador(token, tipos) {
   let elegido = null
@@ -180,13 +194,13 @@ export function leerBorrador(token, tipos) {
   }
   if (!elegido) return null
 
-  const { tipo, paso, datos, actualizadoEn } = elegido
-  return { tipo, paso, datos: { ...DATOS_CHECKLIST_INICIALES, ...datos }, actualizadoEn }
+  const { tipo, paso, datos, conFotos, actualizadoEn } = elegido
+  return { tipo, paso, datos: { ...DATOS_CHECKLIST_INICIALES, ...datos }, conFotos: conFotos === true, actualizadoEn }
 }
 
-export function guardarBorrador(token, tipos, { tipo, paso, datos }) {
+export function guardarBorrador(token, tipos, { tipo, paso, datos, conFotos }) {
   try {
-    const borrador = { version: VERSION_BORRADOR, tipo, paso, datos, actualizadoEn: new Date().toISOString() }
+    const borrador = { version: VERSION_BORRADOR, tipo, paso, datos, conFotos, actualizadoEn: new Date().toISOString() }
     localStorage.setItem(claveBorrador(token, tipo), JSON.stringify(borrador))
   } catch {
     // Sin acceso a localStorage (o sin espacio): el checklist sigue, pero sin borrador
