@@ -98,6 +98,37 @@ export function marcarPendientes(respuestas, items, estado) {
   return nuevas
 }
 
+// Ítems marcados como Anormal, en el orden del back: el paso de cierre pide contar qué les pasa
+export function getItemsAnormales(items, respuestas) {
+  return items.filter(({ id }) => getEstadoItem(respuestas, id) === 'ANORMAL')
+}
+
+// "Marcaste 2 ítems como anormales: Luces delanteras, Aceite hidráulico. Contá qué les pasa."
+export function textoAvisoAnormales(items) {
+  const nombres = items.map(({ nombre }) => nombre).join(', ')
+  return items.length === 1
+    ? `Marcaste 1 ítem como anormal: ${nombres}. Contá qué le pasa.`
+    : `Marcaste ${items.length} ítems como anormales: ${nombres}. Contá qué les pasa.`
+}
+
+export const MAX_OBSERVACIONES = 1000
+
+// Ayuda de las observaciones: en mantenimiento son las tareas; en los demás, algo para destacar
+export function getAyudaObservaciones(tipo) {
+  return tipo === 'MANTENIMIENTO' ? 'Tareas realizadas o a realizar, una por línea' : '¿Algo para destacar?'
+}
+
+export const LARGO_NOMBRE = Object.freeze({ min: 2, max: 60 })
+
+// Nombre o apellido del responsable: 'vacio', 'corto', 'largo' u 'ok' (sin contar los espacios de los bordes)
+export function validarNombre(valor) {
+  const largo = valor.trim().length
+  if (largo === 0) return 'vacio'
+  if (largo < LARGO_NOMBRE.min) return 'corto'
+  if (largo > LARGO_NOMBRE.max) return 'largo'
+  return 'ok'
+}
+
 // Lo que el mecánico va cargando, con la forma que después pide el POST del checklist.
 // `respuestas` es { [item.id]: estado }; al enviar se pasa a la lista de { plantilla_item_id, estado }
 export const DATOS_CHECKLIST_INICIALES = Object.freeze({
@@ -165,6 +196,27 @@ export function guardarBorrador(token, tipos, { tipo, paso, datos }) {
 
 export function borrarBorradores(token, tipos) {
   tipos.forEach((tipo) => borrarClave(claveBorrador(token, tipo)))
+}
+
+/*
+ * Responsable recordado en el celular (checklist:responsable): el mismo mecánico usa el mismo celular, así que
+ * después de un envío exitoso se guardan su nombre y apellido y se precargan en el próximo checklist, de cualquier equipo
+ */
+const CLAVE_RESPONSABLE = 'checklist:responsable'
+
+// { nombre, apellido } o null si no hay uno guardado (o no sirve)
+export function leerResponsable() {
+  const responsable = leerClave(CLAVE_RESPONSABLE)
+  const esValido = typeof responsable?.nombre === 'string' && typeof responsable?.apellido === 'string'
+  return esValido ? { nombre: responsable.nombre, apellido: responsable.apellido } : null
+}
+
+export function guardarResponsable({ nombre, apellido }) {
+  try {
+    localStorage.setItem(CLAVE_RESPONSABLE, JSON.stringify({ nombre: nombre.trim(), apellido: apellido.trim() }))
+  } catch {
+    // Sin acceso a localStorage: la próxima vez se vuelve a escribir
+  }
 }
 
 const hora = new Intl.DateTimeFormat('es-AR', { hour: '2-digit', minute: '2-digit', hourCycle: 'h23' })
