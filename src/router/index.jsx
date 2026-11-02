@@ -10,6 +10,7 @@ import MachineFormPage from '../pages/admin/MachineFormPage'
 import MachinesPage from '../pages/admin/MachinesPage'
 import RolesPage from '../pages/admin/RolesPage'
 import UsersPage from '../pages/admin/UsersPage'
+import ChecklistPage from '../pages/field/ChecklistPage'
 import FieldHomePage from '../pages/field/FieldHomePage'
 import NotFoundPage from '../pages/NotFoundPage'
 import CatalogPage from '../pages/public/CatalogPage'
@@ -68,10 +69,13 @@ export const router = createBrowserRouter([
       { path: 'catalogo/:id', element: <EquipmentDetailPage /> },
     ],
   },
+  // Módulo de campo: público y sin el layout del portal ni del panel. /c/:token es lo que abre el QR de cada equipo
   {
-    path: 'campo',
     element: <FieldLayout />,
-    children: [{ index: true, element: <FieldHomePage /> }],
+    children: [
+      { path: 'campo', element: <FieldHomePage /> },
+      { path: 'c/:token', element: <ChecklistPage /> },
+    ],
   },
   // El login va fuera del panel: pantalla completa, sin sidebar ni topbar
   { path: 'admin/login', element: <LoginPage /> },
