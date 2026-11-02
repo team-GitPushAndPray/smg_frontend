@@ -1,4 +1,5 @@
 import { ClipboardCheck, ClipboardList, Truck, Undo2, Wrench } from 'lucide-react'
+import { formatHoras } from './equipos'
 
 /*
  * Ícono de cada tipo de checklist, con la clave tal cual la manda el back. El título y qué opciones se muestran
@@ -44,6 +45,23 @@ export function adaptarFormularioChecklist(data) {
  */
 export function getPasosChecklist(esMaquina) {
   return esMaquina ? ['inicio', 'horas', 'items', 'cierre'] : ['inicio', 'items', 'cierre']
+}
+
+// Salto desde la última carga a partir del cual se pregunta si las horas están bien (frena un dígito de más)
+export const SALTO_HORAS_A_CONFIRMAR = 200
+
+/*
+ * Horas que se escribieron en el paso de horas, contra las actuales del equipo (null si nunca se cargaron:
+ * entonces no hay mínimo ni salto). `estado` es 'vacio', 'no-entero', 'menor' u 'ok'; con 'ok', `horas` es
+ * el número y `salto` cuánto supera a las actuales
+ */
+export function validarHoras(valor, actuales) {
+  const texto = valor.trim()
+  if (texto === '') return { estado: 'vacio' }
+  if (!/^\d+$/.test(texto)) return { estado: 'no-entero' }
+  const horas = Number(texto)
+  if (actuales != null && horas < actuales) return { estado: 'menor' }
+  return { estado: 'ok', horas, salto: actuales == null ? 0 : horas - actuales }
 }
 
 // Lo que el mecánico va cargando, con la forma que después pide el POST del checklist
@@ -123,4 +141,12 @@ export function formatMomentoBorrador(iso) {
   if (Number.isNaN(date.getTime())) return null
   const esHoy = date.toDateString() === new Date().toDateString()
   return `${esHoy ? 'hoy' : `el ${dia.format(date)}`} a las ${hora.format(date)}`
+}
+
+// Referencia del paso de horas: "2.140 hs (24/10)", sin la fecha si no vino o no sirve. null si nunca se cargaron
+export function formatUltimaCargaHoras({ horasMotorActual, horasActualizadasEn }) {
+  if (horasMotorActual == null) return null
+  const date = new Date(horasActualizadasEn)
+  const fecha = horasActualizadasEn && !Number.isNaN(date.getTime()) ? ` (${dia.format(date)})` : ''
+  return `${formatHoras(horasMotorActual)} hs${fecha}`
 }
