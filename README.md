@@ -12,7 +12,7 @@ sgm_frontend/
 └── src/
     ├── main.jsx                # Punto de entrada: monta <App /> en el DOM
     ├── App.jsx                 # Componente raíz: monta el tema, la sesión y el router
-    ├── index.css               # Tailwind, paleta, tokens de vidrio, fondo global, clases .glass / .glass-strong y botones; clases sólidas del módulo de campo (campo-*)
+    ├── index.css               # Tailwind, paleta, tokens de vidrio, fondo global, clases .glass / .glass-strong y botones; clases sólidas del módulo de campo (campo-*) y el verde de estado (ok-*), solo para "Normal" en los ítems del checklist
     │
     ├── config/                 # Configuración global
     │   ├── env.js              # Lee y expone las variables de entorno (API_URL)
@@ -115,14 +115,15 @@ sgm_frontend/
     │   ├── field/              # Componentes del módulo de campo: sin vidrio, fondos sólidos, 16px mínimo y botones de 48px o más
     │   │   ├── FieldScreen.jsx     # Pantalla base: encabezado fijo arriba, contenido y acción principal fija abajo
     │   │   ├── FieldMessage.jsx    # Aviso de pantalla completa (QR no válido, sin conexión) sin salidas a otras partes del sistema
-    │   │   ├── MainAction.jsx      # Botón principal de un paso: deshabilitado dice qué falta; bloqueado mientras se envía
+    │   │   ├── MainAction.jsx      # Botón principal de un paso: deshabilitado dice qué falta; incompleto se ve igual pero lleva a lo que falta; bloqueado mientras se envía
     │   │   ├── FieldDialog.jsx     # Pregunta que frena el flujo (dialog nativo, sale desde abajo): botones grandes uno debajo del otro
     │   │   ├── WizardHeader.jsx    # "Atrás", "Paso X de N" y barra de progreso
     │   │   ├── ChecklistWizard.jsx # Asistente: un paso por pantalla (4 en máquinas, 3 en aditamentos), primero ofrece seguir el borrador
     │   │   ├── DraftPrompt.jsx     # "Tenés un checklist sin terminar": seguir donde quedaste o empezar de nuevo
     │   │   ├── ChecklistStart.jsx  # Paso 1: el equipo y un botón por cada opción que manda el back, y su versión de carga
     │   │   ├── EquipoSummary.jsx   # Encabezado del equipo: código interno, categoría y marca, y horas actuales si es máquina
-    │   │   └── steps/              # Pasos del asistente: HorasStep (horas del horómetro: no menos que las actuales y confirmación si suben más de 200 hs); ItemsStep, CierreStep y ProvisionalNote, provisorios hasta sus issues
+    │   │   ├── ItemCard.jsx        # Un ítem del checklist: nombre y los tres estados (✓ Normal, ✕ Anormal, — No aplica); respondida cambia de fondo
+    │   │   └── steps/              # Pasos del asistente: HorasStep (horas del horómetro: no menos que las actuales y confirmación si suben más de 200 hs); ItemsStep (lista de ítems con contador fijo, marcado en bloque de los pendientes y botón que lleva al primero que falta); CierreStep y ProvisionalNote, provisorios hasta su issue
     │   └── public/             # Componentes del portal público
     │       ├── NavBar.jsx          # Header con anclas a las secciones, enlace al catálogo, "Ir al panel" con sesión y menú de celular
     │       ├── Footer.jsx          # Footer con el acceso discreto al login
@@ -158,7 +159,7 @@ sgm_frontend/
         ├── vendedores.js       # Nombre del cargo, iniciales y enlace de WhatsApp de un vendedor
         ├── usuarios.js         # Normalización de los módulos (del usuario y de cada rol), nombre del rol, nombre completo, último acceso y error genérico
         ├── roles.js            # Niveles de acceso de la matriz (Sin acceso, Ver, Editar) y armado de la lista completa de módulos de un rol
-        └── checklists.js       # Formulario de checklist con los nombres del front, ícono por tipo, pasos según máquina o aditamento, validación de las horas del horómetro y borrador en localStorage (checklist:<token>:<tipo>)
+        └── checklists.js       # Formulario de checklist con los nombres del front, ícono por tipo, pasos según máquina o aditamento, validación de las horas del horómetro, estados de los ítems y marcado en bloque de los pendientes, y borrador en localStorage (checklist:<token>:<tipo>)
 ```
 
 ## Convenciones
