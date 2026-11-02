@@ -5,11 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>SGM · Sistema Integral de Gestión de Maquinaria</title>
     <script>
-      // Aplica el tema antes del primer render para evitar el parpadeo
+      // Aplica el tema antes del primer render para evitar el parpadeo.
+      // El módulo de campo (/campo y /c/:token) va siempre en claro: mismo criterio que ThemeProvider
       try {
         const tema = localStorage.getItem('tema')
         const prefiereOscuro = window.matchMedia('(prefers-color-scheme: dark)').matches
-        if (tema === 'oscuro' || (!tema && prefiereOscuro)) {
+        const esRutaDeCampo = /^\/(campo|c)(\/|$)/.test(window.location.pathname)
+        if (!esRutaDeCampo && (tema === 'oscuro' || (!tema && prefiereOscuro))) {
           document.documentElement.classList.add('dark')
         }
       } catch {

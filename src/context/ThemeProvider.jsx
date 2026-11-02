@@ -4,6 +4,9 @@ import { ThemeContext } from './ThemeContext'
 // Misma clave que usa el script de index.html para aplicar el tema antes del primer render
 const STORAGE_KEY = 'tema'
 
+// Rutas del módulo de campo: se usan al sol, así que van siempre en modo claro. Mismo criterio que index.html
+const RUTA_CAMPO = /^\/(campo|c)(\/|$)/
+
 function readStoredTheme() {
   try {
     return localStorage.getItem(STORAGE_KEY)
@@ -12,13 +15,21 @@ function readStoredTheme() {
   }
 }
 
+// Preferencia del usuario: la elegida con el botón o, si no eligió, la del sistema operativo
+function prefersDark() {
+  const stored = readStoredTheme()
+  if (stored) return stored === 'oscuro'
+  return window.matchMedia('(prefers-color-scheme: dark)').matches
+}
+
 export default function ThemeProvider({ children }) {
-  // El script de index.html ya dejó (o no) la clase .dark en <html>
-  const [isDark, setIsDark] = useState(() => document.documentElement.classList.contains('dark'))
+  const [isDark, setIsDark] = useState(prefersDark)
+  // Lo prende FieldLayout mientras está montado; arranca prendido si la página se abrió en una ruta de campo
+  const [forcedLight, setForcedLight] = useState(() => RUTA_CAMPO.test(window.location.pathname))
 
   useEffect(() => {
-    document.documentElement.classList.toggle('dark', isDark)
-  }, [isDark])
+    document.documentElement.classList.toggle('dark', isDark && !forcedLight)
+  }, [isDark, forcedLight])
 
   // Mientras el usuario no elija, el tema sigue al del sistema operativo
   useEffect(() => {
@@ -40,5 +51,7 @@ export default function ThemeProvider({ children }) {
     }
   }
 
-  return <ThemeContext.Provider value={{ isDark, toggleTheme }}>{children}</ThemeContext.Provider>
+  return (
+    <ThemeContext.Provider value={{ isDark, toggleTheme, setForcedLight }}>{children}</ThemeContext.Provider>
+  )
 }
