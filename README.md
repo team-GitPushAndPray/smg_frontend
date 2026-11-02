@@ -12,7 +12,7 @@ sgm_frontend/
 └── src/
     ├── main.jsx                # Punto de entrada: monta <App /> en el DOM
     ├── App.jsx                 # Componente raíz: monta el tema, la sesión y el router
-    ├── index.css               # Tailwind, paleta, tokens de vidrio, fondo global, clases .glass / .glass-strong y botones
+    ├── index.css               # Tailwind, paleta, tokens de vidrio, fondo global, clases .glass / .glass-strong y botones; clases sólidas del módulo de campo (campo-*)
     │
     ├── config/                 # Configuración global
     │   ├── env.js              # Lee y expone las variables de entorno (API_URL)
@@ -25,11 +25,13 @@ sgm_frontend/
     │
     ├── context/                # Estado global
     │   ├── ThemeContext.js     # Contexto del tema claro/oscuro
-    │   ├── ThemeProvider.jsx   # Aplica el tema y recuerda la elección en localStorage
+    │   ├── ThemeProvider.jsx   # Aplica el tema y recuerda la elección en localStorage; en el módulo de campo fuerza el modo claro (setForcedLight)
     │   ├── AuthContext.js      # Contexto de la sesión del panel
     │   ├── AuthProvider.jsx    # Login, logout, restauración de la sesión con /auth/me, permisos por módulo y aviso ante un 403 de la API
     │   ├── ToastContext.js     # Contexto de los avisos (toasts)
     │   ├── ToastProvider.jsx   # Pila de avisos no bloqueantes de toda la app (showToast: error, info o exito)
+    │   ├── ChecklistContext.js # Contexto del checklist de campo
+    │   ├── ChecklistProvider.jsx # Estado del asistente del checklist (reducer): tipo, paso y datos, borrador automático en localStorage y confirmación al cerrar la pestaña
     │   ├── VendedoresContext.js  # Contexto del equipo comercial
     │   └── VendedoresProvider.jsx # Carga el equipo comercial una vez para la home, el detalle de equipo y el navbar
     │
@@ -50,12 +52,15 @@ sgm_frontend/
     │   ├── useFiltrosInventario.js # Filtros y página del inventario de máquinas guardados en la URL (sobreviven a recargar y a volver atrás)
     │   ├── useEquipos.js       # Carga una página del inventario según los filtros, conservando la anterior mientras llega la nueva, con reintento
     │   ├── useCategorias.js    # Carga las categorías de equipo para filtros y formularios, con reintento
+    │   ├── useFormularioChecklist.js # Carga el formulario de checklist por el token del QR: carga, QR no válido (404), sin conexión (con reintento solo al volver la red) y error
+    │   ├── useChecklist.js     # Acceso al estado del asistente del checklist (equipo, opciones, paso, datos y acciones)
+    │   ├── useAtrasDelFlujo.js # El botón Atrás del celular retrocede un paso del asistente en vez de salir de la página
     │   └── useRoles.js         # Carga roles y módulos juntos (filas y columnas de la matriz), con reintento, refresco y actualización de un rol
     │
     ├── layouts/                # Estructura común de cada módulo (navbar, sidebar, footer)
     │   ├── PublicLayout.jsx    # Portal público: header + footer
     │   ├── AdminLayout.jsx     # Panel de gestión (/admin): sidebar + topbar + contenido (siempre con sesión)
-    │   └── FieldLayout.jsx     # Módulo de campo (/campo), mobile-first
+    │   └── FieldLayout.jsx     # Módulo de campo (/campo y /c/:token): sin navbar ni footer, fondo sólido, siempre en modo claro, mobile-first
     │
     ├── pages/                  # Una página por ruta, separadas por módulo
     │   ├── NotFoundPage.jsx    # Página 404 compartida
@@ -68,6 +73,9 @@ sgm_frontend/
     │   │   ├── MachineFormPage.jsx # /admin/maquinas/nuevo y /admin/maquinas/:id/editar (requieren editar Máquinas): alta de equipo con aviso y paso al detalle del creado; edición precargada que envía solo los campos modificados (PATCH parcial), bloqueada para equipos dados de baja
     │   │   ├── UsersPage.jsx     # /admin/configuracion/usuarios: ABM de usuarios (tabla, búsqueda, filtro por estado, alta, edición, baja y reactivación); solo lectura con Configuración en "Ver"
     │   │   └── RolesPage.jsx     # /admin/configuracion/roles: matriz de permisos roles × módulos, alta y edición de roles, activación y desactivación; solo lectura con Configuración en "Ver"
+    │   ├── field/              # Módulo de campo (QR)
+    │   │   ├── FieldHomePage.jsx # /campo: pantalla de bienvenida del módulo
+    │   │   └── ChecklistPage.jsx # /c/:token: lo que abre el QR del equipo (pública, sin sesión): esqueleto de carga, QR no válido, sin conexión con "Reintentar" y el asistente del checklist
     │   └── public/
     │       ├── HomePage.jsx    # Home con las secciones institucionales y el equipo comercial
     │       ├── CatalogPage.jsx # Catálogo: tarjetas por equipo, búsqueda y filtro por tipo en tiempo real
@@ -104,6 +112,16 @@ sgm_frontend/
     │   │   ├── EquipoDetail.jsx    # Detalle de un equipo del panel: encabezado con "Editar" y el ⋯ de acciones, aviso de dado de baja, datos generales y datos de máquina, y su versión de carga
     │   │   ├── EquipoForm.jsx      # Formulario de equipo (alta y, precargado, edición): tipo máquina/aditamento, datos generales y de máquina, validaciones del DTO y errores del back (409 en el código interno, 400 arriba); en la edición, tipo fijo, sin horas de motor y sin vaciar la ubicación ni la descripción ya cargadas. Incluye su versión de carga
     │   │   └── Pagination.jsx      # Paginación de un listado: rango mostrado, total y botones de página (anterior/siguiente en celular)
+    │   ├── field/              # Componentes del módulo de campo: sin vidrio, fondos sólidos, 16px mínimo y botones de 48px o más
+    │   │   ├── FieldScreen.jsx     # Pantalla base: encabezado fijo arriba, contenido y acción principal fija abajo
+    │   │   ├── FieldMessage.jsx    # Aviso de pantalla completa (QR no válido, sin conexión) sin salidas a otras partes del sistema
+    │   │   ├── MainAction.jsx      # Botón principal de un paso: deshabilitado dice qué falta; bloqueado mientras se envía
+    │   │   ├── WizardHeader.jsx    # "Atrás", "Paso X de N" y barra de progreso
+    │   │   ├── ChecklistWizard.jsx # Asistente: un paso por pantalla (4 en máquinas, 3 en aditamentos), primero ofrece seguir el borrador
+    │   │   ├── DraftPrompt.jsx     # "Tenés un checklist sin terminar": seguir donde quedaste o empezar de nuevo
+    │   │   ├── ChecklistStart.jsx  # Paso 1: el equipo y un botón por cada opción que manda el back, y su versión de carga
+    │   │   ├── EquipoSummary.jsx   # Encabezado del equipo: código interno, categoría y marca, y horas actuales si es máquina
+    │   │   └── steps/              # Pasos del asistente (provisorios hasta sus issues): HorasStep, ItemsStep, CierreStep y ProvisionalNote
     │   └── public/             # Componentes del portal público
     │       ├── NavBar.jsx          # Header con anclas a las secciones, enlace al catálogo, "Ir al panel" con sesión y menú de celular
     │       ├── Footer.jsx          # Footer con el acceso discreto al login
@@ -130,14 +148,16 @@ sgm_frontend/
     │   ├── usuariosService.js  # ABM de usuarios (GET, POST y PATCH /usuarios, PATCH /usuarios/:id/estado)
     │   ├── rolesService.js     # Roles y permisos: GET /roles, GET /modulos, POST y PATCH /roles, PUT /roles/:id/modulos
     │   ├── equiposService.js   # Equipos del panel: GET /equipos (paginado, con filtros), GET /equipos/:id, POST y PATCH /equipos, PATCH /equipos/:id/horas y /estado, y DELETE /equipos/:id (baja lógica)
-    │   └── categoriasService.js # GET /categorias: categorías de equipo
+    │   ├── categoriasService.js # GET /categorias: categorías de equipo
+    │   └── checklistsService.js # GET /public/checklists/:token (sin sesión): equipo del QR y sus opciones de checklist con los ítems
     │
     └── utils/                  # Funciones auxiliares
         ├── text.js             # Normaliza texto para buscar sin importar mayúsculas ni tildes
         ├── equipos.js          # Datos de un equipo listos para mostrar, WhatsApp de cotización, categorías del listado, tipos, estados (etiqueta, ícono y color, y clave, por clave o etiqueta), nombre del equipo, formato de horas ("Sin registrar" si no hay carga), campos modificados de un equipo (body del PATCH) y mensajes de error del módulo máquinas
         ├── vendedores.js       # Nombre del cargo, iniciales y enlace de WhatsApp de un vendedor
         ├── usuarios.js         # Normalización de los módulos (del usuario y de cada rol), nombre del rol, nombre completo, último acceso y error genérico
-        └── roles.js            # Niveles de acceso de la matriz (Sin acceso, Ver, Editar) y armado de la lista completa de módulos de un rol
+        ├── roles.js            # Niveles de acceso de la matriz (Sin acceso, Ver, Editar) y armado de la lista completa de módulos de un rol
+        └── checklists.js       # Formulario de checklist con los nombres del front, ícono por tipo, pasos según máquina o aditamento y borrador en localStorage (checklist:<token>:<tipo>)
 ```
 
 ## Convenciones
