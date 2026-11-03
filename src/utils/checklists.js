@@ -1,5 +1,6 @@
 import { Check, ClipboardCheck, ClipboardList, Minus, Truck, Undo2, Wrench, X } from 'lucide-react'
 import { formatHoras } from './equipos'
+import { normalizeText } from './text'
 
 /*
  * Ícono de cada tipo de checklist, con la clave tal cual la manda el back. El título y qué opciones se muestran
@@ -40,11 +41,26 @@ export function adaptarFormularioChecklist(data) {
 }
 
 /*
+ * Respuesta 201 del POST del checklist con los nombres del front. `equipo` es su código interno (si el back lo
+ * manda como objeto, se toma de ahí); `horasMotor` es null en los aditamentos
+ */
+export function adaptarResultadoChecklist(data) {
+  const equipo = typeof data?.equipo === 'string' ? data.equipo : (data?.equipo?.codigo_interno ?? null)
+  return {
+    tipo: data?.tipo ?? null,
+    equipo,
+    horasAnteriores: data?.horas_anteriores ?? null,
+    horasMotor: data?.horas_motor ?? null,
+    anormales: data?.resumen?.anormales ?? 0,
+  }
+}
+
+/*
  * Pasos del asistente, en orden. Los aditamentos no tienen motor: no tienen paso de horas.
- * Enviar es la acción del último paso y la confirmación ya no cuenta como paso
+ * La revisión es el último: ahí se envía. La confirmación ("Listo") ya no cuenta como paso
  */
 export function getPasosChecklist(esMaquina) {
-  return esMaquina ? ['inicio', 'horas', 'items', 'cierre'] : ['inicio', 'items', 'cierre']
+  return esMaquina ? ['inicio', 'horas', 'items', 'cierre', 'revision'] : ['inicio', 'items', 'cierre', 'revision']
 }
 
 // Salto desde la última carga a partir del cual se pregunta si las horas están bien (frena un dígito de más)
@@ -62,6 +78,16 @@ export function validarHoras(valor, actuales) {
   const horas = Number(texto)
   if (actuales != null && horas < actuales) return { estado: 'menor' }
   return { estado: 'ok', horas, salto: actuales == null ? 0 : horas - actuales }
+}
+
+/*
+ * Horas de antes y de ahora: "2.140 → 2.148 hs", con `conDiferencia` "2.140 → 2.148 hs (+8)".
+ * Si nunca se habían cargado, "2.148 hs (primera carga)"
+ */
+export function formatCambioHoras(anteriores, nuevas, { conDiferencia = false } = {}) {
+  if (anteriores == null) return `${formatHoras(nuevas)} hs (primera carga)`
+  const diferencia = conDiferencia ? ` (+${formatHoras(nuevas - anteriores)})` : ''
+  return `${formatHoras(anteriores)} → ${formatHoras(nuevas)} hs${diferencia}`
 }
 
 /*
@@ -103,6 +129,21 @@ export function getItemsAnormales(items, respuestas) {
   return items.filter(({ id }) => getEstadoItem(respuestas, id) === 'ANORMAL')
 }
 
+// Cuántos ítems hay en cada estado: { NORMAL, ANORMAL, NO_APLICA }. Los pendientes no se cuentan
+export function contarEstados(items, respuestas) {
+  const cantidades = Object.fromEntries(ESTADOS_ITEM.map(({ valor }) => [valor, 0]))
+  items.forEach(({ id }) => {
+    const estado = getEstadoItem(respuestas, id)
+    if (estado) cantidades[estado] += 1
+  })
+  return cantidades
+}
+
+// Para el botón principal cuando quedan ítems sin responder
+export function textoFaltanItems(cantidad) {
+  return cantidad === 1 ? 'Falta 1 ítem' : `Faltan ${cantidad} ítems`
+}
+
 // "Marcaste 2 ítems como anormales: Luces delanteras, Aceite hidráulico. Contá qué les pasa."
 export function textoAvisoAnormales(items) {
   const nombres = items.map(({ nombre }) => nombre).join(', ')
@@ -129,6 +170,13 @@ export function validarNombre(valor) {
   return 'ok'
 }
 
+// Qué falta del cierre, para el botón principal deshabilitado: primero la foto, que está antes en la pantalla
+export function textoFaltaCierre({ fotoOk, nombreOk, apellidoOk }) {
+  if (!fotoOk) return 'Sacá la foto del equipo'
+  if (!nombreOk && !apellidoOk) return 'Completá tu nombre y apellido'
+  return nombreOk ? 'Completá tu apellido' : 'Completá tu nombre'
+}
+
 /*
  * Fotos de evidencia del checklist. El back acepta de 1 a 4 de hasta 1,5 MB, pero por ahora se pide una sola:
  * la pantalla dibuja MAX_FOTOS lugares, así que para habilitar más alcanza con cambiar este número
@@ -141,6 +189,47 @@ export const COMPRESION_FOTO = Object.freeze({
   calidades: [0.7, 0.6, 0.5],
   pesoObjetivo: 400 * 1024,
 })
+
+/*
+ * JSON `datos` del POST del checklist. Las respuestas salen de los ítems del tipo elegido, en su orden (lo que quedó
+ * en el borrador de ítems que ya no están no viaja). Los aditamentos no mandan horas; las observaciones vacías tampoco van
+ */
+export function getDatosEnvio({ tipo, items, esMaquina, datos }) {
+  const observaciones = datos.observaciones.trim()
+  return {
+    tipo,
+    ...(esMaquina && { horas_motor: Number(datos.horas.trim()) }),
+    responsable_nombre: datos.nombre.trim(),
+    responsable_apellido: datos.apellido.trim(),
+    ...(observaciones && { observaciones }),
+    respuestas: items.map(({ id }) => ({ plantilla_item_id: id, estado: getEstadoItem(datos.respuestas, id) })),
+  }
+}
+
+export const MENSAJE_HORAS_DESACTUALIZADAS = 'Alguien cargó horas más nuevas para este equipo.'
+
+// Paso que corrige un 400 del envío, por lo que nombra su message. null si no nombra ninguno
+function getPasoDelMensaje(mensaje) {
+  const texto = normalizeText(mensaje)
+  if (texto.includes('hora')) return 'horas'
+  if (['respuesta', 'item', 'plantilla'].some((palabra) => texto.includes(palabra))) return 'items'
+  if (['foto', 'nombre', 'apellido', 'responsable', 'observ'].some((palabra) => texto.includes(palabra))) return 'cierre'
+  return null
+}
+
+/*
+ * Qué hacer con un error del envío: { paso, mensaje, red }. `paso` es adonde se lleva al mecánico para corregirlo
+ * (un 400 de horas, a horas; un 409, también a horas, que se actualizan). Sin conexión o con el back caído es
+ * `red`: se queda en la revisión para reintentar. Si el paso no existe en este equipo, se queda en la revisión
+ */
+export function getErrorEnvio(error, pasos) {
+  const enPaso = (paso) => (pasos.includes(paso) ? paso : 'revision')
+
+  if (error.status === 0 || error.status >= 500) return { paso: 'revision', mensaje: null, red: true }
+  if (error.status === 409) return { paso: enPaso('horas'), mensaje: MENSAJE_HORAS_DESACTUALIZADAS, red: false }
+  if (error.status === 400) return { paso: enPaso(getPasoDelMensaje(error.message)), mensaje: error.message, red: false }
+  return { paso: 'revision', mensaje: error.message, red: false }
+}
 
 // Lo que el mecánico va cargando, con la forma que después pide el POST del checklist.
 // `respuestas` es { [item.id]: estado }; al enviar se pasa a la lista de { plantilla_item_id, estado }

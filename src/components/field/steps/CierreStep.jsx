@@ -8,8 +8,10 @@ import {
   MAX_FOTOS,
   MAX_OBSERVACIONES,
   textoAvisoAnormales,
+  textoFaltaCierre,
   validarNombre,
 } from '../../../utils/checklists'
+import EnvioAlert from '../EnvioAlert'
 import FieldScreen from '../FieldScreen'
 import FotoSlot from '../FotoSlot'
 import MainAction from '../MainAction'
@@ -67,25 +69,14 @@ function NombreInput({ ref, label, autoComplete, enterKeyHint, onEnter, value, o
   )
 }
 
-// Qué falta del responsable, para el botón principal deshabilitado
-function textoFaltaResponsable(nombreOk, apellidoOk) {
-  if (!nombreOk && !apellidoOk) return 'Completá tu nombre y apellido'
-  return nombreOk ? 'Completá tu apellido' : 'Completá tu nombre'
-}
-
-// Qué falta para enviar, para el botón principal deshabilitado: primero la foto, que está antes en la pantalla
-function textoFalta({ fotoOk, nombreOk, apellidoOk }) {
-  if (!fotoOk) return 'Sacá la foto del equipo'
-  return textoFaltaResponsable(nombreOk, apellidoOk)
-}
-
 /*
  * Último paso: observaciones (opcionales), fotos y quién hizo la revisión. Si hay ítems Anormales y las observaciones
  * están vacías, un aviso pide contar qué les pasa, sin frenar. Sin la foto o sin nombre y apellido no se avanza.
- * Los datos van al borrador; las fotos quedan solo en memoria (si se retoma un borrador, se piden de nuevo)
+ * Los datos van al borrador; las fotos quedan solo en memoria (si se retoma un borrador, se piden de nuevo).
+ * El botón lleva a la revisión, desde donde se envía
  */
 export default function CierreStep({ header }) {
-  const { opcion, datos, actualizarDatos, fotos, fotosPerdidas, ponerFoto, quitarFoto } = useChecklist()
+  const { opcion, datos, actualizarDatos, avanzar, fotos, fotosPerdidas, ponerFoto, quitarFoto } = useChecklist()
   const observacionesId = useId()
   const ayudaId = useId()
   const contadorId = useId()
@@ -98,17 +89,17 @@ export default function CierreStep({ header }) {
   const apellidoOk = validarNombre(datos.apellido) === 'ok'
   const fotoOk = fotos.length > 0
 
-  // Provisorio: la revisión y el envío llegan en su issue
   const accion =
     fotoOk && nombreOk && apellidoOk ? (
-      <MainAction label="Revisar y enviar" icon={ChevronRight} />
+      <MainAction label="Revisar y enviar" icon={ChevronRight} onClick={avanzar} />
     ) : (
-      <MainAction label={textoFalta({ fotoOk, nombreOk, apellidoOk })} disabled />
+      <MainAction label={textoFaltaCierre({ fotoOk, nombreOk, apellidoOk })} disabled />
     )
 
   return (
     <FieldScreen header={header} footer={accion}>
       <h1 className="text-2xl font-semibold text-balance">Terminá y enviá</h1>
+      <EnvioAlert />
 
       <section className="flex flex-col gap-2">
         <label htmlFor={observacionesId} className="text-lg font-medium">

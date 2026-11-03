@@ -3,6 +3,7 @@ import { useId, useRef, useState } from 'react'
 import { useChecklist } from '../../../hooks/useChecklist'
 import { formatUltimaCargaHoras, SALTO_HORAS_A_CONFIRMAR, validarHoras } from '../../../utils/checklists'
 import { formatHoras } from '../../../utils/equipos'
+import EnvioAlert from '../EnvioAlert'
 import FieldDialog from '../FieldDialog'
 import FieldScreen from '../FieldScreen'
 import MainAction from '../MainAction'
@@ -10,10 +11,11 @@ import MainAction from '../MainAction'
 /*
  * Paso de horas del motor (solo máquinas): las horas del equipo son el dato que se vende, así que el paso cuida el
  * error de tipeo. Menos que las actuales no deja avanzar; un salto de más de SALTO_HORAS_A_CONFIRMAR pregunta
- * antes de seguir, sin bloquear. Lo escrito va a los datos del asistente y, con ellos, al borrador
+ * antes de seguir, sin bloquear. Lo escrito va a los datos del asistente y, con ellos, al borrador.
+ * Si se llegó desde la revisión (o porque el envío rechazó las horas), el botón vuelve directo a ella
  */
 export default function HorasStep({ header }) {
-  const { equipo, datos, actualizarDatos, avanzar } = useChecklist()
+  const { equipo, datos, editando, actualizarDatos, avanzar } = useChecklist()
   const inputId = useId()
   const errorId = useId()
   const inputRef = useRef(null)
@@ -60,13 +62,15 @@ export default function HorasStep({ header }) {
 
   const accion =
     validacion.estado === 'ok' ? (
-      <MainAction label="Siguiente" icon={ChevronRight} onClick={siguiente} />
+      <MainAction label={editando ? 'Volver a la revisión' : 'Siguiente'} icon={ChevronRight} onClick={siguiente} />
     ) : (
       <MainAction label={validacion.estado === 'vacio' ? 'Escribí las horas' : 'Revisá las horas'} disabled />
     )
 
   return (
     <FieldScreen header={header} footer={accion}>
+      <EnvioAlert />
+
       <section aria-label="Referencia" className="campo-card flex items-center gap-3 p-4 text-neutral-700">
         <Gauge size={22} strokeWidth={1.75} aria-hidden="true" className="shrink-0" />
         {ultimaCarga ? (

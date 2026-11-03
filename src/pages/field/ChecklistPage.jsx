@@ -13,7 +13,7 @@ import { useFormularioChecklist } from '../../hooks/useFormularioChecklist'
  */
 export default function ChecklistPage() {
   const { token } = useParams()
-  const { status, formulario, retry } = useFormularioChecklist(token)
+  const { status, formulario, retry, refrescar } = useFormularioChecklist(token)
 
   if (status === 'loading') return <ChecklistStartSkeleton />
 
@@ -41,7 +41,7 @@ export default function ChecklistPage() {
   }
 
   return (
-    <ChecklistProvider key={token} token={token} formulario={formulario}>
+    <ChecklistProvider key={token} token={token} formulario={formulario} onRefrescar={refrescar}>
       <ChecklistWizard />
     </ChecklistProvider>
   )
