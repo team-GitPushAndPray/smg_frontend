@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router'
 import EquipoAccionModal from '../../components/admin/EquipoAccionModal'
 import EquipoDetail, { EquipoDetailSkeleton } from '../../components/admin/EquipoDetail'
+import EquipoQrModal from '../../components/admin/EquipoQrModal'
 import PanelMessage from '../../components/admin/PanelMessage'
 import { MODULOS, RUTAS_MAQUINAS } from '../../config/rutasPanel'
 import { useEquipo } from '../../hooks/useEquipo'
@@ -20,6 +21,8 @@ export default function MachineDetailPage() {
   const { status, equipo, retry, reload } = useEquipo(id, obtenerEquipo)
   // Acción con modal abierta: { tipo: 'horas' | 'estado' | 'baja', equipo }
   const [accion, setAccion] = useState(null)
+  // Equipo con el modal del QR abierto (lo ven todos, también sin edición), o null
+  const [equipoQr, setEquipoQr] = useState(null)
   const abrir = (tipo) => (equipoElegido) => setAccion({ tipo, equipo: equipoElegido })
 
   // Desde el inventario se llega con la página scrolleada: cada equipo se ve desde arriba
@@ -70,6 +73,7 @@ export default function MachineDetailPage() {
       <EquipoDetail
         equipo={equipo}
         canEdit={puedeEditar}
+        onVerQr={setEquipoQr}
         onActualizarHoras={abrir('horas')}
         onCambiarEstado={abrir('estado')}
         onDarDeBaja={abrir('baja')}
@@ -90,6 +94,7 @@ export default function MachineDetailPage() {
       {content}
 
       <EquipoAccionModal accion={accion} onClose={() => setAccion(null)} onDone={reload} />
+      {equipoQr && <EquipoQrModal equipo={equipoQr} onClose={() => setEquipoQr(null)} />}
     </article>
   )
 }
