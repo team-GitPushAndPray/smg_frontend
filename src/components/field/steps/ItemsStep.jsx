@@ -1,7 +1,8 @@
 import { ArrowDown, Check, ChevronRight, CircleCheck, ClipboardList, Minus } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { useChecklist } from '../../../hooks/useChecklist'
-import { getEstadoItem, marcarPendientes, permiteNoAplicaMasivo } from '../../../utils/checklists'
+import { getEstadoItem, marcarPendientes, permiteNoAplicaMasivo, textoFaltanItems } from '../../../utils/checklists'
+import EnvioAlert from '../EnvioAlert'
 import FieldScreen from '../FieldScreen'
 import ItemCard from '../ItemCard'
 import MainAction from '../MainAction'
@@ -9,18 +10,14 @@ import MainAction from '../MainAction'
 // Cuánto queda marcado el ítem pendiente al que lleva el botón principal
 const DURACION_RESALTADO = 2500
 
-function textoFaltan(cantidad) {
-  return cantidad === 1 ? 'Falta 1 ítem' : `Faltan ${cantidad} ítems`
-}
-
 /*
  * Paso de ítems: la lista del checklist elegido, en el orden del back, con un contador fijo arriba. Al final, para
  * los pendientes, marcar en bloque como Normal (y como No aplica en entrega y devolución) sin pisar lo respondido.
  * Con pendientes no se avanza: el botón principal dice cuántos faltan y lleva al primero. Las respuestas van a los
- * datos del asistente y, con ellos, al borrador
+ * datos del asistente y, con ellos, al borrador. Si se llegó desde la revisión, el botón vuelve directo a ella
  */
 export default function ItemsStep({ header }) {
-  const { opcion, datos, actualizarDatos, avanzar } = useChecklist()
+  const { opcion, datos, editando, actualizarDatos, avanzar } = useChecklist()
   const tarjetas = useRef(new Map())
   const [resaltado, setResaltado] = useState(null)
 
@@ -55,9 +52,9 @@ export default function ItemsStep({ header }) {
 
   const accion =
     pendientes.length > 0 ? (
-      <MainAction label={textoFaltan(pendientes.length)} icon={ArrowDown} incompleto onClick={irAlPrimerPendiente} />
+      <MainAction label={textoFaltanItems(pendientes.length)} icon={ArrowDown} incompleto onClick={irAlPrimerPendiente} />
     ) : (
-      <MainAction label="Siguiente" icon={ChevronRight} onClick={avanzar} />
+      <MainAction label={editando ? 'Volver a la revisión' : 'Siguiente'} icon={ChevronRight} onClick={avanzar} />
     )
 
   const encabezado = (
@@ -75,6 +72,7 @@ export default function ItemsStep({ header }) {
   return (
     <FieldScreen header={encabezado} footer={accion}>
       <h1 className="text-2xl font-semibold text-balance">Revisá cada ítem</h1>
+      <EnvioAlert />
 
       {items.length === 0 ? (
         <div className="campo-card flex items-center gap-4 p-4 text-neutral-700">
