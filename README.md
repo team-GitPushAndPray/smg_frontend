@@ -31,7 +31,7 @@ sgm_frontend/
     │   ├── ToastContext.js     # Contexto de los avisos (toasts)
     │   ├── ToastProvider.jsx   # Pila de avisos no bloqueantes de toda la app (showToast: error, info o exito)
     │   ├── ChecklistContext.js # Contexto del checklist de campo
-    │   ├── ChecklistProvider.jsx # Estado del asistente del checklist (reducer): tipo, paso y datos, fotos en memoria (no van al borrador; si el retomado tenía, se piden de nuevo), borrador automático en localStorage, responsable recordado precargado en cada checklist nuevo y confirmación al cerrar la pestaña
+    │   ├── ChecklistProvider.jsx # Estado del asistente del checklist (reducer): tipo, paso y datos, fotos en memoria (no van al borrador; si el retomado tenía, se piden de nuevo), borrador automático en localStorage, responsable recordado precargado en cada checklist nuevo, confirmación al cerrar la pestaña, edición desde la revisión y envío (un solo POST aunque se toque dos veces; el error lleva al paso que lo corrige; el éxito borra el borrador y recuerda al responsable)
     │   ├── VendedoresContext.js  # Contexto del equipo comercial
     │   └── VendedoresProvider.jsx # Carga el equipo comercial una vez para la home, el detalle de equipo y el navbar
     │
@@ -52,7 +52,7 @@ sgm_frontend/
     │   ├── useFiltrosInventario.js # Filtros y página del inventario de máquinas guardados en la URL (sobreviven a recargar y a volver atrás)
     │   ├── useEquipos.js       # Carga una página del inventario según los filtros, conservando la anterior mientras llega la nueva, con reintento
     │   ├── useCategorias.js    # Carga las categorías de equipo para filtros y formularios, con reintento
-    │   ├── useFormularioChecklist.js # Carga el formulario de checklist por el token del QR: carga, QR no válido (404), sin conexión (con reintento solo al volver la red) y error
+    │   ├── useFormularioChecklist.js # Carga el formulario de checklist por el token del QR: carga, QR no válido (404), sin conexión (con reintento solo al volver la red) y error; también lo vuelve a pedir sin pantalla de carga para actualizar las horas
     │   ├── useChecklist.js     # Acceso al estado del asistente del checklist (equipo, opciones, paso, datos y acciones)
     │   ├── useAtrasDelFlujo.js # El botón Atrás del celular retrocede un paso del asistente en vez de salir de la página
     │   └── useRoles.js         # Carga roles y módulos juntos (filas y columnas de la matriz), con reintento, refresco y actualización de un rol
@@ -118,13 +118,15 @@ sgm_frontend/
     │   │   ├── MainAction.jsx      # Botón principal de un paso: deshabilitado dice qué falta; incompleto se ve igual pero lleva a lo que falta; bloqueado mientras se envía
     │   │   ├── FieldDialog.jsx     # Pregunta que frena el flujo (dialog nativo, sale desde abajo): botones grandes uno debajo del otro
     │   │   ├── WizardHeader.jsx    # "Atrás", "Paso X de N" y barra de progreso
-    │   │   ├── ChecklistWizard.jsx # Asistente: un paso por pantalla (4 en máquinas, 3 en aditamentos), primero ofrece seguir el borrador
+    │   │   ├── ChecklistWizard.jsx # Asistente: un paso por pantalla (5 en máquinas, 4 en aditamentos), primero ofrece seguir el borrador y después de enviar muestra "Listo" (su Atrás lleva a un checklist nuevo, nunca al enviado)
     │   │   ├── DraftPrompt.jsx     # "Tenés un checklist sin terminar": seguir donde quedaste o empezar de nuevo
+    │   │   ├── ChecklistDone.jsx   # "Listo": ✓ grande, resumen de lo que respondió el back (tipo, equipo, horas y anormales) y "Hacer otro checklist de este equipo"
+    │   │   ├── EnvioAlert.jsx      # Por qué no salió el envío, arriba del paso al que llevó el error: "No se pudo enviar" sin conexión o el mensaje del back
     │   │   ├── ChecklistStart.jsx  # Paso 1: el equipo y un botón por cada opción que manda el back, y su versión de carga
     │   │   ├── EquipoSummary.jsx   # Encabezado del equipo: código interno, categoría y marca, y horas actuales si es máquina
     │   │   ├── ItemCard.jsx        # Un ítem del checklist: nombre y los tres estados (✓ Normal, ✕ Anormal, — No aplica); respondida cambia de fondo
     │   │   ├── FotoSlot.jsx        # Lugar de una foto: "Sacar foto" abre la cámara trasera, la comprime ("Procesando…") y muestra la miniatura con ✕ y "Sacar otra"; avisa "Volvé a sacar la foto" al retomar un borrador
-    │   │   └── steps/              # Pasos del asistente: HorasStep (horas del horómetro: no menos que las actuales y confirmación si suben más de 200 hs); ItemsStep (lista de ítems con contador fijo, marcado en bloque de los pendientes y botón que lleva al primero que falta); CierreStep (observaciones con ayuda según el tipo, contador y aviso si hay ítems Anormales sin contar, foto del equipo y nombre y apellido obligatorios)
+    │   │   └── steps/              # Pasos del asistente: HorasStep (horas del horómetro: no menos que las actuales y confirmación si suben más de 200 hs); ItemsStep (lista de ítems con contador fijo, marcado en bloque de los pendientes y botón que lleva al primero que falta); CierreStep (observaciones con ayuda según el tipo, contador y aviso si hay ítems Anormales sin contar, foto del equipo y nombre y apellido obligatorios); RevisionStep (todo lo cargado de solo lectura con un "Editar" por bloque, horas con la diferencia, conteo por estado con los Anormales por nombre, "Enviar" / "Enviando…" / "Reintentar"). Llegando desde la revisión, el botón de cada paso dice "Volver a la revisión"
     │   └── public/             # Componentes del portal público
     │       ├── NavBar.jsx          # Header con anclas a las secciones, enlace al catálogo, "Ir al panel" con sesión y menú de celular
     │       ├── Footer.jsx          # Footer con el acceso discreto al login
@@ -144,7 +146,7 @@ sgm_frontend/
     │       └── CatalogMessage.jsx  # Avisos de carga: error, sin equipos y sin resultados (catálogo y equipo comercial)
     │
     ├── services/               # Comunicación con el backend
-    │   ├── api.js              # Cliente HTTP base (apiFetch) que usan todos los services: token, 401, 403, errores de conexión y mensajes de validación del back
+    │   ├── api.js              # Cliente HTTP base (apiFetch) que usan todos los services: token, 401, 403, errores de conexión y mensajes de validación del back; body JSON o FormData (archivos)
     │   ├── authService.js      # POST /auth/login, GET /auth/me y PATCH /auth/password
     │   ├── catalogoService.js  # GET /catalogo y GET /catalogo/id=:id: equipos disponibles y detalle de uno
     │   ├── vendedoresService.js # GET /vendedores/public: vendedores activos, ordenados por cargo
@@ -152,7 +154,7 @@ sgm_frontend/
     │   ├── rolesService.js     # Roles y permisos: GET /roles, GET /modulos, POST y PATCH /roles, PUT /roles/:id/modulos
     │   ├── equiposService.js   # Equipos del panel: GET /equipos (paginado, con filtros), GET /equipos/:id, POST y PATCH /equipos, PATCH /equipos/:id/horas y /estado, y DELETE /equipos/:id (baja lógica)
     │   ├── categoriasService.js # GET /categorias: categorías de equipo
-    │   └── checklistsService.js # GET /public/checklists/:token (sin sesión): equipo del QR y sus opciones de checklist con los ítems
+    │   └── checklistsService.js # GET /public/checklists/:token (sin sesión): equipo del QR y sus opciones de checklist con los ítems; POST del checklist terminado (multipart: `datos` JSON y `fotos`)
     │
     └── utils/                  # Funciones auxiliares
         ├── text.js             # Normaliza texto para buscar sin importar mayúsculas ni tildes
@@ -161,7 +163,7 @@ sgm_frontend/
         ├── usuarios.js         # Normalización de los módulos (del usuario y de cada rol), nombre del rol, nombre completo, último acceso y error genérico
         ├── roles.js            # Niveles de acceso de la matriz (Sin acceso, Ver, Editar) y armado de la lista completa de módulos de un rol
         ├── imagenes.js         # Compresión de una imagen en el navegador (lado mayor y JPEG con la calidad que entre en el peso buscado)
-        └── checklists.js       # Formulario de checklist con los nombres del front, ícono por tipo, pasos según máquina o aditamento, validación de las horas del horómetro, estados de los ítems y marcado en bloque de los pendientes, ítems anormales y su aviso, ayuda de las observaciones según el tipo, validación del nombre y apellido, cantidad de fotos (MAX_FOTOS) y su compresión, borrador en localStorage (checklist:<token>:<tipo>) y responsable recordado (checklist:responsable)
+        └── checklists.js       # Formulario de checklist con los nombres del front, ícono por tipo, pasos según máquina o aditamento, validación de las horas del horómetro, estados de los ítems y marcado en bloque de los pendientes, ítems anormales y su aviso, ayuda de las observaciones según el tipo, validación del nombre y apellido, cantidad de fotos (MAX_FOTOS) y su compresión, borrador en localStorage (checklist:<token>:<tipo>), responsable recordado (checklist:responsable), conteo por estado, cambio de horas ("2.140 → 2.148 hs (+8)"), datos del POST, respuesta del envío y a qué paso lleva cada error (400, 409, sin conexión)
 ```
 
 ## Convenciones
