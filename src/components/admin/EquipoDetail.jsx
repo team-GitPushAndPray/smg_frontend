@@ -1,4 +1,4 @@
-import { Archive, PencilLine } from 'lucide-react'
+import { Archive, PencilLine, QrCode } from 'lucide-react'
 import { Link } from 'react-router'
 import { RUTAS_MAQUINAS } from '../../config/rutasPanel'
 import {
@@ -54,13 +54,17 @@ function Seccion({ id, title, children }) {
 /*
  * Detalle de un equipo del panel: encabezado, datos generales y, si es una máquina, sus datos de máquina.
  * Junto a "Editar" va un ⋯ con las acciones que abren un modal (llegan como callbacks, igual que en el inventario).
+ * "Ver QR" lo tienen todos, con o sin edición, porque es de solo lectura.
  * Un equipo dado de baja (`activo: false`) se sigue mostrando, porque se conserva por su historial, pero con un aviso
- * y sin acciones. Sin edición en el módulo (por ejemplo, taller) se ve todo, de solo lectura
+ * y sin acciones, tampoco el QR: el checklist de campo no abre equipos dados de baja.
+ * Sin edición en el módulo (por ejemplo, taller) se ve todo, de solo lectura
  */
-export default function EquipoDetail({ equipo, canEdit, onActualizarHoras, onCambiarEstado, onDarDeBaja }) {
+export default function EquipoDetail({ equipo, canEdit, onVerQr, onActualizarHoras, onCambiarEstado, onDarDeBaja }) {
   const dadoDeBaja = equipo.activo === false
   const esMaquina = equipo.tipo === 'maquina'
   const marcaModelo = [equipo.marca, equipo.modelo].filter(Boolean).join(' ')
+  const showQr = !dadoDeBaja && Boolean(equipo.qr_token)
+  const showEdicion = canEdit && !dadoDeBaja
 
   return (
     <div className="flex flex-col gap-6">
@@ -76,21 +80,31 @@ export default function EquipoDetail({ equipo, canEdit, onActualizarHoras, onCam
           </div>
           {marcaModelo && <p className={textMuted}>{marcaModelo}</p>}
         </div>
-        {canEdit && !dadoDeBaja && (
+        {(showQr || showEdicion) && (
           <div className="flex shrink-0 items-center gap-2">
-            <Link to={RUTAS_MAQUINAS.editar(equipo.id)} className="btn-primary flex-1 sm:flex-none">
-              <PencilLine size={18} strokeWidth={1.75} aria-hidden="true" />
-              Editar
-            </Link>
-            <EquipoActionsMenu
-              equipo={equipo}
-              canEdit
-              dadoDeBaja={false}
-              enDetalle
-              onActualizarHoras={onActualizarHoras}
-              onCambiarEstado={onCambiarEstado}
-              onDarDeBaja={onDarDeBaja}
-            />
+            {showQr && (
+              <button type="button" onClick={() => onVerQr(equipo)} className="btn-secondary flex-1 sm:flex-none">
+                <QrCode size={18} strokeWidth={1.75} aria-hidden="true" />
+                Ver QR
+              </button>
+            )}
+            {showEdicion && (
+              <>
+                <Link to={RUTAS_MAQUINAS.editar(equipo.id)} className="btn-primary flex-1 sm:flex-none">
+                  <PencilLine size={18} strokeWidth={1.75} aria-hidden="true" />
+                  Editar
+                </Link>
+                <EquipoActionsMenu
+                  equipo={equipo}
+                  canEdit
+                  dadoDeBaja={false}
+                  enDetalle
+                  onActualizarHoras={onActualizarHoras}
+                  onCambiarEstado={onCambiarEstado}
+                  onDarDeBaja={onDarDeBaja}
+                />
+              </>
+            )}
           </div>
         )}
       </header>
