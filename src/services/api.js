@@ -65,21 +65,23 @@ function createError(message, status, data = null) {
  * Si hay token guardado, viaja en el header Authorization. Con `auth: false` la request
  * no lleva token y un 401 no cierra la sesión (el propio login: su 401 es "credenciales inválidas").
  * Un 403 (el rol no tiene permiso) muestra un aviso y la sesión sigue abierta.
+ * Un body FormData (archivos) viaja tal cual: el navegador arma el Content-Type multipart; cualquier otro, como JSON.
  * Los errores llevan `status` (0 si no se pudo conectar) y `data` con el cuerpo de la respuesta.
  */
 export async function apiFetch(path, { headers, body, auth = true, ...options } = {}) {
   const token = auth ? getToken() : null
+  const esJson = body !== undefined && !(body instanceof FormData)
 
   let response
   try {
     response = await fetch(`${API_URL}${path}`, {
       ...options,
       headers: {
-        ...(body !== undefined && { 'Content-Type': 'application/json' }),
+        ...(esJson && { 'Content-Type': 'application/json' }),
         ...(token && { Authorization: `Bearer ${token}` }),
         ...headers,
       },
-      body: body !== undefined ? JSON.stringify(body) : undefined,
+      body: esJson ? JSON.stringify(body) : body,
     })
   } catch (error) {
     // Una request cancelada (AbortController) no es un error de conexión
