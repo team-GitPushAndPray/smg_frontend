@@ -1,4 +1,4 @@
-import { apiFetch } from './api'
+import { apiFetch, toQuery } from './api'
 
 /*
  * Equipos del panel (módulo máquinas): a diferencia del catálogo, llegan todos, sin importar estado ni actividad.
@@ -6,16 +6,6 @@ import { apiFetch } from './api'
  * no existe; 409 si choca con otro equipo o si está dado de baja (no admite cambios).
  * Para mostrarlos se usa getErrorEquipo() (utils/equipos.js).
  */
-
-// Query string con los filtros que tienen valor: los vacíos no viajan, para no filtrar por "" o null
-function toQuery(filtros = {}) {
-  const params = new URLSearchParams()
-  for (const [clave, valor] of Object.entries(filtros)) {
-    if (valor !== undefined && valor !== null && valor !== '') params.set(clave, valor)
-  }
-  const query = params.toString()
-  return query ? `?${query}` : ''
-}
 
 /*
  * Listado paginado, ordenado por código interno (lo define el back). `filtros`, todos opcionales:

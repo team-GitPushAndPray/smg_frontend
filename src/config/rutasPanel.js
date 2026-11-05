@@ -46,6 +46,7 @@ export const RUTAS_MAQUINAS = Object.freeze({
   detalle: (id) => `/admin/maquinas/${id}`,
   editar: (id) => `/admin/maquinas/${id}/editar`,
   historial: (id) => `/admin/maquinas/${id}/historial`,
+  checklist: (id, checklistId) => `/admin/maquinas/${id}/historial/checklists/${checklistId}`,
 })
 
 // Ícono del encabezado de cada grupo del sidebar
