@@ -66,14 +66,81 @@ export function adaptarChecklistHistorial(row) {
     tipo: row?.tipo ?? null,
     fecha: row?.fecha ?? null,
     horasMotor: row?.horas_motor ?? null,
-    responsable: [row?.responsable_nombre, row?.responsable_apellido]
-      .map((parte) => parte?.trim())
-      .filter(Boolean)
-      .join(' '),
+    responsable: getResponsable(row),
     anormales: row?.cantidad_anormales ?? 0,
     fotos: row?.cantidad_fotos ?? 0,
     tieneObservaciones: row?.tiene_observaciones === true,
   }
+}
+
+// Nombre y apellido del responsable en una línea; '' si no vino ninguno
+function getResponsable(row) {
+  return [row?.responsable_nombre, row?.responsable_apellido]
+    .map((parte) => parte?.trim())
+    .filter(Boolean)
+    .join(' ')
+}
+
+// Texto libre que puede venir null o con solo espacios: '' si no tiene nada que mostrar
+function getTexto(valor) {
+  return typeof valor === 'string' ? valor.trim() : ''
+}
+
+/*
+ * Detalle de un checklist (GET /equipos/:id/historial/checklists/:checklistId) con los nombres del front.
+ * Las respuestas llegan en el orden de la plantilla; las fotos, en el orden en que se cargaron
+ */
+export function adaptarDetalleChecklist(data) {
+  const respuestas = Array.isArray(data?.respuestas) ? data.respuestas : []
+  const fotos = Array.isArray(data?.fotos) ? data.fotos : []
+  return {
+    id: data?.id,
+    tipo: data?.tipo ?? null,
+    fecha: data?.fecha ?? null,
+    horasMotor: data?.horas_motor ?? null,
+    responsable: getResponsable(data),
+    observaciones: getTexto(data?.observaciones),
+    respuestas: respuestas.map((respuesta, index) => ({
+      id: `${respuesta?.orden ?? 'x'}-${index}`,
+      item: respuesta?.item?.trim() || 'Ítem sin nombre',
+      estado: respuesta?.estado ?? null,
+      observacion: getTexto(respuesta?.observacion),
+    })),
+    fotos: fotos.filter((foto) => typeof foto?.url === 'string' && foto.url).map(({ id, url }) => ({ id, url })),
+  }
+}
+
+/*
+ * Respuestas del detalle separadas: las ANORMAL, que son lo que hay que mirar, y el resto (NORMAL, NO_APLICA o un
+ * estado que el front no conoce). Las dos conservan el orden de la plantilla, el mismo de la hoja en papel
+ */
+export function separarRespuestas(respuestas) {
+  const anormales = []
+  const resto = []
+  for (const respuesta of respuestas) {
+    if (respuesta.estado === 'ANORMAL') anormales.push(respuesta)
+    else resto.push(respuesta)
+  }
+  return { anormales, resto }
+}
+
+/*
+ * Transformaciones de Cloudinary para las fotos de un checklist: la miniatura de la galería (cuadrada, recortada al
+ * centro, al doble de su tamaño en pantalla para que se vea nítida en pantallas de alta densidad) y la del visor
+ * (hasta 1600px de ancho, sin recortar ni agrandar). f_auto y q_auto eligen formato y calidad según el navegador
+ */
+export const TRANSFORMACION_FOTO = Object.freeze({
+  miniatura: 'w_300,h_300,c_fill,g_auto,f_auto,q_auto',
+  ampliada: 'w_1600,c_limit,f_auto,q_auto',
+})
+
+/*
+ * URL de una foto de Cloudinary con una transformación ("…/image/upload/<transformación>/v123/…").
+ * Una URL que no es de Cloudinary vuelve tal cual: se ve igual, solo que sin achicar
+ */
+export function getUrlFoto(url, transformacion) {
+  if (typeof url !== 'string' || !url.includes('res.cloudinary.com') || !url.includes('/upload/')) return url
+  return url.replace('/upload/', `/upload/${transformacion}/`)
 }
 
 /*

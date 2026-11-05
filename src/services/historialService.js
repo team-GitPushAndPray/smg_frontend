@@ -1,4 +1,4 @@
-import { adaptarChecklistHistorial } from '../utils/historial'
+import { adaptarChecklistHistorial, adaptarDetalleChecklist } from '../utils/historial'
 import { apiFetch, toQuery } from './api'
 
 /*
@@ -19,4 +19,13 @@ export async function listarChecklistsEquipo(equipoId, filtros, { signal } = {})
     checklists: Array.isArray(respuesta?.data) ? respuesta.data.map(adaptarChecklistHistorial) : [],
     meta: { total: respuesta?.meta?.total ?? 0, page: respuesta?.meta?.page ?? 1, limit: respuesta?.meta?.limit ?? 0 },
   }
+}
+
+/*
+ * Detalle de un checklist del equipo: cabecera, respuestas en el orden de la plantilla (con la observación de cada
+ * ítem) y fotos. 404 si el checklist no existe o es de otro equipo
+ */
+export async function obtenerChecklistEquipo(equipoId, checklistId, { signal } = {}) {
+  const respuesta = await apiFetch(`/equipos/${equipoId}/historial/checklists/${checklistId}`, { signal })
+  return adaptarDetalleChecklist(respuesta)
 }
