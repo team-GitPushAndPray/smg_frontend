@@ -7,6 +7,7 @@ import AdminHomePage from '../pages/admin/AdminHomePage'
 import LoginPage from '../pages/admin/LoginPage'
 import MachineDetailPage from '../pages/admin/MachineDetailPage'
 import MachineFormPage from '../pages/admin/MachineFormPage'
+import MachineHistoryPage from '../pages/admin/MachineHistoryPage'
 import MachinesPage from '../pages/admin/MachinesPage'
 import RolesPage from '../pages/admin/RolesPage'
 import UsersPage from '../pages/admin/UsersPage'
@@ -32,7 +33,7 @@ const rutasPanel = RUTAS_PANEL.map(({ path, modulo }) => ({
   element: <RutaModulo modulo={modulo}>{paginasPanel[path]}</RutaModulo>,
 }))
 
-// Pantallas de Máquinas fuera del sidebar (RUTAS_MAQUINAS): el alta y la edición exigen poder editar el módulo
+// Pantallas de Máquinas fuera del sidebar (RUTAS_MAQUINAS): el alta y la edición exigen poder editar el módulo; el detalle y el historial, solo verlo
 const rutasMaquinas = [
   {
     path: 'maquinas/nuevo',
@@ -55,6 +56,15 @@ const rutasMaquinas = [
     element: (
       <RutaModulo modulo={MODULOS.MAQUINAS} requiereEdicion>
         <MachineFormPage />
+      </RutaModulo>
+    ),
+  },
+  // El historial es de solo lectura: lo ve todo el que ve el inventario
+  {
+    path: 'maquinas/:id/historial',
+    element: (
+      <RutaModulo modulo={MODULOS.MAQUINAS}>
+        <MachineHistoryPage />
       </RutaModulo>
     ),
   },

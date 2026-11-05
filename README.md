@@ -16,7 +16,7 @@ sgm_frontend/
     │
     ├── config/                 # Configuración global
     │   ├── env.js              # Lee y expone las variables de entorno (API_URL)
-    │   └── rutasPanel.js       # Única fuente de verdad del panel: códigos de módulo (MODULOS), secciones (RUTAS_PANEL) para sidebar, Inicio y rutas protegidas, y pantallas de Máquinas (RUTAS_MAQUINAS: inventario, alta, detalle y edición)
+    │   └── rutasPanel.js       # Única fuente de verdad del panel: códigos de módulo (MODULOS), secciones (RUTAS_PANEL) para sidebar, Inicio y rutas protegidas, y pantallas de Máquinas (RUTAS_MAQUINAS: inventario, alta, detalle, edición e historial)
     │
     ├── router/                 # Definición de rutas
     │   ├── index.jsx           # Rutas de cada módulo con su layout, login del panel (sin layout) + 404. Las del panel se generan desde RUTAS_PANEL
@@ -69,7 +69,8 @@ sgm_frontend/
     │   │   ├── AdminHomePage.jsx # /admin: saludo y una tarjeta por cada sección que el rol tiene
     │   │   ├── ForbiddenPage.jsx # 403 dentro del panel: sección que el rol no incluye (o que puede ver pero no editar)
     │   │   ├── MachinesPage.jsx  # /admin/maquinas: inventario con buscador (espera de 400 ms), filtros, dados de baja y paginación del back, todo en la URL; acciones de horas, estado y baja que refrescan la página; solo lectura sin edición en Máquinas
-    │   │   ├── MachineDetailPage.jsx # /admin/maquinas/:id: detalle de un equipo (también dado de baja), con "Equipo no encontrado" y reintento; "Ver QR" para todos y "Editar" y las acciones de horas, estado y baja solo con edición, todo con el equipo activo; las acciones al terminar recargan el equipo
+    │   │   ├── MachineDetailPage.jsx # /admin/maquinas/:id: detalle de un equipo (también dado de baja), con "Equipo no encontrado" y reintento; "Ver historial" para todos (también dado de baja), "Ver QR" para todos y "Editar" y las acciones de horas, estado y baja solo con edición, todo con el equipo activo; las acciones al terminar recargan el equipo
+    │   │   ├── MachineHistoryPage.jsx # /admin/maquinas/:id/historial (requiere ver Máquinas): historial de solo lectura de un equipo (también dado de baja), con encabezado, "Equipo no encontrado" y reintento; pestañas Checklists, Alquileres y Mantenimiento con la activa en la URL (?tab=checklists); Alquileres y Mantenimiento con estado vacío hasta M-08 y M-10
     │   │   ├── MachineFormPage.jsx # /admin/maquinas/nuevo y /admin/maquinas/:id/editar (requieren editar Máquinas): alta de equipo con aviso y paso al detalle del creado; edición precargada que envía solo los campos modificados (PATCH parcial), bloqueada para equipos dados de baja
     │   │   ├── UsersPage.jsx     # /admin/configuracion/usuarios: ABM de usuarios (tabla, búsqueda, filtro por estado, alta, edición, baja y reactivación); solo lectura con Configuración en "Ver"
     │   │   └── RolesPage.jsx     # /admin/configuracion/roles: matriz de permisos roles × módulos, alta y edición de roles, activación y desactivación; solo lectura con Configuración en "Ver"
@@ -106,11 +107,14 @@ sgm_frontend/
     │   │   ├── RoleFormModal.jsx   # Alta y edición de un rol (nombre y descripción) con errores del back (409 y 400 en el nombre, lista de 400 arriba)
     │   │   ├── InventarioToolbar.jsx # Buscador, filtros por tipo, estado y categoría, switch "Ver dados de baja" y limpiar filtros del inventario
     │   │   ├── InventarioTable.jsx # Tabla del inventario (tarjetas debajo de xl) con horas, estado y menú de acciones, y su versión de carga
-    │   │   ├── EquipoActionsMenu.jsx # Menú ⋯ de un equipo según el permiso (Ver detalle, Editar, Actualizar horas, Cambiar estado, Dar de baja), en un portal; en el detalle, solo las acciones con modal
+    │   │   ├── EquipoActionsMenu.jsx # Menú ⋯ de un equipo según el permiso (Ver detalle y Ver historial para todos, Editar, Actualizar horas, Cambiar estado, Dar de baja), en un portal; en el detalle, solo las acciones con modal
     │   │   ├── EquipoAccionModal.jsx # Modales de las acciones de un equipo: actualizar horas (no menores a las actuales), cambiar estado (aviso del catálogo) y confirmación de baja; manejan el 400 en el modal y el 409/404 con aviso y refresco
     │   │   ├── EquipoQrModal.jsx   # QR de un equipo (lleva a /c/<qr_token>): vista previa de la etiqueta, "Descargar PNG" para imprimir a 5 × 5 cm y "Copiar link" para grabarlo en una etiqueta NFC
     │   │   ├── EstadoEquipoBadge.jsx # Badge del estado de un equipo (ícono, texto y color); acepta la clave o la etiqueta del estado
-    │   │   ├── EquipoDetail.jsx    # Detalle de un equipo del panel: encabezado con "Ver QR", "Editar" y el ⋯ de acciones, aviso de dado de baja, datos generales y datos de máquina, y su versión de carga
+    │   │   ├── AvisoDadoDeBaja.jsx # Aviso de equipo dado de baja (se conserva por su historial), compartido por el detalle y el historial
+    │   │   ├── HistorialHeader.jsx # Encabezado del historial: "M027 · Minicargadora Bobcat S530" (sin modelo en aditamentos), badge de estado y aviso de dado de baja; sin acciones. Incluye la versión de carga de toda la pantalla
+    │   │   ├── HistorialTabs.jsx   # Pestañas del historial (Checklists, Alquileres, Mantenimiento): control segmentado con el patrón de tabs de WAI-ARIA (flechas, Inicio y Fin); en celular, ícono arriba del texto para que entren a 360px
+    │   │   ├── EquipoDetail.jsx    # Detalle de un equipo del panel: encabezado con "Ver historial", "Ver QR", "Editar" y el ⋯ de acciones, aviso de dado de baja, datos generales y datos de máquina, y su versión de carga
     │   │   ├── EquipoForm.jsx      # Formulario de equipo (alta y, precargado, edición): tipo máquina/aditamento, datos generales y de máquina, validaciones del DTO y errores del back (409 en el código interno, 400 arriba); en la edición, tipo fijo, sin horas de motor y sin vaciar la ubicación ni la descripción ya cargadas. Incluye su versión de carga
     │   │   └── Pagination.jsx      # Paginación de un listado: rango mostrado, total y botones de página (anterior/siguiente en celular)
     │   ├── field/              # Componentes del módulo de campo: sin vidrio, fondos sólidos, 16px mínimo y botones de 48px o más
@@ -159,7 +163,8 @@ sgm_frontend/
     │
     └── utils/                  # Funciones auxiliares
         ├── text.js             # Normaliza texto para buscar sin importar mayúsculas ni tildes
-        ├── equipos.js          # Datos de un equipo listos para mostrar, WhatsApp de cotización, categorías del listado, tipos, estados (etiqueta, ícono y color, y clave, por clave o etiqueta), nombre del equipo, formato de horas ("Sin registrar" si no hay carga), campos modificados de un equipo (body del PATCH) y mensajes de error del módulo máquinas
+        ├── equipos.js          # Datos de un equipo listos para mostrar, WhatsApp de cotización, categorías del listado, tipos, estados (etiqueta, ícono y color, y clave, por clave o etiqueta), nombre del equipo, el equipo en una línea (código · categoría marca modelo), formato de horas ("Sin registrar" si no hay carga), campos modificados de un equipo (body del PATCH) y mensajes de error del módulo máquinas
+        ├── historial.js        # Pestañas del historial de un equipo (id de la URL, etiqueta, ícono y módulo pendiente) y lectura de la pestaña activa (?tab=), con Checklists por defecto
         ├── vendedores.js       # Nombre del cargo, iniciales y enlace de WhatsApp de un vendedor
         ├── usuarios.js         # Normalización de los módulos (del usuario y de cada rol), nombre del rol, nombre completo, último acceso y error genérico
         ├── roles.js            # Niveles de acceso de la matriz (Sin acceso, Ver, Editar) y armado de la lista completa de módulos de un rol

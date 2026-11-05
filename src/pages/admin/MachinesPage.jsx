@@ -24,7 +24,7 @@ function countLabel(cantidad) {
 /*
  * Máquinas: inventario de máquinas y aditamentos con buscador, filtros y paginación del back.
  * Filtros y página viven en la URL (useFiltrosInventario). Sin edición en el módulo (por ejemplo, taller)
- * la pantalla es de solo lectura: sin "Nuevo equipo" y con "Ver detalle" como única acción.
+ * la pantalla es de solo lectura: sin "Nuevo equipo" y con "Ver detalle" y "Ver historial" como únicas acciones.
  * Después de actualizar horas, cambiar el estado o dar de baja, se vuelve a pedir la página actual
  */
 export default function MachinesPage() {

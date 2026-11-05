@@ -85,6 +85,18 @@ export function getNombreEquipo(equipo) {
   return equipo.nombre ?? equipo.categoria?.nombre ?? 'Sin categoría'
 }
 
+/*
+ * Equipo en una línea: código interno, categoría, marca y modelo ("M027 · Minicargadora Bobcat S530").
+ * Lo que no tiene (un aditamento sin modelo, una marca sin cargar) simplemente no aparece
+ */
+export function getTituloEquipo(equipo) {
+  const descripcion = [getNombreEquipo(equipo), equipo.marca, equipo.modelo]
+    .map((valor) => valor?.trim())
+    .filter(Boolean)
+    .join(' ')
+  return [equipo.codigoInterno, descripcion].filter(Boolean).join(' · ')
+}
+
 const texto = (valor) => valor?.trim() ?? ''
 
 // Datos guardados de un equipo con los nombres y tipos que manda EquipoForm, para compararlos

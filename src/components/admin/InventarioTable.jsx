@@ -25,7 +25,7 @@ const textMuted = 'text-neutral-600 dark:text-neutral-400'
 
 /*
  * Inventario de equipos: tabla desde xl (con el sidebar abierto, en lg no entran las 9 columnas) y tarjetas por debajo.
- * `dadosDeBaja` indica que el listado es de equipos dados de baja: su menú solo tiene "Ver detalle".
+ * `dadosDeBaja` indica que el listado es de equipos dados de baja: su menú solo tiene "Ver detalle" y "Ver historial".
  * Las acciones que abren un modal llegan como callbacks; Ver detalle y Editar son enlaces
  */
 export default function InventarioTable({ equipos, canEdit, dadosDeBaja, onActualizarHoras, onCambiarEstado, onDarDeBaja }) {
