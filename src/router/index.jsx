@@ -5,6 +5,7 @@ import FieldLayout from '../layouts/FieldLayout'
 import PublicLayout from '../layouts/PublicLayout'
 import AdminHomePage from '../pages/admin/AdminHomePage'
 import LoginPage from '../pages/admin/LoginPage'
+import MachineChecklistPage from '../pages/admin/MachineChecklistPage'
 import MachineDetailPage from '../pages/admin/MachineDetailPage'
 import MachineFormPage from '../pages/admin/MachineFormPage'
 import MachineHistoryPage from '../pages/admin/MachineHistoryPage'
@@ -65,6 +66,14 @@ const rutasMaquinas = [
     element: (
       <RutaModulo modulo={MODULOS.MAQUINAS}>
         <MachineHistoryPage />
+      </RutaModulo>
+    ),
+  },
+  {
+    path: 'maquinas/:id/historial/checklists/:checklistId',
+    element: (
+      <RutaModulo modulo={MODULOS.MAQUINAS}>
+        <MachineChecklistPage />
       </RutaModulo>
     ),
   },
