@@ -1,4 +1,4 @@
-import { ArchiveX, ArrowLeftRight, Ellipsis, Eye, Gauge, PencilLine } from 'lucide-react'
+import { ArchiveX, ArrowLeftRight, Ellipsis, Eye, Gauge, History, PencilLine } from 'lucide-react'
 import { useEffect, useId, useLayoutEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { Link } from 'react-router'
@@ -27,8 +27,9 @@ function getPosition(button, menu) {
 }
 
 /*
- * Menú ⋯ de una fila del inventario. "Ver detalle" lo tienen todos; con `canEdit` se suman Editar,
- * Actualizar horas (solo máquinas), Cambiar estado y Dar de baja. Un equipo `dadoDeBaja` solo tiene "Ver detalle".
+ * Menú ⋯ de una fila del inventario. "Ver detalle" y "Ver historial" los tienen todos (son de solo lectura); con
+ * `canEdit` se suman Editar, Actualizar horas (solo máquinas), Cambiar estado y Dar de baja. Un equipo `dadoDeBaja`
+ * solo tiene "Ver detalle" y "Ver historial": se conserva justamente por su historial.
  * Con `enDetalle` (el ⋯ junto a "Editar" en el detalle) quedan solo las tres acciones con modal.
  * Va en un portal a <body> con posición fija: la tabla tiene scroll horizontal y recortaría un menú desplegado adentro.
  * Se cierra con Escape, Tab, un clic afuera o cualquier scroll (así nunca queda separado de su botón)
@@ -109,14 +110,24 @@ export default function EquipoActionsMenu({
         createPortal(
           <div ref={menuRef} id={menuId} className="glass-strong fixed z-30 flex w-56 flex-col p-1.5">
             {!enDetalle && (
-              <Link
-                to={RUTAS_MAQUINAS.detalle(equipo.id)}
-                onClick={() => setIsOpen(false)}
-                className={`${itemBase} ${itemIdle}`}
-              >
-                <Eye size={18} strokeWidth={1.75} aria-hidden="true" />
-                Ver detalle
-              </Link>
+              <>
+                <Link
+                  to={RUTAS_MAQUINAS.detalle(equipo.id)}
+                  onClick={() => setIsOpen(false)}
+                  className={`${itemBase} ${itemIdle}`}
+                >
+                  <Eye size={18} strokeWidth={1.75} aria-hidden="true" />
+                  Ver detalle
+                </Link>
+                <Link
+                  to={RUTAS_MAQUINAS.historial(equipo.id)}
+                  onClick={() => setIsOpen(false)}
+                  className={`${itemBase} ${itemIdle}`}
+                >
+                  <History size={18} strokeWidth={1.75} aria-hidden="true" />
+                  Ver historial
+                </Link>
+              </>
             )}
             {showEdicion && (
               <>
