@@ -1,6 +1,7 @@
-import { ArrowLeft, ClipboardCheck, CloudOff, PackageX, RotateCw } from 'lucide-react'
+import { ArrowLeft, CloudOff, PackageX, RotateCw } from 'lucide-react'
 import { useEffect } from 'react'
 import { Link, useParams, useSearchParams } from 'react-router'
+import HistorialChecklists from '../../components/admin/HistorialChecklists'
 import HistorialHeader, { HistorialSkeleton } from '../../components/admin/HistorialHeader'
 import HistorialTabs from '../../components/admin/HistorialTabs'
 import PanelMessage from '../../components/admin/PanelMessage'
@@ -24,7 +25,8 @@ function PestanaPendiente({ pestana }) {
  * Historial de un equipo (/admin/maquinas/:id/historial), activo o dado de baja. Es de solo lectura: no hay ningún
  * botón de editar ni de borrar. La pestaña activa va en la URL (?tab=checklists) y reemplaza la entrada del
  * historial del navegador: sobrevive a recargar y "atrás" lleva a la pantalla anterior, no a la pestaña anterior.
- * Alquileres y Mantenimiento muestran un estado vacío hasta que existan sus módulos (M-08 y M-10)
+ * Checklists lista los del equipo con filtros (HistorialChecklists); Alquileres y Mantenimiento muestran un estado
+ * vacío hasta que existan sus módulos (M-08 y M-10)
  */
 export default function MachineHistoryPage() {
   const { id } = useParams()
@@ -91,16 +93,7 @@ export default function MachineHistoryPage() {
       <>
         <HistorialHeader equipo={equipo} />
         <HistorialTabs activa={pestana.id} onCambiar={cambiarPestana}>
-          {pestana.pendiente ? (
-            <PestanaPendiente pestana={pestana} />
-          ) : (
-            // Provisorio: el listado de checklists con filtros llega en la próxima issue de M-07
-            <PanelMessage
-              icon={ClipboardCheck}
-              title="Checklists del equipo"
-              description="Acá vas a ver los checklists cargados desde el QR del equipo."
-            />
-          )}
+          {pestana.pendiente ? <PestanaPendiente pestana={pestana} /> : <HistorialChecklists equipo={equipo} />}
         </HistorialTabs>
       </>
     )
