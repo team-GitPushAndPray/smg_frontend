@@ -38,11 +38,13 @@
   --color-neutral-950: #0f0f10;
 
   /*
-   * Verde de estado: solo para "Normal" en los ítems del checklist de campo, donde el estado lleva color,
-   * ícono y texto. No es un acento: las acciones y lo activo siguen en rojo. ok-700 da AA sobre blanco y con texto blanco
+   * Verde de estado: solo para "Normal" en los ítems de un checklist (el de campo y su detalle en el historial),
+   * donde el estado lleva color, ícono y texto. No es un acento: las acciones y lo activo siguen en rojo.
+   * ok-700 da AA sobre blanco y con texto blanco; ok-300 es su versión para texto en modo oscuro
    */
   --color-ok-50: #f0fdf4;
   --color-ok-200: #bbf7d0;
+  --color-ok-300: #86efac;
   --color-ok-700: #15803d;
 
   /* Tipografía del sistema Apple */
@@ -102,6 +104,14 @@
 
   /* Velo detrás de los modales */
   --overlay-bg: color-mix(in srgb, var(--color-black) 35%, transparent);
+
+  /*
+   * Visor de fotos: casi negro en los dos modos, para que la foto no compita con el fondo. Los controles van en
+   * blanco sobre un círculo oscuro, así se leen aunque queden encima de una parte clara de la foto
+   */
+  --visor-bg: color-mix(in srgb, var(--color-black) 94%, transparent);
+  --visor-control-bg: color-mix(in srgb, var(--color-black) 55%, transparent);
+  --visor-control-bg-hover: color-mix(in srgb, var(--color-neutral-800) 85%, transparent);
 
   /* Opción elegida de un control segmentado (niveles de la matriz de permisos) */
   --segment-active-bg: var(--color-white);
