@@ -13,7 +13,7 @@ import { obtenerEquipo } from '../../services/equiposService'
 /*
  * Detalle de un equipo del panel (/admin/maquinas/:id), activo o dado de baja. Después de actualizar horas,
  * cambiar el estado o dar de baja, el equipo se vuelve a pedir sin pasar por la carga (tras la baja se queda acá,
- * con el aviso de dado de baja). Las fotos y el historial del equipo todavía no forman parte de esta pantalla
+ * con el aviso de dado de baja). Las fotos todavía no forman parte de esta pantalla; el historial tiene la suya (MachineHistoryPage)
  */
 export default function MachineDetailPage() {
   const { id } = useParams()

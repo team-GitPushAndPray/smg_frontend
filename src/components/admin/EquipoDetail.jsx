@@ -1,4 +1,4 @@
-import { Archive, PencilLine, QrCode } from 'lucide-react'
+import { History, PencilLine, QrCode } from 'lucide-react'
 import { Link } from 'react-router'
 import { RUTAS_MAQUINAS } from '../../config/rutasPanel'
 import {
@@ -8,6 +8,7 @@ import {
   SIN_REGISTRAR,
   TIPOS_EQUIPO,
 } from '../../utils/equipos'
+import AvisoDadoDeBaja from './AvisoDadoDeBaja'
 import EquipoActionsMenu from './EquipoActionsMenu'
 import EstadoEquipoBadge from './EstadoEquipoBadge'
 import PermissionBadge from './PermissionBadge'
@@ -54,9 +55,9 @@ function Seccion({ id, title, children }) {
 /*
  * Detalle de un equipo del panel: encabezado, datos generales y, si es una máquina, sus datos de máquina.
  * Junto a "Editar" va un ⋯ con las acciones que abren un modal (llegan como callbacks, igual que en el inventario).
- * "Ver QR" lo tienen todos, con o sin edición, porque es de solo lectura.
+ * "Ver historial" y "Ver QR" los tienen todos, con o sin edición, porque son de solo lectura.
  * Un equipo dado de baja (`activo: false`) se sigue mostrando, porque se conserva por su historial, pero con un aviso
- * y sin acciones, tampoco el QR: el checklist de campo no abre equipos dados de baja.
+ * y sin acciones salvo "Ver historial"; tampoco el QR: el checklist de campo no abre equipos dados de baja.
  * Sin edición en el módulo (por ejemplo, taller) se ve todo, de solo lectura
  */
 export default function EquipoDetail({ equipo, canEdit, onVerQr, onActualizarHoras, onCambiarEstado, onDarDeBaja }) {
@@ -80,48 +81,38 @@ export default function EquipoDetail({ equipo, canEdit, onVerQr, onActualizarHor
           </div>
           {marcaModelo && <p className={textMuted}>{marcaModelo}</p>}
         </div>
-        {(showQr || showEdicion) && (
-          <div className="flex shrink-0 items-center gap-2">
-            {showQr && (
-              <button type="button" onClick={() => onVerQr(equipo)} className="btn-secondary flex-1 sm:flex-none">
-                <QrCode size={18} strokeWidth={1.75} aria-hidden="true" />
-                Ver QR
-              </button>
-            )}
-            {showEdicion && (
-              <>
-                <Link to={RUTAS_MAQUINAS.editar(equipo.id)} className="btn-primary flex-1 sm:flex-none">
-                  <PencilLine size={18} strokeWidth={1.75} aria-hidden="true" />
-                  Editar
-                </Link>
-                <EquipoActionsMenu
-                  equipo={equipo}
-                  canEdit
-                  dadoDeBaja={false}
-                  enDetalle
-                  onActualizarHoras={onActualizarHoras}
-                  onCambiarEstado={onCambiarEstado}
-                  onDarDeBaja={onDarDeBaja}
-                />
-              </>
-            )}
-          </div>
-        )}
+        <div className="flex shrink-0 flex-wrap items-center gap-2">
+          <Link to={RUTAS_MAQUINAS.historial(equipo.id)} className="btn-secondary flex-1 sm:flex-none">
+            <History size={18} strokeWidth={1.75} aria-hidden="true" />
+            Ver historial
+          </Link>
+          {showQr && (
+            <button type="button" onClick={() => onVerQr(equipo)} className="btn-secondary flex-1 sm:flex-none">
+              <QrCode size={18} strokeWidth={1.75} aria-hidden="true" />
+              Ver QR
+            </button>
+          )}
+          {showEdicion && (
+            <>
+              <Link to={RUTAS_MAQUINAS.editar(equipo.id)} className="btn-primary flex-1 sm:flex-none">
+                <PencilLine size={18} strokeWidth={1.75} aria-hidden="true" />
+                Editar
+              </Link>
+              <EquipoActionsMenu
+                equipo={equipo}
+                canEdit
+                dadoDeBaja={false}
+                enDetalle
+                onActualizarHoras={onActualizarHoras}
+                onCambiarEstado={onCambiarEstado}
+                onDarDeBaja={onDarDeBaja}
+              />
+            </>
+          )}
+        </div>
       </header>
 
-      {dadoDeBaja && (
-        <div className="glass flex items-start gap-4 p-5 sm:p-6">
-          <span className="icon-badge">
-            <Archive size={20} strokeWidth={1.75} aria-hidden="true" />
-          </span>
-          <div className="flex flex-col gap-0.5 pt-0.5">
-            <p className="font-semibold">Equipo dado de baja</p>
-            <p className={`text-sm text-pretty ${textMuted}`}>
-              Se conserva por su historial: se puede consultar, pero no editar.
-            </p>
-          </div>
-        </div>
-      )}
+      {dadoDeBaja && <AvisoDadoDeBaja description="Se conserva por su historial: se puede consultar, pero no editar." />}
 
       <Seccion id="datos-generales" title="Datos generales">
         <Dato label="Código interno" value={equipo.codigoInterno} />
