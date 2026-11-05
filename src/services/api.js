@@ -52,6 +52,16 @@ function getBackMessage(data) {
   return Array.isArray(message) ? message[0] : message
 }
 
+// Query string con los filtros que tienen valor: los vacíos no viajan, para no filtrar por "" o null
+export function toQuery(filtros = {}) {
+  const params = new URLSearchParams()
+  for (const [clave, valor] of Object.entries(filtros)) {
+    if (valor !== undefined && valor !== null && valor !== '') params.set(clave, valor)
+  }
+  const query = params.toString()
+  return query ? `?${query}` : ''
+}
+
 function createError(message, status, data = null) {
   const error = new Error(message)
   error.status = status
