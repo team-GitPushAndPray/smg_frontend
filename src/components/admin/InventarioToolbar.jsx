@@ -1,29 +1,7 @@
-import { ChevronDown, FilterX, Search, X } from 'lucide-react'
+import { FilterX } from 'lucide-react'
 import { ESTADOS_EQUIPO, TIPOS_EQUIPO } from '../../utils/equipos'
-
-// z-10 en los íconos: el blur del campo crea su propia capa y los taparía
-const fieldIcon = 'pointer-events-none absolute top-1/2 z-10 -translate-y-1/2 text-neutral-500 dark:text-neutral-400'
-
-// Select de filtro sobre el fondo: mismo vidrio opaco que el buscador
-function FilterSelect({ id, label, value, onChange, disabled, children }) {
-  return (
-    <div className="relative min-w-0">
-      <label htmlFor={id} className="sr-only">
-        {label}
-      </label>
-      <select
-        id={id}
-        value={value}
-        onChange={(event) => onChange(event.target.value)}
-        disabled={disabled}
-        className="field-glass appearance-none truncate pr-11 pl-3.5 disabled:opacity-60"
-      >
-        {children}
-      </select>
-      <ChevronDown size={18} strokeWidth={1.75} aria-hidden="true" className={`${fieldIcon} right-3.5`} />
-    </div>
-  )
-}
+import FilterSelect from './FilterSelect'
+import SearchField from './SearchField'
 
 // Switch con el acento cuando está prendido. El gris de apagado (neutral-500) pasa 3:1 sobre el fondo en ambos modos
 function Switch({ checked, onChange, label }) {
@@ -73,30 +51,15 @@ export default function InventarioToolbar({
   return (
     <div className="flex flex-col gap-3">
       <div className="flex flex-col gap-3 xl:flex-row xl:items-center">
-        <div className="relative w-full xl:max-w-xs">
-          <label htmlFor="inventario-busqueda" className="sr-only">
-            Buscar equipos
-          </label>
-          <Search size={18} strokeWidth={1.75} aria-hidden="true" className={`${fieldIcon} left-4`} />
-          <input
+        <div className="w-full xl:max-w-xs">
+          <SearchField
             id="inventario-busqueda"
-            type="search"
+            label="Buscar equipos"
             value={query}
-            onChange={(event) => onQueryChange(event.target.value)}
+            onChange={onQueryChange}
+            onClear={onQueryClear}
             placeholder="Buscar en el inventario"
-            autoComplete="off"
-            className="field-glass pr-12 pl-11"
           />
-          {query && (
-            <button
-              type="button"
-              onClick={onQueryClear}
-              aria-label="Borrar búsqueda"
-              className="interactive absolute inset-y-0 right-0 grid w-11 place-items-center rounded-control text-neutral-600 hover:text-black dark:text-neutral-400 dark:hover:text-white"
-            >
-              <X size={18} strokeWidth={1.75} aria-hidden="true" />
-            </button>
-          )}
         </div>
 
         <div className="grid flex-1 gap-3 sm:grid-cols-3">
