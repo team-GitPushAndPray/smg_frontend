@@ -56,7 +56,8 @@ sgm_frontend/
     │   ├── useChecklistHistorial.js # Carga el detalle de un checklist del historial por los ids de la URL: carga, no encontrado (404: no existe o es de otro equipo), error y reintento
     │   ├── useExportacionChecklists.js # Exportar a PDF los checklists de un equipo con los filtros aplicados: pide todos (todas las páginas, solo GET), deja listo el informe con la fecha de emisión y avisa con un toast si falla la red
     │   ├── useFiltrosClientes.js # Búsqueda por razón social y filtro de estado de los clientes (Activos por defecto o Todos, que incluye a los inactivos) guardados en la URL
-    │   ├── useClientes.js      # Carga los clientes según la búsqueda y el estado, conservando la lista anterior mientras llega la nueva, con reintento
+    │   ├── useClientes.js      # Carga los clientes según la búsqueda y el estado, conservando la lista anterior mientras llega la nueva, con reintento y recarga después de guardar
+    │   ├── useCliente.js       # Carga un cliente por id con la cantidad de alquileres (loading, success, not-found, error), con reintento y recarga sin pasar por la carga
     │   ├── useTextoDiferido.js # Campo de texto que se aplica cuando se deja de tipear (400 ms por defecto), con borrar al momento y puesta al día si cambia la URL
     │   ├── useCategorias.js    # Carga las categorías de equipo para filtros y formularios, con reintento
     │   ├── useFormularioChecklist.js # Carga el formulario de checklist por el token del QR: carga, QR no válido (404), sin conexión (con reintento solo al volver la red) y error; también lo vuelve a pedir sin pantalla de carga para actualizar las horas
@@ -85,8 +86,8 @@ sgm_frontend/
     │   │   ├── RentalFormPage.jsx # /admin/alquileres/nuevo (requiere editar Alquileres): alta de un alquiler (provisorio)
     │   │   ├── RentalDetailPage.jsx # /admin/alquileres/:id: detalle del alquiler con sus equipos y checklists (provisorio)
     │   │   ├── RentalChecklistPage.jsx # /admin/alquileres/:id/equipos/:equipoId/checklist?tipo= (requiere editar Alquileres): checklist de entrega o devolución, sin las pestañas del módulo (provisorio)
-    │   │   ├── ClientsPage.jsx   # /admin/alquileres/clientes: clientes ordenados por razón social, con buscador por razón social (espera de 300 ms) y filtro de estado (Activos por defecto), ambos en la URL; estados de carga, error, sin clientes y sin resultados; toda la fila abre el detalle; "Nuevo cliente" solo con edición en Alquileres (modal provisorio)
-    │   │   ├── ClientDetailPage.jsx # /admin/alquileres/clientes/:id: detalle del cliente con su historial de alquileres (provisorio)
+    │   │   ├── ClientsPage.jsx   # /admin/alquileres/clientes: clientes ordenados por razón social, con buscador por razón social (espera de 300 ms) y filtro de estado (Activos por defecto), ambos en la URL; estados de carga, error, sin clientes y sin resultados; toda la fila abre el detalle; con edición en Alquileres, "Nuevo cliente" y, por fila, Editar y Desactivar / Reactivar (con confirmación), con aviso de éxito y la lista recargada; no hay eliminar
+    │   │   ├── ClientDetailPage.jsx # /admin/alquileres/clientes/:id: datos del cliente (activo o no) con la cantidad de alquileres; Editar y Desactivar / Reactivar con edición en Alquileres; estados de carga, no encontrado y error. El historial de alquileres llega en su issue
     │   │   ├── UsersPage.jsx     # /admin/configuracion/usuarios: ABM de usuarios (tabla, búsqueda, filtro por estado, alta, edición, baja y reactivación); solo lectura con Configuración en "Ver"
     │   │   └── RolesPage.jsx     # /admin/configuracion/roles: matriz de permisos roles × módulos, alta y edición de roles, activación y desactivación; solo lectura con Configuración en "Ver"
     │   ├── field/              # Módulo de campo (QR)
@@ -132,8 +133,11 @@ sgm_frontend/
     │   │   ├── EstadoAlquilerBadge.jsx # Badge del estado de un alquiler (Pendiente, Activo, Finalizado, Anulado): ícono, texto y color fijo, igual en todas las pantallas
     │   │   ├── AlquileresTabs.jsx  # Pestañas del módulo Alquileres (Alquileres / Clientes): links con la activa según la ruta (Clientes en /clientes y su detalle; Alquileres en el resto)
     │   │   ├── ClientesToolbar.jsx # Buscador por razón social y filtro de estado (Activos / Todos) de la pantalla de clientes
-    │   │   ├── ClientesTable.jsx   # Tabla de clientes desde lg (razón social, CUIT, contacto, teléfono, localidad y estado) y tarjetas por debajo; toda la fila abre el detalle. Incluye su versión de carga
-    │   │   ├── ClienteFormModal.jsx # Alta de un cliente (provisorio: avisa que está en construcción hasta su issue)
+    │   │   ├── ClientesTable.jsx   # Tabla de clientes desde lg (razón social, CUIT, contacto con el email, teléfono como enlace a WhatsApp, dirección y estado) y tarjetas por debajo; toda la fila abre el detalle; con edición, un menú ⋯ por fila. Incluye su versión de carga
+    │   │   ├── ClienteFormModal.jsx # Alta (POST) y edición (PATCH, solo lo que cambió) de un cliente: razón social obligatoria, CUIT, teléfono, email (con formato) y dirección; el 409 de CUIT repetido se marca en el campo. Contacto, localidad y observaciones quedan fuera hasta que el back los acepte
+    │   │   ├── ClienteActionsMenu.jsx # Menú ⋯ de una fila de clientes (en un portal): Editar y Desactivar / Reactivar
+    │   │   ├── ClienteEstadoDialog.jsx # Confirmación para desactivar o reactivar un cliente (PATCH con `activo`): explica que no se borra
+    │   │   ├── ClienteDetail.jsx   # Detalle de un cliente: encabezado con estado y cantidad de alquileres, acciones, aviso de inactivo y sus datos. Incluye su versión de carga
     │   │   ├── AvisoDadoDeBaja.jsx # Aviso de equipo dado de baja (se conserva por su historial), compartido por el detalle y el historial
     │   │   ├── HistorialHeader.jsx # Encabezado del historial: "M027 · Minicargadora Bobcat S530" (sin modelo en aditamentos), badge de estado y aviso de dado de baja; sin acciones. Incluye la versión de carga de toda la pantalla
     │   │   ├── HistorialTabs.jsx   # Pestañas del historial (Checklists, Alquileres, Mantenimiento): control segmentado con el patrón de tabs de WAI-ARIA (flechas, Inicio y Fin); en celular, ícono arriba del texto para que entren a 360px
