@@ -12,9 +12,10 @@ const DURACION_RESALTADO = 2500
 
 /*
  * Paso de ítems: la lista del checklist elegido, en el orden del back, con un contador fijo arriba. Al final, para
- * los pendientes, marcar en bloque como Normal (y como No aplica en entrega y devolución) sin pisar lo respondido.
- * Con pendientes no se avanza: el botón principal dice cuántos faltan y lleva al primero. Las respuestas van a los
- * datos del asistente y, con ellos, al borrador. Si se llegó desde la revisión, el botón vuelve directo a ella
+ * los pendientes, marcar en bloque como Normal (y como No aplica en la entrega y devolución del alquiler) sin pisar
+ * lo respondido. Con pendientes no se avanza: el botón principal dice cuántos faltan y lleva al primero. Las
+ * respuestas van a los datos del asistente y, con ellos, al borrador. Si se llegó desde la revisión, el botón vuelve
+ * directo a ella
  */
 export default function ItemsStep({ header }) {
   const { opcion, datos, editando, actualizarDatos, avanzar } = useChecklist()
