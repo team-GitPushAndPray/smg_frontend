@@ -99,7 +99,7 @@ sgm_frontend/
     │   │   └── RolesPage.jsx     # /admin/configuracion/roles: matriz de permisos roles × módulos, alta y edición de roles, activación y desactivación; solo lectura con Configuración en "Ver"
     │   ├── field/              # Módulo de campo (QR)
     │   │   ├── FieldHomePage.jsx # /campo: pantalla de bienvenida del módulo
-    │   │   └── ChecklistPage.jsx # /c/:token: lo que abre el QR del equipo (pública, sin sesión): esqueleto de carga, QR no válido, sin conexión con "Reintentar" y el asistente del checklist
+    │   │   └── ChecklistPage.jsx # /c/:token: lo que abre el QR del equipo (pública, sin sesión): esqueleto de carga, QR no válido, sin conexión con "Reintentar" y el asistente del checklist (Diario o Mantenimiento)
     │   └── public/
     │       ├── HomePage.jsx    # Home con las secciones institucionales y el equipo comercial
     │       ├── CatalogPage.jsx # Catálogo: tarjetas por equipo, búsqueda y filtro por tipo en tiempo real
@@ -186,7 +186,7 @@ sgm_frontend/
     │   │   ├── DraftPrompt.jsx     # "Tenés un checklist sin terminar": seguir donde quedaste o empezar de nuevo
     │   │   ├── ChecklistDone.jsx   # "Listo": ✓ grande, resumen de lo que respondió el back (tipo, equipo, horas y anormales) y "Hacer otro checklist de este equipo"
     │   │   ├── EnvioAlert.jsx      # Por qué no salió el envío, arriba del paso al que llevó el error: "No se pudo enviar" sin conexión o el mensaje del back
-    │   │   ├── ChecklistStart.jsx  # Paso 1: el equipo y un botón por cada opción que manda el back, y su versión de carga
+    │   │   ├── ChecklistStart.jsx  # Paso 1 del QR: el equipo y un botón por cada opción que manda el back (Diario y Mantenimiento), y su versión de carga
     │   │   ├── AlquilerChecklistStart.jsx # Paso 1 de la entrega o devolución de un alquiler: qué se hace, el equipo y cliente, ubicación y fechas de solo lectura, con "Empezar la entrega" / "Empezar la devolución"; y el link "Volver al alquiler" (SalidaAlquiler)
     │   │   ├── EquipoSummary.jsx   # Encabezado del equipo: código interno, categoría y marca, y horas actuales si es máquina
     │   │   ├── ItemCard.jsx        # Un ítem del checklist: nombre y los tres estados (✓ Normal, ✕ Anormal, — No aplica); respondida cambia de fondo
@@ -222,7 +222,7 @@ sgm_frontend/
     │   ├── historialService.js # Historial de un equipo (solo lectura): GET /equipos/:id/historial/checklists (paginado, con filtros de fecha, tipo, responsable y búsqueda en observaciones) y GET /equipos/:id/historial/checklists/:checklistId (detalle con respuestas y fotos); para el PDF, recorre todas las páginas de a 100 (el máximo del back)
     │   ├── clientesService.js  # Clientes (módulo Alquileres): GET /clientes (sin paginar, con búsqueda y filtro por activo), GET /clientes/:id (con la cantidad de alquileres), POST y PATCH /clientes (también activar/desactivar: no hay DELETE)
     │   ├── alquileresService.js # Alquileres: GET /alquileres (sin paginar; filtros por estado, cliente, equipo y por vencer), GET /alquileres/:id, POST y PATCH /alquileres (prórroga y ubicación), POST /alquileres/:id/anular, GET y POST del checklist de entrega/devolución de un equipo (multipart: `tipo`, `datos` JSON y `fotos`) y equipos disponibles para el alta (GET /equipos?estado=disponible: una página o todos, de a 50)
-    │   └── checklistsService.js # GET /public/checklists/:token (sin sesión): equipo del QR y sus opciones de checklist con los ítems; POST del checklist terminado (multipart: `datos` JSON y `fotos`)
+    │   └── checklistsService.js # GET /public/checklists/:token (sin sesión): equipo del QR y sus opciones de checklist con los ítems (por QR, solo Diario y Mantenimiento: la entrega y la devolución van por el alquiler); POST del checklist terminado (multipart: `datos` JSON y `fotos`; un 400, como el de un tipo que no va por QR, muestra el mensaje del back)
     │
     ├── types/                  # Tipos en JSDoc (el proyecto es JavaScript): VS Code los usa para autocompletar
     │   └── alquileres.js       # Cliente, Alquiler, AlquilerListado, AlquilerDetalle, AlquilerEquipo, EstadoAlquiler, filtros y bodies de alta y edición, formulario y datos del checklist, tal cual el back (snake_case)
