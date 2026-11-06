@@ -1,9 +1,7 @@
 import { useCallback, useEffect, useMemo, useReducer, useRef } from 'react'
-import { enviarChecklist } from '../services/checklistsService'
 import {
   borrarBorradores,
   DATOS_CHECKLIST_INICIALES,
-  getDatosEnvio,
   getErrorEnvio,
   getPasosChecklist,
   guardarBorrador,
@@ -17,7 +15,8 @@ import { ChecklistContext } from './ChecklistContext'
 /*
  * Estado del asistente: el tipo elegido, el paso actual (por su id: 'inicio', 'horas', 'items', 'cierre' o 'revision')
  * y los datos cargados. `borrador` es el que quedó sin terminar, mientras se decide si seguirlo o empezar de nuevo.
- * `datosIniciales` son los de un checklist nuevo: vacíos, salvo el responsable recordado en el celular.
+ * `datosIniciales` son los de un checklist nuevo: vacíos, salvo lo que precarga la página (las horas actuales, en un
+ * alquiler) y el responsable recordado en el celular (solo si se pide).
  * `fotos` (los File ya comprimidos) va aparte de `datos` porque no entra en el borrador; `fotosPerdidas` marca
  * que el borrador retomado tenía fotos, para pedir que las vuelva a sacar, hasta que saque una.
  * `editando` es que se llegó a un paso desde la revisión ("Editar" o un error del envío): su botón principal
@@ -110,24 +109,41 @@ function reducer(state, action) {
 }
 
 /*
- * Flujo de un checklist de campo, compartido entre los pasos del asistente. Recibe el formulario que devolvió
- * el back para el token del QR. Cada cambio se guarda como borrador en localStorage (sin las fotos) y, si al abrir
- * el link había uno sin terminar, se ofrece seguirlo. Un checklist nuevo arranca con el nombre y apellido del último envío.
- * Con un checklist empezado, cerrar o recargar la pestaña pide confirmación.
- * `enviar` hace el POST una sola vez aunque se toque dos veces; si sale bien borra el borrador, recuerda al responsable
- * y pide de nuevo el formulario (`onRefrescar`) para que el inicio muestre las horas nuevas. Con un 409 también lo
- * pide, para actualizar las horas a corregir.
- * Montarlo con key={token}: el estado es de un solo equipo
+ * Flujo de un checklist hecho con el asistente de campo, compartido entre sus pasos. Lo usan el QR de M06
+ * (ChecklistPage) y la entrega o devolución de un equipo alquilado (RentalChecklistPage).
+ * `clave` identifica el borrador: cada cambio se guarda en localStorage (sin las fotos) y, si al abrir había uno sin
+ * terminar, se ofrece seguirlo. Con un checklist empezado, cerrar o recargar la pestaña pide confirmación.
+ * `formulario` es { equipo, opciones } con los nombres del front; `datosIniciales` precarga campos de cada checklist nuevo.
+ * `responsable`: null pide nombre y apellido (QR: un checklist nuevo arranca con los del último envío); con un texto
+ * no se pide, la revisión lo muestra y el back usa el usuario de la sesión.
+ * `enviarChecklist({ tipo, items, esMaquina, datos, fotos })` hace el POST y devuelve la respuesta: `enviar` lo llama
+ * una sola vez aunque se toque dos veces. Si sale bien, borra el borrador y:
+ *  - con `onEnviado(respuesta)`, la página sigue sola (por ejemplo, vuelve al alquiler): el asistente queda "Enviando…";
+ *  - sin él, muestra "Listo", recuerda al responsable y pide de nuevo el formulario (`onRefrescar`) para las horas nuevas.
+ * Si falla, `onErrorEnvio(error)` puede tomarlo (devuelve true y la página muestra otra cosa); si no, el error lleva
+ * al paso que lo corrige y, con un 409, también se pide de nuevo el formulario para actualizar las horas.
+ * Montarlo con key={clave}: el estado es de un solo equipo
  */
-export default function ChecklistProvider({ token, formulario, onRefrescar, children }) {
+export default function ChecklistProvider({
+  clave,
+  formulario,
+  datosIniciales: precargados = null,
+  responsable = null,
+  enviarChecklist,
+  onEnviado,
+  onErrorEnvio,
+  onRefrescar,
+  children,
+}) {
   const { equipo, opciones } = formulario
   const tipos = useMemo(() => opciones.map(({ tipo }) => tipo), [opciones])
+  const pideResponsable = responsable == null
 
   const [state, dispatch] = useReducer(reducer, null, () =>
     crearEstado({
       pasos: getPasosChecklist(equipo.esMaquina),
-      borrador: leerBorrador(token, tipos),
-      datosIniciales: { ...DATOS_CHECKLIST_INICIALES, ...leerResponsable() },
+      borrador: leerBorrador(clave, tipos),
+      datosIniciales: { ...DATOS_CHECKLIST_INICIALES, ...precargados, ...(pideResponsable && leerResponsable()) },
     }),
   )
   const { pasos, borrador, tipo, paso, datos, fotos, fotosPerdidas, editando, enviando, errorEnvio, resultado } = state
@@ -136,8 +152,8 @@ export default function ChecklistProvider({ token, formulario, onRefrescar, chil
   // Si se recarga antes de volver a sacar las fotos perdidas, el aviso tiene que seguir apareciendo
   const conFotos = fotos.length > 0 || fotosPerdidas
   useEffect(() => {
-    if (tipo) guardarBorrador(token, tipos, { tipo, paso, datos, conFotos })
-  }, [token, tipos, tipo, paso, datos, conFotos])
+    if (tipo) guardarBorrador(clave, tipos, { tipo, paso, datos, conFotos })
+  }, [clave, tipos, tipo, paso, datos, conFotos])
 
   useEffect(() => {
     if (!tipo) return
@@ -148,9 +164,9 @@ export default function ChecklistProvider({ token, formulario, onRefrescar, chil
 
   const seguirBorrador = useCallback(() => dispatch({ type: 'seguir-borrador' }), [])
   const descartarBorrador = useCallback(() => {
-    borrarBorradores(token, tipos)
+    borrarBorradores(clave, tipos)
     dispatch({ type: 'descartar-borrador' })
-  }, [token, tipos])
+  }, [clave, tipos])
   const elegirTipo = useCallback((nuevo) => dispatch({ type: 'elegir-tipo', tipo: nuevo }), [])
   const avanzar = useCallback(() => dispatch({ type: 'avanzar' }), [])
   const retroceder = useCallback(() => dispatch({ type: 'retroceder' }), [])
@@ -168,28 +184,47 @@ export default function ChecklistProvider({ token, formulario, onRefrescar, chil
     dispatch({ type: 'envio-iniciado' })
 
     try {
-      const datosEnvio = getDatosEnvio({ tipo, items: opcion.items, esMaquina: equipo.esMaquina, datos })
-      const respuesta = await enviarChecklist(token, { datos: datosEnvio, fotos })
-      const responsable = { nombre: datos.nombre.trim(), apellido: datos.apellido.trim() }
-      borrarBorradores(token, tipos)
-      guardarResponsable(responsable)
+      const respuesta = await enviarChecklist({ tipo, items: opcion.items, esMaquina: equipo.esMaquina, datos, fotos })
+      borrarBorradores(clave, tipos)
+      if (onEnviado) {
+        onEnviado(respuesta)
+        return
+      }
+      const recordado = pideResponsable ? { nombre: datos.nombre.trim(), apellido: datos.apellido.trim() } : null
+      if (recordado) guardarResponsable(recordado)
       dispatch({
         type: 'envio-exitoso',
         resultado: { ...respuesta, titulo: opcion.titulo, codigoInterno: equipo.codigoInterno },
-        datosIniciales: { ...DATOS_CHECKLIST_INICIALES, ...responsable },
+        datosIniciales: { ...DATOS_CHECKLIST_INICIALES, ...precargados, ...recordado },
       })
       onRefrescar?.()
     } catch (error) {
+      if (onErrorEnvio?.(error)) return
       dispatch({ type: 'envio-fallido', error: getErrorEnvio(error, pasos) })
       if (error.status === 409) onRefrescar?.()
     } finally {
       enviandoRef.current = false
     }
-  }, [opcion, tipo, equipo, datos, token, fotos, tipos, pasos, onRefrescar])
+  }, [
+    opcion,
+    tipo,
+    equipo,
+    datos,
+    clave,
+    fotos,
+    tipos,
+    pasos,
+    precargados,
+    pideResponsable,
+    enviarChecklist,
+    onEnviado,
+    onErrorEnvio,
+    onRefrescar,
+  ])
 
   const value = useMemo(
     () => ({
-      token,
+      clave,
       equipo,
       opciones,
       opcion,
@@ -201,6 +236,8 @@ export default function ChecklistProvider({ token, formulario, onRefrescar, chil
       datos,
       fotos,
       fotosPerdidas,
+      pideResponsable,
+      responsable,
       editando,
       enviando,
       errorEnvio,
@@ -218,7 +255,7 @@ export default function ChecklistProvider({ token, formulario, onRefrescar, chil
       otroChecklist,
     }),
     [
-      token,
+      clave,
       equipo,
       opciones,
       opcion,
@@ -228,6 +265,8 @@ export default function ChecklistProvider({ token, formulario, onRefrescar, chil
       datos,
       fotos,
       fotosPerdidas,
+      pideResponsable,
+      responsable,
       editando,
       enviando,
       errorEnvio,

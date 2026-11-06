@@ -1,4 +1,5 @@
 import { QrCode, RotateCw, ServerCrash, WifiOff } from 'lucide-react'
+import { useCallback } from 'react'
 import { useParams } from 'react-router'
 import { ChecklistStartSkeleton } from '../../components/field/ChecklistStart'
 import ChecklistWizard from '../../components/field/ChecklistWizard'
@@ -6,6 +7,8 @@ import FieldMessage from '../../components/field/FieldMessage'
 import MainAction from '../../components/field/MainAction'
 import ChecklistProvider from '../../context/ChecklistProvider'
 import { useFormularioChecklist } from '../../hooks/useFormularioChecklist'
+import { enviarChecklist } from '../../services/checklistsService'
+import { getDatosEnvio } from '../../utils/checklists'
 
 /*
  * /c/:token: lo que abre el QR pegado en el equipo. Pública, sin sesión y sin navbar, footer ni menú:
@@ -14,6 +17,10 @@ import { useFormularioChecklist } from '../../hooks/useFormularioChecklist'
 export default function ChecklistPage() {
   const { token } = useParams()
   const { status, formulario, retry, refrescar } = useFormularioChecklist(token)
+  const enviar = useCallback(
+    ({ fotos, ...checklist }) => enviarChecklist(token, { datos: getDatosEnvio(checklist), fotos }),
+    [token],
+  )
 
   if (status === 'loading') return <ChecklistStartSkeleton />
 
@@ -41,7 +48,13 @@ export default function ChecklistPage() {
   }
 
   return (
-    <ChecklistProvider key={token} token={token} formulario={formulario} onRefrescar={refrescar}>
+    <ChecklistProvider
+      key={token}
+      clave={token}
+      formulario={formulario}
+      enviarChecklist={enviar}
+      onRefrescar={refrescar}
+    >
       <ChecklistWizard />
     </ChecklistProvider>
   )
