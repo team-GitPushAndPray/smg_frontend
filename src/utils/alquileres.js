@@ -3,7 +3,12 @@ import { formatFechaChecklist } from './historial'
 import { normalizeText } from './text'
 import { getErrorGenerico } from './usuarios'
 
-/** @import { AlquilerEquipo, AlquilerListado, AlquilerListadoEquipo, EstadoAlquiler } from '../types/alquileres' */
+/**
+ * @import {
+ *   AlquilerEquipo, AlquilerListado, AlquilerListadoEquipo, EstadoAlquiler, FormularioChecklistAlquiler,
+ *   TipoChecklistAlquiler,
+ * } from '../types/alquileres'
+ */
 
 /*
  * Estados de un alquiler, con la clave tal cual la manda el back. Mismo badge en todas las pantallas.
@@ -174,6 +179,95 @@ export function getAccionesEquipo(equipo, { estado, puedeEditar }) {
     entrega: !equipo.entrega,
     devolucion: Boolean(equipo.entrega) && !equipo.devolucion,
   }
+}
+
+// ── Checklist de entrega / devolución ────────────────────────────────────────
+
+/**
+ * Si el `?tipo=` de la ruta del checklist es uno que existe (ENTREGA o DEVOLUCION, tal cual)
+ * @param {string | null | undefined} tipo
+ * @returns {tipo is TipoChecklistAlquiler}
+ */
+export function esTipoChecklistAlquiler(tipo) {
+  return Object.hasOwn(TIPOS_CHECKLIST_ALQUILER, tipo ?? '')
+}
+
+/**
+ * Clave del borrador del checklist de un equipo alquilado en localStorage: queda checklist:alquiler:<id>:<equipoId>:<tipo>
+ * (ver guardarBorrador en utils/checklists.js), aparte de los borradores del QR
+ * @param {number | string} id
+ * @param {number | string} equipoId
+ */
+export function claveChecklistAlquiler(id, equipoId) {
+  return `alquiler:${id}:${equipoId}`
+}
+
+/**
+ * Respuesta de GET /alquileres/:id/equipos/:equipoId/checklist?tipo= con la forma que usa el asistente de campo
+ * (ChecklistProvider): el equipo en camelCase como en el QR y una sola opción, la del `tipo` pedido, titulada "Entrega" o
+ * "Devolución" (el nombre de la plantilla, "Alquiler — Máquina", no dice qué se está haciendo). `alquiler` es el contexto
+ * de solo lectura del encabezado
+ * @param {FormularioChecklistAlquiler} data
+ * @param {TipoChecklistAlquiler} tipo
+ */
+export function adaptarFormularioChecklistAlquiler(data, tipo) {
+  const equipo = data?.equipo ?? {}
+  const alquiler = data?.alquiler ?? {}
+  const esMaquina = equipo.tipo === 'MAQUINA'
+  const items = Array.isArray(data?.plantilla?.items) ? data.plantilla.items : []
+  return {
+    equipo: {
+      codigoInterno: equipo.codigo_interno ?? '',
+      categoria: equipo.categoria ?? '',
+      marca: null,
+      esMaquina,
+      tipo: esMaquina ? 'maquina' : 'aditamento',
+      horasMotorActual: esMaquina ? (equipo.horas_motor_actual ?? null) : null,
+      horasActualizadasEn: null,
+    },
+    opciones: [{ tipo, titulo: TIPOS_CHECKLIST_ALQUILER[tipo], items }],
+    alquiler: {
+      id: alquiler.id ?? null,
+      cliente: alquiler.cliente_razon_social ?? '',
+      ubicacion: alquiler.ubicacion_referencia ?? '',
+      fechaInicio: alquiler.fecha_inicio ?? null,
+      fechaFin: alquiler.fecha_fin_prevista ?? null,
+    },
+  }
+}
+
+/*
+ * Por qué no se puede hacer el checklist (409 del GET o del POST), en palabras del usuario. El back avisa: "Este equipo
+ * ya cuenta con un checklist de entrega registrado", "No se puede realizar la devolución de un equipo sin entrega previa"
+ * o "El alquiler no se encuentra en estado PENDIENTE o ACTIVO". Un mensaje que no se reconoce se muestra como llega
+ */
+const CONFLICTOS_CHECKLIST = [
+  { patron: /ya cuenta con un checklist de entrega/i, texto: 'La entrega de este equipo ya se registró.' },
+  { patron: /ya cuenta con un checklist de devoluci[oó]n/i, texto: 'La devolución de este equipo ya se registró.' },
+  { patron: /sin entrega previa/i, texto: 'Este equipo todavía no se entregó: primero hay que completar la entrega.' },
+  { patron: /no se encuentra en estado/i, texto: 'Este alquiler ya no está en curso: no admite entregas.' },
+]
+
+/**
+ * Aviso de pantalla completa para un 409 del checklist: { titulo, descripcion }
+ * @param {TipoChecklistAlquiler} tipo
+ * @param {string | null | undefined} mensaje El message del back
+ */
+export function getConflictoChecklistAlquiler(tipo, mensaje) {
+  const conocido = CONFLICTOS_CHECKLIST.find(({ patron }) => patron.test(mensaje ?? ''))
+  return {
+    titulo: tipo === 'DEVOLUCION' ? 'No se puede completar la devolución' : 'No se puede completar la entrega',
+    descripcion: conocido?.texto ?? mensaje ?? 'Revisá el detalle del alquiler.',
+  }
+}
+
+/**
+ * Aviso de éxito al volver al detalle: "Entrega de MC-01 registrada"
+ * @param {TipoChecklistAlquiler} tipo
+ * @param {string} codigoInterno
+ */
+export function textoChecklistRegistrado(tipo, codigoInterno) {
+  return `${TIPOS_CHECKLIST_ALQUILER[tipo]} de ${codigoInterno} registrada`
 }
 
 /**
