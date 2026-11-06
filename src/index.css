@@ -487,3 +487,73 @@
     background: color-mix(in srgb, var(--color-black) 50%, transparent);
   }
 }
+
+/*
+ * Hoja de impresión (exportar el historial a PDF e imprimir un checklist). La arma HojaImpresion en un portal,
+ * directo en <body>: en pantalla no se ve y al imprimir es lo único que sale. Así el PDF nunca lleva sidebar,
+ * topbar, botones ni filtros, venga del botón o de Ctrl + P mientras la hoja está armada.
+ * El papel va siempre en claro y sin vidrio, como el módulo de campo: estas clases no tienen variante oscura
+ */
+@page {
+  size: A4;
+  margin: 14mm 12mm;
+}
+
+@media screen {
+  .hoja-impresion {
+    display: none;
+  }
+}
+
+@media print {
+  html,
+  html.dark {
+    color-scheme: light;
+  }
+
+  body:has(> .hoja-impresion) {
+    background: var(--color-white);
+
+    &::before {
+      display: none;
+    }
+
+    & > :not(.hoja-impresion) {
+      display: none !important;
+    }
+  }
+}
+
+/* Contenedor de la hoja: blanco y negro, y los tintes (anormales, encabezados) se imprimen aunque no se pidan fondos */
+@utility impresion-hoja {
+  @apply flex flex-col gap-6 bg-white text-sm text-black;
+  print-color-adjust: exact;
+  -webkit-print-color-adjust: exact;
+}
+
+/* Título de un bloque: no queda solo al pie de una hoja, separado de lo que titula */
+@utility impresion-titulo {
+  @apply text-base font-semibold tracking-tight;
+  break-after: avoid;
+}
+
+/* Tabla de la hoja: bordes finos visibles en papel; el encabezado se repite en cada hoja y ninguna fila se corta */
+@utility impresion-tabla {
+  @apply w-full border-collapse text-left text-xs;
+
+  & thead {
+    display: table-header-group;
+  }
+
+  & th {
+    @apply border-b-2 border-neutral-400 bg-neutral-100 px-2 py-1.5 font-semibold text-neutral-800;
+  }
+
+  & td {
+    @apply border-b border-neutral-300 px-2 py-1.5 align-top;
+  }
+
+  & tr {
+    break-inside: avoid;
+  }
+}

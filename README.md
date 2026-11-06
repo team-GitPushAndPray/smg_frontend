@@ -12,7 +12,7 @@ sgm_frontend/
 └── src/
     ├── main.jsx                # Punto de entrada: monta <App /> en el DOM
     ├── App.jsx                 # Componente raíz: monta el tema, la sesión y el router
-    ├── index.css               # Tailwind, paleta, tokens de vidrio, fondo global, clases .glass / .glass-strong, botones, campos e ícono dentro de un campo (field-icon); clases sólidas del módulo de campo (campo-*), el verde de estado (ok-*), solo para "Normal" en los ítems de un checklist (campo e historial), y los tokens del visor de fotos (--visor-*)
+    ├── index.css               # Tailwind, paleta, tokens de vidrio, fondo global, clases .glass / .glass-strong, botones, campos e ícono dentro de un campo (field-icon); clases sólidas del módulo de campo (campo-*), el verde de estado (ok-*), solo para "Normal" en los ítems de un checklist (campo e historial), los tokens del visor de fotos (--visor-*) y la hoja de impresión (hoja-impresion e impresion-*: A4, papel siempre claro, sin vidrio; al imprimir oculta todo lo demás)
     │
     ├── config/                 # Configuración global
     │   ├── env.js              # Lee y expone las variables de entorno (API_URL)
@@ -54,6 +54,7 @@ sgm_frontend/
     │   ├── useFiltrosHistorial.js # Filtros (desde, hasta, tipo, responsable, q) y página de los checklists del historial guardados en la URL junto a la pestaña; ignora lo inválido y nunca deja un rango al revés
     │   ├── useChecklistsEquipo.js # Carga una página de los checklists de un equipo según los filtros, conservando la anterior mientras llega la nueva, con reintento
     │   ├── useChecklistHistorial.js # Carga el detalle de un checklist del historial por los ids de la URL: carga, no encontrado (404: no existe o es de otro equipo), error y reintento
+    │   ├── useExportacionChecklists.js # Exportar a PDF los checklists de un equipo con los filtros aplicados: pide todos (todas las páginas, solo GET), deja listo el informe con la fecha de emisión y avisa con un toast si falla la red
     │   ├── useTextoDiferido.js # Campo de texto que se aplica cuando se deja de tipear (400 ms), con borrar al momento y puesta al día si cambia la URL
     │   ├── useCategorias.js    # Carga las categorías de equipo para filtros y formularios, con reintento
     │   ├── useFormularioChecklist.js # Carga el formulario de checklist por el token del QR: carga, QR no válido (404), sin conexión (con reintento solo al volver la red) y error; también lo vuelve a pedir sin pantalla de carga para actualizar las horas
@@ -75,7 +76,7 @@ sgm_frontend/
     │   │   ├── MachinesPage.jsx  # /admin/maquinas: inventario con buscador (espera de 400 ms), filtros, dados de baja y paginación del back, todo en la URL; acciones de horas, estado y baja que refrescan la página; solo lectura sin edición en Máquinas
     │   │   ├── MachineDetailPage.jsx # /admin/maquinas/:id: detalle de un equipo (también dado de baja), con "Equipo no encontrado" y reintento; "Ver historial" para todos (también dado de baja), "Ver QR" para todos y "Editar" y las acciones de horas, estado y baja solo con edición, todo con el equipo activo; las acciones al terminar recargan el equipo
     │   │   ├── MachineHistoryPage.jsx # /admin/maquinas/:id/historial (requiere ver Máquinas): historial de solo lectura de un equipo (también dado de baja), con encabezado, "Equipo no encontrado" y reintento; pestañas Checklists, Alquileres y Mantenimiento con la activa en la URL (?tab=checklists); Checklists con filtros, tabla y paginación; Alquileres y Mantenimiento con estado vacío hasta M-08 y M-10
-    │   │   ├── MachineChecklistPage.jsx # /admin/maquinas/:id/historial/checklists/:checklistId (requiere ver Máquinas): detalle de un checklist del historial con el equipo, "Checklist no encontrado" (404) y reintento; se puede recargar o compartir; "Volver al historial" restaura los filtros con los que se abrió
+    │   │   ├── MachineChecklistPage.jsx # /admin/maquinas/:id/historial/checklists/:checklistId (requiere ver Máquinas): detalle de un checklist del historial con el equipo, "Checklist no encontrado" (404) y reintento; se puede recargar o compartir; "Volver al historial" restaura los filtros con los que se abrió; "Imprimir" abre el diálogo de impresión con el checklist completo y sus fotos (se puede guardar como PDF)
     │   │   ├── MachineFormPage.jsx # /admin/maquinas/nuevo y /admin/maquinas/:id/editar (requieren editar Máquinas): alta de equipo con aviso y paso al detalle del creado; edición precargada que envía solo los campos modificados (PATCH parcial), bloqueada para equipos dados de baja
     │   │   ├── UsersPage.jsx     # /admin/configuracion/usuarios: ABM de usuarios (tabla, búsqueda, filtro por estado, alta, edición, baja y reactivación); solo lectura con Configuración en "Ver"
     │   │   └── RolesPage.jsx     # /admin/configuracion/roles: matriz de permisos roles × módulos, alta y edición de roles, activación y desactivación; solo lectura con Configuración en "Ver"
@@ -121,14 +122,18 @@ sgm_frontend/
     │   │   ├── AvisoDadoDeBaja.jsx # Aviso de equipo dado de baja (se conserva por su historial), compartido por el detalle y el historial
     │   │   ├── HistorialHeader.jsx # Encabezado del historial: "M027 · Minicargadora Bobcat S530" (sin modelo en aditamentos), badge de estado y aviso de dado de baja; sin acciones. Incluye la versión de carga de toda la pantalla
     │   │   ├── HistorialTabs.jsx   # Pestañas del historial (Checklists, Alquileres, Mantenimiento): control segmentado con el patrón de tabs de WAI-ARIA (flechas, Inicio y Fin); en celular, ícono arriba del texto para que entren a 360px
-    │   │   ├── HistorialChecklists.jsx # Pestaña Checklists del historial: filtros, listado de a 20 (el más nuevo arriba), paginación y estados (cargando, sin checklists, sin resultados y error con reintento)
-    │   │   ├── ChecklistsToolbar.jsx # Filtros de los checklists: buscador en las observaciones, responsable, tipo, rango de fechas (Desde/Hasta) y "Limpiar filtros"
+    │   │   ├── HistorialChecklists.jsx # Pestaña Checklists del historial: filtros, listado de a 20 (el más nuevo arriba), paginación y estados (cargando, sin checklists, sin resultados y error con reintento); "Exportar PDF" con todos los checklists filtrados, no solo la página
+    │   │   ├── ChecklistsToolbar.jsx # Filtros de los checklists: buscador en las observaciones, responsable, tipo, rango de fechas (Desde/Hasta), "Limpiar filtros" y, al lado, las acciones sobre el listado (Exportar PDF)
     │   │   ├── HistorialChecklistsTable.jsx # Checklists de un equipo: tabla desde md (fecha, tipo, horas motor, responsable, anormales y fotos) y tarjetas en celular; toda la fila abre el detalle. Incluye su versión de carga
     │   │   ├── TipoChecklistBadge.jsx # Badge del tipo de checklist (ícono, texto y un tono por tipo)
     │   │   ├── ChecklistDetalle.jsx # Detalle de un checklist: cabecera (tipo, fecha y hora, horas motor, responsable y anormales), ítems ANORMAL primero y resaltados con su observación, observaciones generales, fotos y el resto de los ítems en un bloque colapsable; cada bloque solo si tiene contenido. Incluye su versión de carga
     │   │   ├── EstadoItemBadge.jsx # Estado de un ítem respondido en el panel (✓ Normal en verde, ✕ Anormal en rojo, — No aplica en gris)
     │   │   ├── GaleriaFotos.jsx    # Miniaturas de las fotos de un checklist pedidas achicadas a Cloudinary (w_300), que abren el visor
     │   │   ├── VisorFotos.jsx      # Visor de fotos a pantalla completa: flechas en pantalla y de teclado, deslizar en celular, Escape para cerrar, foco atrapado y precarga de la anterior y la siguiente
+    │   │   ├── HojaImpresion.jsx   # Hoja para imprimir o guardar como PDF desde el navegador: portal en <body> invisible en pantalla, espera a que carguen las fotos, abre el diálogo con un título que sirve de nombre de archivo y se desmonta al cerrarlo. No sube nada al back
+    │   │   ├── EncabezadoImpresion.jsx # Encabezado de las hojas impresas del historial: marca, fecha de emisión, título y equipo con su estado (y dado de baja)
+    │   │   ├── InformeChecklists.jsx # Hoja del historial de checklists: filtros aplicados, cantidad y tabla con todos los checklists filtrados (horas motor solo en máquinas)
+    │   │   ├── InformeChecklistDetalle.jsx # Hoja de un checklist (entrega o devolución para el cliente): datos, observaciones generales, todas las respuestas con las anormales resaltadas y las fotos, dos por fila
     │   │   ├── EquipoDetail.jsx    # Detalle de un equipo del panel: encabezado con "Ver historial", "Ver QR", "Editar" y el ⋯ de acciones, aviso de dado de baja, datos generales y datos de máquina, y su versión de carga
     │   │   ├── EquipoForm.jsx      # Formulario de equipo (alta y, precargado, edición): tipo máquina/aditamento, datos generales y de máquina, validaciones del DTO y errores del back (409 en el código interno, 400 arriba); en la edición, tipo fijo, sin horas de motor y sin vaciar la ubicación ni la descripción ya cargadas. Incluye su versión de carga
     │   │   └── Pagination.jsx      # Paginación de un listado: rango mostrado, total y botones de página (anterior/siguiente en celular)
@@ -174,13 +179,13 @@ sgm_frontend/
     │   ├── rolesService.js     # Roles y permisos: GET /roles, GET /modulos, POST y PATCH /roles, PUT /roles/:id/modulos
     │   ├── equiposService.js   # Equipos del panel: GET /equipos (paginado, con filtros), GET /equipos/:id, POST y PATCH /equipos, PATCH /equipos/:id/horas y /estado, y DELETE /equipos/:id (baja lógica)
     │   ├── categoriasService.js # GET /categorias: categorías de equipo
-    │   ├── historialService.js # Historial de un equipo (solo lectura): GET /equipos/:id/historial/checklists (paginado, con filtros de fecha, tipo, responsable y búsqueda en observaciones) y GET /equipos/:id/historial/checklists/:checklistId (detalle con respuestas y fotos)
+    │   ├── historialService.js # Historial de un equipo (solo lectura): GET /equipos/:id/historial/checklists (paginado, con filtros de fecha, tipo, responsable y búsqueda en observaciones) y GET /equipos/:id/historial/checklists/:checklistId (detalle con respuestas y fotos); para el PDF, recorre todas las páginas de a 100 (el máximo del back)
     │   └── checklistsService.js # GET /public/checklists/:token (sin sesión): equipo del QR y sus opciones de checklist con los ítems; POST del checklist terminado (multipart: `datos` JSON y `fotos`)
     │
     └── utils/                  # Funciones auxiliares
         ├── text.js             # Normaliza texto para buscar sin importar mayúsculas ni tildes
         ├── equipos.js          # Datos de un equipo listos para mostrar, WhatsApp de cotización, categorías del listado, tipos, estados (etiqueta, ícono y color, y clave, por clave o etiqueta), nombre del equipo, el equipo en una línea (código · categoría marca modelo), formato de horas ("Sin registrar" si no hay carga), campos modificados de un equipo (body del PATCH) y mensajes de error del módulo máquinas
-        ├── historial.js        # Pestañas del historial de un equipo (id de la URL, etiqueta, ícono y módulo pendiente) y lectura de la pestaña activa (?tab=), con Checklists por defecto; tipos de checklist (etiqueta, ícono y tono), checklist del listado y su detalle con los nombres del front, separación de los ítems ANORMAL del resto, URL de las fotos con la transformación de Cloudinary (miniatura y ampliada), formatos de fecha y horas y validación de las fechas de los filtros
+        ├── historial.js        # Pestañas del historial de un equipo (id de la URL, etiqueta, ícono y módulo pendiente) y lectura de la pestaña activa (?tab=), con Checklists por defecto; tipos de checklist (etiqueta, ícono y tono), checklist del listado y su detalle con los nombres del front, separación de los ítems ANORMAL del resto, URL de las fotos con la transformación de Cloudinary (miniatura, ampliada e impresión), formatos de fecha y horas, validación de las fechas de los filtros, filtros aplicados en palabras y nombre del archivo PDF
         ├── vendedores.js       # Nombre del cargo, iniciales y enlace de WhatsApp de un vendedor
         ├── usuarios.js         # Normalización de los módulos (del usuario y de cada rol), nombre del rol, nombre completo, último acceso y error genérico
         ├── roles.js            # Niveles de acceso de la matriz (Sin acceso, Ver, Editar) y armado de la lista completa de módulos de un rol

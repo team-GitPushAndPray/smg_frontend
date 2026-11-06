@@ -1,4 +1,8 @@
-import { adaptarChecklistHistorial, adaptarDetalleChecklist } from '../utils/historial'
+import {
+  adaptarChecklistHistorial,
+  adaptarDetalleChecklist,
+  CHECKLISTS_POR_PEDIDO_EXPORTACION,
+} from '../utils/historial'
 import { apiFetch, toQuery } from './api'
 
 /*
@@ -19,6 +23,24 @@ export async function listarChecklistsEquipo(equipoId, filtros, { signal } = {})
     checklists: Array.isArray(respuesta?.data) ? respuesta.data.map(adaptarChecklistHistorial) : [],
     meta: { total: respuesta?.meta?.total ?? 0, page: respuesta?.meta?.page ?? 1, limit: respuesta?.meta?.limit ?? 0 },
   }
+}
+
+/*
+ * Todos los checklists del equipo que cumplen los filtros (sin página), para exportarlos a PDF. Recorre las páginas
+ * de a 100 (el máximo del back) hasta juntar el total que informa la primera; si una página vuelve vacía (se borró
+ * algo en el medio, aunque hoy no se borra nada) corta ahí. Solo GET: no se sube nada al back
+ */
+export async function listarTodosLosChecklistsEquipo(equipoId, filtros, { signal } = {}) {
+  const limit = CHECKLISTS_POR_PEDIDO_EXPORTACION
+  const todos = []
+  let total = Infinity
+  for (let page = 1; todos.length < total; page += 1) {
+    const { checklists, meta } = await listarChecklistsEquipo(equipoId, { ...filtros, page, limit }, { signal })
+    if (page === 1) total = meta.total
+    if (checklists.length === 0) break
+    todos.push(...checklists)
+  }
+  return todos
 }
 
 /*
