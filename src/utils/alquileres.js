@@ -1,7 +1,8 @@
 import { CalendarClock, CircleCheck, CirclePlay, CircleX, Clock, History } from 'lucide-react'
+import { formatFechaChecklist } from './historial'
 import { normalizeText } from './text'
 
-/** @import { AlquilerListado, AlquilerListadoEquipo, EstadoAlquiler } from '../types/alquileres' */
+/** @import { AlquilerEquipo, AlquilerListado, AlquilerListadoEquipo, EstadoAlquiler } from '../types/alquileres' */
 
 /*
  * Estados de un alquiler, con la clave tal cual la manda el back. Mismo badge en todas las pantallas.
@@ -141,6 +142,75 @@ export const TIPOS_CHECKLIST_ALQUILER = Object.freeze({
   ENTREGA: 'Entrega',
   DEVOLUCION: 'Devolución',
 })
+
+// ── Detalle de un alquiler ───────────────────────────────────────────────────
+
+// Tipo de un equipo del alquiler, con la clave tal cual la manda el back
+export const TIPOS_EQUIPO_ALQUILER = Object.freeze({
+  MAQUINA: 'Máquina',
+  ADITAMENTO: 'Aditamento',
+})
+
+/**
+ * Si el alquiler todavía admite checklists de entrega y devolución: solo mientras está en curso (PENDIENTE o ACTIVO).
+ * FINALIZADO y ANULADO, o un estado que el front no conoce, no
+ * @param {EstadoAlquiler | string | null | undefined} estado
+ */
+export function admiteChecklists(estado) {
+  return ESTADOS_EN_CURSO.includes(estado)
+}
+
+/**
+ * Qué checklist se puede completar sobre un equipo del alquiler: la entrega si todavía no se hizo y la devolución solo
+ * después de la entrega y si todavía no se hizo. Ninguno sin edición en Alquileres o si el alquiler ya no está en curso
+ * @param {AlquilerEquipo} equipo
+ * @param {{ estado: EstadoAlquiler | string, puedeEditar: boolean }} contexto
+ * @returns {{ entrega: boolean, devolucion: boolean }}
+ */
+export function getAccionesEquipo(equipo, { estado, puedeEditar }) {
+  if (!puedeEditar || !admiteChecklists(estado)) return { entrega: false, devolucion: false }
+  return {
+    entrega: !equipo.entrega,
+    devolucion: Boolean(equipo.entrega) && !equipo.devolucion,
+  }
+}
+
+/**
+ * Un timestamp del back (alta del alquiler, fecha de un checklist) en la hora del navegador: "05/11/2026 · 14:32".
+ * "—" si no vino o no es una fecha
+ * @param {string | null | undefined} iso
+ * @returns {string}
+ */
+export function formatFechaHoraAlquiler(iso) {
+  const partes = formatFechaChecklist(iso)
+  return partes ? `${partes.fecha} · ${partes.hora}` : '—'
+}
+
+/**
+ * Nombre y apellido de una persona en una línea ("Juan Pérez"); '' si no vino ninguno
+ * @param {string | null | undefined} nombre
+ * @param {string | null | undefined} apellido
+ */
+export function nombreCompleto(nombre, apellido) {
+  return [nombre, apellido]
+    .map((valor) => valor?.trim())
+    .filter(Boolean)
+    .join(' ')
+}
+
+/**
+ * Cuántos equipos del alquiler ya se entregaron y cuántos ya volvieron
+ * @param {AlquilerEquipo[] | null | undefined} equipos
+ * @returns {{ entregados: number, devueltos: number, total: number }}
+ */
+export function contarChecklistsEquipos(equipos) {
+  const lista = equipos ?? []
+  return {
+    entregados: lista.filter((equipo) => equipo.entrega).length,
+    devueltos: lista.filter((equipo) => equipo.devolucion).length,
+    total: lista.length,
+  }
+}
 
 /**
  * Link a Google Maps de una ubicación, para abrir en pestaña nueva. Devuelve null si falta alguna coordenada o no es un
