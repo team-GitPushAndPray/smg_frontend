@@ -1,6 +1,7 @@
 import { LockKeyhole, ShieldCheck } from 'lucide-react'
 import { formatUltimoAcceso, getNombreCompleto, getRolLabel } from '../../utils/usuarios'
 import { getIniciales } from '../../utils/vendedores'
+import EstadoActivoBadge from './EstadoActivoBadge'
 import UserActionsMenu from './UserActionsMenu'
 
 const SKELETON_COUNT = 4
@@ -55,21 +56,6 @@ function RoleBadge({ rol, esSistema }) {
     <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium ${className}`}>
       {esSistema && <ShieldCheck size={14} strokeWidth={1.75} aria-hidden="true" />}
       {getRolLabel(rol) || 'Sin rol'}
-    </span>
-  )
-}
-
-// Sin verde en la paleta: activo es un punto lleno en el color del texto; inactivo, un punto hueco y en gris
-function StatusBadge({ activo }) {
-  return (
-    <span
-      className={`inline-flex items-center gap-2 text-sm font-medium ${activo ? textStrong.activo : textStrong.inactivo}`}
-    >
-      <span
-        aria-hidden="true"
-        className={`size-2 shrink-0 rounded-full ${activo ? 'bg-current' : 'border-[1.5px] border-current'}`}
-      />
-      {activo ? 'Activo' : 'Inactivo'}
     </span>
   )
 }
@@ -154,7 +140,7 @@ export default function UsersTable({ usuarios, rolesSistema, sesionId, pendingId
                 <RoleBadge rol={usuario.rol} esSistema={esSistema} />
               </td>
               <td className="px-4 py-3 whitespace-nowrap">
-                <StatusBadge activo={usuario.activo} />
+                <EstadoActivoBadge activo={usuario.activo} />
               </td>
               <td className={`px-4 py-3 whitespace-nowrap tabular-nums ${textSoft[estadoKey(usuario)]}`}>
                 {formatUltimoAcceso(usuario.ultimoAcceso)}
@@ -186,7 +172,7 @@ export default function UsersTable({ usuarios, rolesSistema, sesionId, pendingId
               </div>
               <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
                 <RoleBadge rol={usuario.rol} esSistema={esSistema} />
-                <StatusBadge activo={usuario.activo} />
+                <EstadoActivoBadge activo={usuario.activo} />
               </div>
               <p className={`text-sm ${textSoft[estadoKey(usuario)]}`}>
                 <span className="text-neutral-600 dark:text-neutral-400">Último acceso: </span>
