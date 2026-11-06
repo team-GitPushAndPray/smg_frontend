@@ -1,8 +1,9 @@
-import { ChevronRight, Clock, MapPin, TriangleAlert } from 'lucide-react'
+import { ChevronRight, MapPin } from 'lucide-react'
 import { Link, useNavigate } from 'react-router'
 import { RUTAS_ALQUILERES } from '../../config/rutasPanel'
 import { formatFechaAlquiler, getVencimiento, linkMaps, resumirEquipos } from '../../utils/alquileres'
 import EstadoAlquilerBadge from './EstadoAlquilerBadge'
+import VencimientoTag from './VencimientoTag'
 
 /** @import { AlquilerListado } from '../../types/alquileres' */
 
@@ -16,26 +17,6 @@ const textSoft = 'text-neutral-700 dark:text-neutral-300'
 const textMuted = 'text-neutral-600 dark:text-neutral-400'
 const rowHover = 'transition-colors duration-200 ease-glass hover:bg-black/5 dark:hover:bg-white/5'
 const focusRing = 'focus-visible:outline-2 focus-visible:outline-(--focus-ring)'
-
-/*
- * Vencido: rojo con alerta, lo que tiene que saltar a la vista (brand-700 / brand-400 pasan AA en texto chico sobre el
- * vidrio). Por vencer: gris fuerte con reloj. No depende solo del color: siempre lleva ícono y texto
- */
-const VENCIMIENTO = {
-  vencido: { Icon: TriangleAlert, className: 'text-brand-700 dark:text-brand-400' },
-  'por-vencer': { Icon: Clock, className: 'text-neutral-800 dark:text-neutral-200' },
-}
-
-function VencimientoTag({ vencimiento }) {
-  if (!vencimiento) return null
-  const { Icon, className } = VENCIMIENTO[vencimiento.tipo]
-  return (
-    <span className={`inline-flex items-center gap-1 text-xs font-medium whitespace-nowrap ${className}`}>
-      <Icon size={14} strokeWidth={1.75} aria-hidden="true" className="shrink-0" />
-      {vencimiento.label}
-    </span>
-  )
-}
 
 // Equipos resumidos ("MC-01 +3"): el title y los lectores de pantalla tienen la lista completa
 function EquiposResumen({ equipos }) {
