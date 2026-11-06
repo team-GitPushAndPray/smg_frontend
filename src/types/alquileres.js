@@ -2,7 +2,7 @@
  * Tipos del módulo Alquileres (M-08), en JSDoc: el proyecto es JavaScript, así que no se compilan, pero VS Code los
  * usa para autocompletar y avisar. Se importan con `@import` o `import('../types/alquileres').Tipo`.
  *
- * Salen de los DTOs y services del back (smg_backend, rama develop: src/clientes y src/alquileres). Los campos van
+ * Salen de los DTOs y services del back (smg_backend, rama staging: src/clientes y src/alquileres). Los campos van
  * tal cual los manda el back, en snake_case (a diferencia de Máquinas, cuyo back los pasa a camelCase).
  *
  * Fechas: las de calendario (fecha_inicio, fecha_fin_prevista) se mandan como 'aaaa-mm-dd', pero el back las devuelve

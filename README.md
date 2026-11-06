@@ -55,7 +55,9 @@ sgm_frontend/
     │   ├── useChecklistsEquipo.js # Carga una página de los checklists de un equipo según los filtros, conservando la anterior mientras llega la nueva, con reintento
     │   ├── useChecklistHistorial.js # Carga el detalle de un checklist del historial por los ids de la URL: carga, no encontrado (404: no existe o es de otro equipo), error y reintento
     │   ├── useExportacionChecklists.js # Exportar a PDF los checklists de un equipo con los filtros aplicados: pide todos (todas las páginas, solo GET), deja listo el informe con la fecha de emisión y avisa con un toast si falla la red
-    │   ├── useTextoDiferido.js # Campo de texto que se aplica cuando se deja de tipear (400 ms), con borrar al momento y puesta al día si cambia la URL
+    │   ├── useFiltrosClientes.js # Búsqueda por razón social y filtro de estado de los clientes (Activos por defecto o Todos, que incluye a los inactivos) guardados en la URL
+    │   ├── useClientes.js      # Carga los clientes según la búsqueda y el estado, conservando la lista anterior mientras llega la nueva, con reintento
+    │   ├── useTextoDiferido.js # Campo de texto que se aplica cuando se deja de tipear (400 ms por defecto), con borrar al momento y puesta al día si cambia la URL
     │   ├── useCategorias.js    # Carga las categorías de equipo para filtros y formularios, con reintento
     │   ├── useFormularioChecklist.js # Carga el formulario de checklist por el token del QR: carga, QR no válido (404), sin conexión (con reintento solo al volver la red) y error; también lo vuelve a pedir sin pantalla de carga para actualizar las horas
     │   ├── useChecklist.js     # Acceso al estado del asistente del checklist (equipo, opciones, paso, datos y acciones)
@@ -83,7 +85,7 @@ sgm_frontend/
     │   │   ├── RentalFormPage.jsx # /admin/alquileres/nuevo (requiere editar Alquileres): alta de un alquiler (provisorio)
     │   │   ├── RentalDetailPage.jsx # /admin/alquileres/:id: detalle del alquiler con sus equipos y checklists (provisorio)
     │   │   ├── RentalChecklistPage.jsx # /admin/alquileres/:id/equipos/:equipoId/checklist?tipo= (requiere editar Alquileres): checklist de entrega o devolución, sin las pestañas del módulo (provisorio)
-    │   │   ├── ClientsPage.jsx   # /admin/alquileres/clientes: tabla de clientes (provisorio)
+    │   │   ├── ClientsPage.jsx   # /admin/alquileres/clientes: clientes ordenados por razón social, con buscador por razón social (espera de 300 ms) y filtro de estado (Activos por defecto), ambos en la URL; estados de carga, error, sin clientes y sin resultados; toda la fila abre el detalle; "Nuevo cliente" solo con edición en Alquileres (modal provisorio)
     │   │   ├── ClientDetailPage.jsx # /admin/alquileres/clientes/:id: detalle del cliente con su historial de alquileres (provisorio)
     │   │   ├── UsersPage.jsx     # /admin/configuracion/usuarios: ABM de usuarios (tabla, búsqueda, filtro por estado, alta, edición, baja y reactivación); solo lectura con Configuración en "Ver"
     │   │   └── RolesPage.jsx     # /admin/configuracion/roles: matriz de permisos roles × módulos, alta y edición de roles, activación y desactivación; solo lectura con Configuración en "Ver"
@@ -112,6 +114,7 @@ sgm_frontend/
 │   │   ├── FormField.jsx       # Campo de formulario (label, ayuda y error) e input de contraseña con mostrar/ocultar
     │   │   ├── UsersToolbar.jsx    # Buscador por nombre o email y filtro por estado de la pantalla de usuarios
     │   │   ├── UsersTable.jsx      # Tabla de usuarios (tarjetas debajo de lg) con rol, estado y último acceso, y su versión de carga
+    │   │   ├── EstadoActivoBadge.jsx # Estado Activo / Inactivo de un registro (usuarios, clientes): punto lleno o hueco y su texto
     │   │   ├── UserActionsMenu.jsx # Menú ⋯ de una fila: Editar y Dar de baja / Reactivar
     │   │   ├── UserFormModal.jsx   # Alta y edición de un usuario con validación y errores del back (409 en el email, 400 arriba)
     │   │   ├── PermissionsMatrix.jsx # Matriz de permisos (filas = roles, columnas = módulos) con la columna del rol fija al hacer scroll, y su versión de carga
@@ -128,6 +131,9 @@ sgm_frontend/
     │   │   ├── EstadoEquipoBadge.jsx # Badge del estado de un equipo (ícono, texto y color); acepta la clave o la etiqueta del estado
     │   │   ├── EstadoAlquilerBadge.jsx # Badge del estado de un alquiler (Pendiente, Activo, Finalizado, Anulado): ícono, texto y color fijo, igual en todas las pantallas
     │   │   ├── AlquileresTabs.jsx  # Pestañas del módulo Alquileres (Alquileres / Clientes): links con la activa según la ruta (Clientes en /clientes y su detalle; Alquileres en el resto)
+    │   │   ├── ClientesToolbar.jsx # Buscador por razón social y filtro de estado (Activos / Todos) de la pantalla de clientes
+    │   │   ├── ClientesTable.jsx   # Tabla de clientes desde lg (razón social, CUIT, contacto, teléfono, localidad y estado) y tarjetas por debajo; toda la fila abre el detalle. Incluye su versión de carga
+    │   │   ├── ClienteFormModal.jsx # Alta de un cliente (provisorio: avisa que está en construcción hasta su issue)
     │   │   ├── AvisoDadoDeBaja.jsx # Aviso de equipo dado de baja (se conserva por su historial), compartido por el detalle y el historial
     │   │   ├── HistorialHeader.jsx # Encabezado del historial: "M027 · Minicargadora Bobcat S530" (sin modelo en aditamentos), badge de estado y aviso de dado de baja; sin acciones. Incluye la versión de carga de toda la pantalla
     │   │   ├── HistorialTabs.jsx   # Pestañas del historial (Checklists, Alquileres, Mantenimiento): control segmentado con el patrón de tabs de WAI-ARIA (flechas, Inicio y Fin); en celular, ícono arriba del texto para que entren a 360px
