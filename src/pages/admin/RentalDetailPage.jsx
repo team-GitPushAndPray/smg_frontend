@@ -1,23 +1,70 @@
-import { ArrowLeft, CloudOff, KeyRound, RotateCw } from 'lucide-react'
+import { ArrowLeft, Ban, CalendarPlus, CloudOff, KeyRound, MapPinned, RotateCw } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { Link, useLocation, useParams } from 'react-router'
+import AlquilerAccionModal from '../../components/admin/AlquilerAccionModal'
 import AlquilerDetail, { AlquilerDetailSkeleton } from '../../components/admin/AlquilerDetail'
 import PanelMessage from '../../components/admin/PanelMessage'
 import { MODULOS, RUTAS_ALQUILERES } from '../../config/rutasPanel'
 import { useAlquiler } from '../../hooks/useAlquiler'
 import { usePermiso } from '../../hooks/usePermiso'
+import { ACCIONES_ALQUILER, getAccionesAlquiler } from '../../utils/alquileres'
+
+const iconProps = { size: 18, strokeWidth: 1.75, 'aria-hidden': true }
+const botonClass = 'flex-1 whitespace-nowrap sm:flex-none'
+
+// Botones del encabezado: los que habilita getAccionesAlquiler (según el estado y la edición en Alquileres)
+function AccionesAlquiler({ acciones: { prorrogar, ubicacion, anular }, onAccion }) {
+  return (
+    <>
+      {prorrogar && (
+        <button
+          type="button"
+          onClick={() => onAccion(ACCIONES_ALQUILER.PRORROGAR)}
+          className={`btn-secondary ${botonClass}`}
+        >
+          <CalendarPlus {...iconProps} />
+          Prorrogar
+        </button>
+      )}
+      {ubicacion && (
+        <button
+          type="button"
+          onClick={() => onAccion(ACCIONES_ALQUILER.UBICACION)}
+          className={`btn-secondary ${botonClass}`}
+        >
+          <MapPinned {...iconProps} />
+          Cambiar ubicación
+        </button>
+      )}
+      {anular && (
+        <button
+          type="button"
+          onClick={() => onAccion(ACCIONES_ALQUILER.ANULAR)}
+          className={`btn-tonal ${botonClass}`}
+        >
+          <Ban {...iconProps} />
+          Anular
+        </button>
+      )}
+    </>
+  )
+}
 
 /*
  * /admin/alquileres/:id: todo un alquiler en una pantalla (GET /alquileres/:id): datos, cliente y, equipo por equipo,
  * qué ya se entregó, qué ya volvió y qué falta. Con edición en Alquileres y el alquiler en curso, cada equipo tiene
  * "Completar entrega" o "Completar devolución", que llevan a su checklist; sin edición se ve todo, de solo lectura.
- * Si se llega desde el alta, el detalle viene en el state de la navegación y se muestra sin esperar
+ * Con edición, el encabezado tiene las únicas tres acciones que modifican un alquiler, cada una en su modal: Prorrogar
+ * y Cambiar ubicación (PENDIENTE o ACTIVO) y Anular (solo PENDIENTE). Al terminar, el detalle se refresca sin pasar
+ * por la carga. Si se llega desde el alta, el detalle viene en el state de la navegación y se muestra sin esperar
  */
 export default function RentalDetailPage() {
   const { id } = useParams()
   const location = useLocation()
   const { puedeEditar } = usePermiso(MODULOS.ALQUILERES)
-  const { status, alquiler, retry } = useAlquiler(id, location.state?.alquiler ?? null)
+  const { status, alquiler, retry, reload } = useAlquiler(id, location.state?.alquiler ?? null)
+  // Modal abierto (una de ACCIONES_ALQUILER) o null
+  const [accion, setAccion] = useState(/** @type {string | null} */ (null))
 
   // Fecha contra la que se calcula el vencimiento: la de cuando se abrió la pantalla
   const [hoy] = useState(() => new Date())
@@ -66,8 +113,21 @@ export default function RentalDetailPage() {
       </PanelMessage>
     )
   } else {
-    // Prorrogar, Cambiar ubicación y Anular (sub-issue 9) van en `acciones`, en el encabezado del detalle
-    content = <AlquilerDetail alquiler={alquiler} puedeEditar={puedeEditar} hoy={hoy} />
+    const acciones = getAccionesAlquiler(alquiler.estado, puedeEditar)
+    const hayAcciones = acciones.prorrogar || acciones.ubicacion || acciones.anular
+    content = (
+      <>
+        <AlquilerDetail
+          alquiler={alquiler}
+          puedeEditar={puedeEditar}
+          hoy={hoy}
+          acciones={
+            hayAcciones ? <AccionesAlquiler acciones={acciones} onAccion={setAccion} /> : null
+          }
+        />
+        <AlquilerAccionModal accion={accion} alquiler={alquiler} onClose={() => setAccion(null)} onDone={reload} />
+      </>
+    )
   }
 
   return (

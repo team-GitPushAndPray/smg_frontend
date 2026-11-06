@@ -1,6 +1,7 @@
 import { CalendarClock, CircleCheck, CirclePlay, CircleX, Clock, History } from 'lucide-react'
 import { formatFechaChecklist } from './historial'
 import { normalizeText } from './text'
+import { getErrorGenerico } from './usuarios'
 
 /** @import { AlquilerEquipo, AlquilerListado, AlquilerListadoEquipo, EstadoAlquiler } from '../types/alquileres' */
 
@@ -305,4 +306,86 @@ export function filtrarEquipos(equipos, busqueda) {
     (equipo) =>
       normalizeText(equipo.codigoInterno).includes(texto) || normalizeText(equipo.categoria?.nombre).includes(texto),
   )
+}
+
+// ── Acciones sobre un alquiler: prórroga, cambio de ubicación y anulación ────
+
+/*
+ * Las únicas tres cosas que se pueden cambiar de un alquiler ya creado (el resto es inmutable, el back rechaza
+ * cualquier otro campo). Las tres exigen edición en Alquileres
+ */
+export const ACCIONES_ALQUILER = Object.freeze({
+  PRORROGAR: 'prorrogar',
+  UBICACION: 'ubicacion',
+  ANULAR: 'anular',
+})
+
+/**
+ * Qué acciones muestra el encabezado del detalle: prorrogar y cambiar ubicación mientras está en curso (PENDIENTE o
+ * ACTIVO); anular, solo PENDIENTE (un pendiente nunca tiene entregas: la primera lo pasa a ACTIVO). Ninguna sin edición
+ * o con el alquiler FINALIZADO o ANULADO
+ * @param {EstadoAlquiler | string | null | undefined} estado
+ * @param {boolean} puedeEditar
+ * @returns {{ prorrogar: boolean, ubicacion: boolean, anular: boolean }}
+ */
+export function getAccionesAlquiler(estado, puedeEditar) {
+  if (!puedeEditar) return { prorrogar: false, ubicacion: false, anular: false }
+  const enCurso = ESTADOS_EN_CURSO.includes(estado)
+  return { prorrogar: enCurso, ubicacion: enCurso, anular: estado === 'PENDIENTE' }
+}
+
+/**
+ * Fecha de calendario de un alquiler tal cual la manda el back (ISO a medianoche UTC) como 'aaaa-mm-dd', para un input
+ * date o para compararla con otra. Toma los primeros 10 caracteres, igual que formatFechaAlquiler. '' si no tiene la forma
+ * @param {string | null | undefined} valor
+ * @returns {string}
+ */
+export function fechaCalendarioAlquiler(valor) {
+  return /^(\d{4}-\d{2}-\d{2})/.exec(valor ?? '')?.[1] ?? ''
+}
+
+export const ERROR_SIN_FECHA_FIN = 'Elegí la nueva fecha de fin.'
+
+/**
+ * Error de la nueva fecha de fin de una prórroga ('' si está bien): obligatoria y no anterior al inicio, como el back
+ * @param {string} fecha 'aaaa-mm-dd'
+ * @param {string} inicio 'aaaa-mm-dd'
+ */
+export function validarProrroga(fecha, inicio) {
+  if (!fecha) return ERROR_SIN_FECHA_FIN
+  if (inicio && fecha < inicio) return ERROR_FIN_ANTERIOR
+  return ''
+}
+
+// Máximo del motivo de anulación (AnularAlquilerDto del back)
+export const MAX_MOTIVO_ANULACION = 500
+
+export const ERROR_SIN_MOTIVO = 'Escribí el motivo de la anulación.'
+
+const ERROR_ALQUILER_INEXISTENTE = 'Este alquiler ya no existe.'
+const ERROR_NO_ANULABLE =
+  'Ya no se puede anular: solo se anulan los alquileres pendientes y sin entregas. Revisá el detalle actualizado.'
+
+/**
+ * Mensaje para un error de prorrogar, cambiar ubicación o anular. 400: lo que dice la validación del back. 404: que el
+ * alquiler ya no existe. 409: por qué el estado no lo admite, en palabras del usuario (el back nombra el estado con su
+ * clave: "No se puede modificar un alquiler en estado FINALIZADO"). null en 401 y 403, que ya avisó apiFetch
+ * @param {{ status?: number, message?: string, data?: any }} error
+ * @returns {string | null}
+ */
+export function getErrorAccionAlquiler(error) {
+  if (error.status === 400) {
+    const mensajes = error.data?.message
+    return Array.isArray(mensajes) ? mensajes.join('. ') : error.message
+  }
+  if (error.status === 404) return ERROR_ALQUILER_INEXISTENTE
+  if (error.status === 409) {
+    if (/anular/i.test(error.message ?? '')) return ERROR_NO_ANULABLE
+    const estado = getEstadoAlquiler(/estado\s+(\w+)/i.exec(error.message ?? '')?.[1] ?? '')
+    if (estado) {
+      return `Este alquiler está ${estado.label.toLowerCase()}: ya no admite cambios. Revisá el detalle actualizado.`
+    }
+    return error.message
+  }
+  return getErrorGenerico(error)
 }
