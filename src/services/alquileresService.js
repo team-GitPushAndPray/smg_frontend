@@ -100,3 +100,25 @@ export function enviarChecklistAlquiler(id, equipoId, { tipo, datos, fotos = [] 
 export function listarEquiposDisponibles(filtros = {}, opciones = {}) {
   return listarEquipos({ ...filtros, estado: 'disponible', activo: true }, opciones)
 }
+
+// Tope de `limit` que acepta GET /equipos (PaginationDto del back: más de 50 da 400)
+const MAX_EQUIPOS_POR_PAGINA = 50
+
+/**
+ * Todos los equipos que se pueden alquilar, para elegirlos en el alta: pide la primera página con el máximo del back y,
+ * si hay más, el resto en paralelo. Ordenados por código interno (lo define el back). Exige el módulo MAQUINAS
+ * @returns {Promise<object[]>} Equipos del listado del inventario (camelCase: codigoInterno, tipo, categoria, marca…)
+ */
+export async function listarTodosLosEquiposDisponibles({ signal } = {}) {
+  const limit = MAX_EQUIPOS_POR_PAGINA
+  const primera = await listarEquiposDisponibles({ page: 1, limit }, { signal })
+  const paginas = Math.ceil(primera.meta.total / limit)
+  if (paginas <= 1) return primera.equipos
+
+  const resto = await Promise.all(
+    Array.from({ length: paginas - 1 }, (_, index) => listarEquiposDisponibles({ page: index + 2, limit }, { signal })),
+  )
+  const equipos = [primera, ...resto].flatMap((pagina) => pagina.equipos)
+  // Si entre una página y otra cambió el inventario, un equipo puede venir dos veces
+  return [...new Map(equipos.map((equipo) => [equipo.id, equipo])).values()]
+}
