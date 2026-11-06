@@ -77,8 +77,10 @@ export function obtenerFormularioChecklistAlquiler(id, equipoId, tipo, { signal 
 }
 
 /**
- * Envía el checklist de entrega o devolución: multipart con `tipo`, `datos` (JSON) y hasta 4 fotos en `fotos`.
- * La primera entrega pasa el alquiler a ACTIVO; la devolución libera el equipo y la última lo pasa a FINALIZADO
+ * Envía el checklist de entrega o devolución: multipart con `tipo`, `datos` (JSON, sin tipo ni responsable: el back usa
+ * el usuario de la sesión) y las fotos en `fotos` (el back acepta hasta 4; el front manda MAX_FOTOS, utils/checklists.js).
+ * La primera entrega pasa el alquiler a ACTIVO; la devolución libera el equipo y la última lo pasa a FINALIZADO.
+ * Un 409 dice que ya no se puede (ya se hizo, falta la entrega o el alquiler no está en curso); un 400, qué dato no sirve
  * @param {number | string} id
  * @param {number | string} equipoId
  * @param {{ tipo: TipoChecklistAlquiler, datos: DatosChecklistAlquiler, fotos?: Blob[] }} checklist

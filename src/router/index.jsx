@@ -67,14 +67,27 @@ const rutasPanel = RUTAS_PANEL.map(({ path, modulo }) => ({
   children: subrutasPanel[path],
 }))
 
-// El checklist de entrega/devolución va fuera del layout de Alquileres (sin pestañas) y exige poder editar el módulo
+/*
+ * El checklist de entrega/devolución de un equipo alquilado va fuera del panel, a pantalla completa como el módulo de
+ * campo (FieldLayout: sin sidebar ni topbar, siempre en claro), pero con sesión y exigiendo poder editar Alquileres
+ */
 const rutaChecklistAlquiler = {
-  path: 'alquileres/:id/equipos/:equipoId/checklist',
+  path: 'admin/alquileres/:id/equipos/:equipoId/checklist',
   element: (
-    <RutaModulo modulo={MODULOS.ALQUILERES} requiereEdicion>
-      <RentalChecklistPage />
-    </RutaModulo>
+    <RutaPrivada>
+      <FieldLayout />
+    </RutaPrivada>
   ),
+  children: [
+    {
+      index: true,
+      element: (
+        <RutaModulo modulo={MODULOS.ALQUILERES} requiereEdicion>
+          <RentalChecklistPage />
+        </RutaModulo>
+      ),
+    },
+  ],
 }
 
 // Pantallas de Máquinas fuera del sidebar (RUTAS_MAQUINAS): el alta y la edición exigen poder editar el módulo; el detalle y el historial, solo verlo
@@ -149,7 +162,8 @@ export const router = createBrowserRouter([
         <AdminLayout />
       </RutaPrivada>
     ),
-    children: [{ index: true, element: <AdminHomePage /> }, ...rutasPanel, ...rutasMaquinas, rutaChecklistAlquiler],
+    children: [{ index: true, element: <AdminHomePage /> }, ...rutasPanel, ...rutasMaquinas],
   },
+  rutaChecklistAlquiler,
   { path: '*', element: <NotFoundPage /> },
 ])

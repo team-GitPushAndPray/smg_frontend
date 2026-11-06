@@ -72,11 +72,13 @@ function NombreInput({ ref, label, autoComplete, enterKeyHint, onEnter, value, o
 /*
  * Último paso: observaciones (opcionales), fotos y quién hizo la revisión. Si hay ítems Anormales y las observaciones
  * están vacías, un aviso pide contar qué les pasa, sin frenar. Sin la foto o sin nombre y apellido no se avanza.
+ * Si el responsable ya se sabe (el usuario de la sesión, en un alquiler), no se pide.
  * Los datos van al borrador; las fotos quedan solo en memoria (si se retoma un borrador, se piden de nuevo).
  * El botón lleva a la revisión, desde donde se envía
  */
 export default function CierreStep({ header }) {
-  const { opcion, datos, actualizarDatos, avanzar, fotos, fotosPerdidas, ponerFoto, quitarFoto } = useChecklist()
+  const { opcion, datos, pideResponsable, actualizarDatos, avanzar, fotos, fotosPerdidas, ponerFoto, quitarFoto } =
+    useChecklist()
   const observacionesId = useId()
   const ayudaId = useId()
   const contadorId = useId()
@@ -85,8 +87,8 @@ export default function CierreStep({ header }) {
 
   const anormales = getItemsAnormales(opcion?.items ?? [], datos.respuestas)
   const mostrarAviso = anormales.length > 0 && datos.observaciones.trim() === ''
-  const nombreOk = validarNombre(datos.nombre) === 'ok'
-  const apellidoOk = validarNombre(datos.apellido) === 'ok'
+  const nombreOk = !pideResponsable || validarNombre(datos.nombre) === 'ok'
+  const apellidoOk = !pideResponsable || validarNombre(datos.apellido) === 'ok'
   const fotoOk = fotos.length > 0
 
   const accion =
@@ -143,29 +145,31 @@ export default function CierreStep({ header }) {
         ))}
       </section>
 
-      <section aria-labelledby={responsableId} className="flex flex-col gap-3">
-        <h2 id={responsableId} className="text-xl font-semibold text-balance">
-          ¿Quién hizo la revisión?
-        </h2>
-        {/* "Siguiente" del teclado pasa al apellido; en el apellido, lo cierra */}
-        <NombreInput
-          label="Nombre"
-          autoComplete="given-name"
-          enterKeyHint="next"
-          onEnter={() => apellidoRef.current?.focus()}
-          value={datos.nombre}
-          onChange={(nombre) => actualizarDatos({ nombre })}
-        />
-        <NombreInput
-          ref={apellidoRef}
-          label="Apellido"
-          autoComplete="family-name"
-          enterKeyHint="done"
-          onEnter={(input) => input.blur()}
-          value={datos.apellido}
-          onChange={(apellido) => actualizarDatos({ apellido })}
-        />
-      </section>
+      {pideResponsable && (
+        <section aria-labelledby={responsableId} className="flex flex-col gap-3">
+          <h2 id={responsableId} className="text-xl font-semibold text-balance">
+            ¿Quién hizo la revisión?
+          </h2>
+          {/* "Siguiente" del teclado pasa al apellido; en el apellido, lo cierra */}
+          <NombreInput
+            label="Nombre"
+            autoComplete="given-name"
+            enterKeyHint="next"
+            onEnter={() => apellidoRef.current?.focus()}
+            value={datos.nombre}
+            onChange={(nombre) => actualizarDatos({ nombre })}
+          />
+          <NombreInput
+            ref={apellidoRef}
+            label="Apellido"
+            autoComplete="family-name"
+            enterKeyHint="done"
+            onEnter={(input) => input.blur()}
+            value={datos.apellido}
+            onChange={(apellido) => actualizarDatos({ apellido })}
+          />
+        </section>
+      )}
     </FieldScreen>
   )
 }

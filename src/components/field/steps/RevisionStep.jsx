@@ -23,8 +23,8 @@ const COLOR_ESTADO = {
   NO_APLICA: 'text-neutral-700',
 }
 
-// Un bloque de la revisión, con su "Editar" que lleva al paso donde se cargó
-function RevisionBlock({ titulo, onEditar, children }) {
+// Un bloque de la revisión, con su "Editar" que lleva al paso donde se cargó (sin `onEditar`, no se edita)
+function RevisionBlock({ titulo, onEditar = null, children }) {
   const tituloId = useId()
 
   return (
@@ -33,15 +33,17 @@ function RevisionBlock({ titulo, onEditar, children }) {
         <h2 id={tituloId} className="font-medium text-neutral-700">
           {titulo}
         </h2>
-        <button
-          type="button"
-          onClick={onEditar}
-          aria-label={`Editar ${titulo.toLowerCase()}`}
-          className="interactive -my-2 -mr-2 inline-flex min-h-12 min-w-12 items-center justify-center gap-1 rounded-control px-2 font-semibold text-brand-700 hover:text-brand-800"
-        >
-          <Pencil size={20} strokeWidth={2} aria-hidden="true" />
-          Editar
-        </button>
+        {onEditar && (
+          <button
+            type="button"
+            onClick={onEditar}
+            aria-label={`Editar ${titulo.toLowerCase()}`}
+            className="interactive -my-2 -mr-2 inline-flex min-h-12 min-w-12 items-center justify-center gap-1 rounded-control px-2 font-semibold text-brand-700 hover:text-brand-800"
+          >
+            <Pencil size={20} strokeWidth={2} aria-hidden="true" />
+            Editar
+          </button>
+        )}
       </div>
       {children}
     </section>
@@ -52,7 +54,7 @@ function RevisionBlock({ titulo, onEditar, children }) {
  * Lo primero que falta para enviar, con el paso que lo corrige: { paso, texto } o null si está todo.
  * Hace falta acá porque se puede llegar desde un borrador (sin las fotos) o con horas que un 409 dejó viejas
  */
-function getFaltante({ equipo, items, datos, fotos }) {
+function getFaltante({ equipo, items, datos, fotos, pideResponsable }) {
   if (equipo.esMaquina && validarHoras(datos.horas, equipo.horasMotorActual).estado !== 'ok') {
     return { paso: 'horas', texto: 'Revisá las horas' }
   }
@@ -61,8 +63,8 @@ function getFaltante({ equipo, items, datos, fotos }) {
 
   const cierre = {
     fotoOk: fotos.length > 0,
-    nombreOk: validarNombre(datos.nombre) === 'ok',
-    apellidoOk: validarNombre(datos.apellido) === 'ok',
+    nombreOk: !pideResponsable || validarNombre(datos.nombre) === 'ok',
+    apellidoOk: !pideResponsable || validarNombre(datos.apellido) === 'ok',
   }
   if (!cierre.fotoOk || !cierre.nombreOk || !cierre.apellidoOk) return { paso: 'cierre', texto: textoFaltaCierre(cierre) }
   return null
@@ -70,16 +72,19 @@ function getFaltante({ equipo, items, datos, fotos }) {
 
 /*
  * Último paso: todo lo cargado, de solo lectura, en un bloque por paso con su "Editar". "Enviar" se bloquea mientras
- * se envía ("Enviando…"); sin conexión queda "Reintentar" con todo intacto. Si falta algo, el botón dice qué y lleva ahí
+ * se envía ("Enviando…"); sin conexión queda "Reintentar" con todo intacto. Si falta algo, el botón dice qué y lleva ahí.
+ * El tipo de revisión solo se edita si había para elegir; el responsable de la sesión se muestra, pero no se edita
  */
 export default function RevisionStep({ header }) {
-  const { equipo, opcion, datos, fotos, enviando, errorEnvio, editarPaso, enviar } = useChecklist()
+  const { equipo, opciones, opcion, datos, fotos, pideResponsable, responsable, enviando, errorEnvio, editarPaso, enviar } =
+    useChecklist()
 
   const items = opcion?.items ?? []
   const validacionHoras = validarHoras(datos.horas, equipo.horasMotorActual)
   const cantidades = contarEstados(items, datos.respuestas)
   const anormales = getItemsAnormales(items, datos.respuestas)
-  const faltante = getFaltante({ equipo, items, datos, fotos })
+  const faltante = getFaltante({ equipo, items, datos, fotos, pideResponsable })
+  const nombreResponsable = pideResponsable ? `${datos.nombre.trim()} ${datos.apellido.trim()}`.trim() : responsable
   const detalleEquipo = [equipo.codigoInterno, equipo.categoria, equipo.marca].filter(Boolean).join(' · ')
 
   let accion
@@ -93,7 +98,7 @@ export default function RevisionStep({ header }) {
       <h1 className="text-2xl font-semibold text-balance">Revisá y enviá</h1>
       <EnvioAlert />
 
-      <RevisionBlock titulo="Revisión" onEditar={() => editarPaso('inicio')}>
+      <RevisionBlock titulo="Revisión" onEditar={opciones.length > 1 ? () => editarPaso('inicio') : null}>
         <p className="text-lg font-semibold">{opcion?.titulo}</p>
         <p className="break-words text-neutral-700">{detalleEquipo}</p>
       </RevisionBlock>
@@ -147,7 +152,7 @@ export default function RevisionStep({ header }) {
           <div className="flex flex-wrap gap-x-2">
             <dt className="text-neutral-700">Responsable:</dt>
             <dd className="min-w-0 font-semibold break-words">
-              {`${datos.nombre.trim()} ${datos.apellido.trim()}`.trim() || '—'}
+              {nombreResponsable || '—'}
             </dd>
           </div>
         </dl>

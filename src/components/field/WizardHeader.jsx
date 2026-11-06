@@ -2,9 +2,10 @@ import { ChevronLeft } from 'lucide-react'
 
 /*
  * Encabezado del asistente: "Atrás" chico arriba a la izquierda (no en el primer paso), "Paso X de N" y la barra
- * de progreso, para que el mecánico siempre sepa cuánto le falta
+ * de progreso, para que el mecánico siempre sepa cuánto le falta. Sin "Atrás", ese lugar puede llevar una `salida`
+ * (en el alquiler, el link de vuelta a su detalle)
  */
-export default function WizardHeader({ numero, total, onAtras }) {
+export default function WizardHeader({ numero, total, onAtras, salida = null }) {
   const porcentaje = Math.round((numero / total) * 100)
 
   return (
@@ -20,7 +21,7 @@ export default function WizardHeader({ numero, total, onAtras }) {
             Atrás
           </button>
         ) : (
-          <span />
+          (salida ?? <span />)
         )}
         <p className="font-medium text-neutral-700">
           Paso {numero} de {total}
