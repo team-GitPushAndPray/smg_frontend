@@ -49,9 +49,10 @@ function DateField({ id, label, value, onChange, min, max }) {
  * Filtros de los checklists del historial: buscador en las observaciones, responsable, tipo y rango de fechas.
  * `q` y `responsable` son lo escrito en esos campos (se aplican con espera desde la pestaña); tipo y fechas se
  * aplican al momento. Si una fecha deja el rango al revés, la otra se mueve con ella: nunca se pide un rango
- * imposible. "Limpiar filtros" está siempre, deshabilitado sin filtros, para que la pantalla no salte
+ * imposible. "Limpiar filtros" está siempre, deshabilitado sin filtros, para que la pantalla no salte.
+ * `children` son acciones sobre el listado filtrado (Exportar PDF), al lado de "Limpiar filtros"
  */
-export default function ChecklistsToolbar({ q, responsable, filtros, onFiltrosChange, hasFilters, onClear }) {
+export default function ChecklistsToolbar({ q, responsable, filtros, onFiltrosChange, hasFilters, onClear, children }) {
   const hoy = getHoyFiltro()
 
   const cambiarDesde = (desde) => {
@@ -118,15 +119,18 @@ export default function ChecklistsToolbar({ q, responsable, filtros, onFiltrosCh
           min={filtros.desde || undefined}
           max={hoy}
         />
-        <button
-          type="button"
-          onClick={onClear}
-          disabled={!hasFilters}
-          className="interactive inline-flex min-h-11 items-center justify-center gap-2 justify-self-end rounded-control px-3 text-sm font-medium text-neutral-700 hover:bg-black/5 hover:text-black sm:col-span-3 lg:col-span-1 dark:text-neutral-300 dark:hover:bg-white/10 dark:hover:text-white"
-        >
-          <FilterX size={18} strokeWidth={1.75} aria-hidden="true" />
-          Limpiar filtros
-        </button>
+        <div className="flex flex-wrap items-center justify-end gap-2 sm:col-span-3 lg:col-span-1">
+          <button
+            type="button"
+            onClick={onClear}
+            disabled={!hasFilters}
+            className="interactive inline-flex min-h-11 items-center justify-center gap-2 rounded-control px-3 text-sm font-medium text-neutral-700 hover:bg-black/5 hover:text-black dark:text-neutral-300 dark:hover:bg-white/10 dark:hover:text-white"
+          >
+            <FilterX size={18} strokeWidth={1.75} aria-hidden="true" />
+            Limpiar filtros
+          </button>
+          {children}
+        </div>
       </div>
     </div>
   )
