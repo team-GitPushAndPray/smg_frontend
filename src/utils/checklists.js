@@ -191,18 +191,26 @@ export const COMPRESION_FOTO = Object.freeze({
 })
 
 /*
- * JSON `datos` del POST del checklist. Las respuestas salen de los ítems del tipo elegido, en su orden (lo que quedó
- * en el borrador de ítems que ya no están no viaja). Los aditamentos no mandan horas; las observaciones vacías tampoco van
+ * Lo que tienen todos los checklists en el POST: horas, observaciones y respuestas. Las respuestas salen de los ítems
+ * del tipo elegido, en su orden (lo que quedó en el borrador de ítems que ya no están no viaja). Los aditamentos no
+ * mandan horas; las observaciones vacías tampoco van
  */
-export function getDatosEnvio({ tipo, items, esMaquina, datos }) {
+export function getCuerpoChecklist({ items, esMaquina, datos }) {
   const observaciones = datos.observaciones.trim()
   return {
-    tipo,
     ...(esMaquina && { horas_motor: Number(datos.horas.trim()) }),
-    responsable_nombre: datos.nombre.trim(),
-    responsable_apellido: datos.apellido.trim(),
     ...(observaciones && { observaciones }),
     respuestas: items.map(({ id }) => ({ plantilla_item_id: id, estado: getEstadoItem(datos.respuestas, id) })),
+  }
+}
+
+// JSON `datos` del POST del checklist por QR: el cuerpo común, el tipo y quién hizo la revisión
+export function getDatosEnvio({ tipo, items, esMaquina, datos }) {
+  return {
+    tipo,
+    responsable_nombre: datos.nombre.trim(),
+    responsable_apellido: datos.apellido.trim(),
+    ...getCuerpoChecklist({ items, esMaquina, datos }),
   }
 }
 
@@ -242,14 +250,14 @@ export const DATOS_CHECKLIST_INICIALES = Object.freeze({
 })
 
 /*
- * Borrador automático en localStorage, uno por token y tipo: checklist:<token>:<tipo>.
- * Hay uno solo por equipo a la vez: al guardar el de un tipo se borran los de los otros.
+ * Borrador automático en localStorage, uno por clave y tipo: checklist:<clave>:<tipo>. La clave es el token del QR o,
+ * en un alquiler, la de claveChecklistAlquiler. Hay uno solo por clave a la vez: al guardar el de un tipo se borran los de los otros.
  * Las fotos no van (no entran en localStorage): solo `conFotos`, si había alguna, para pedir que las vuelva a sacar
  */
 const VERSION_BORRADOR = 1
 
-function claveBorrador(token, tipo) {
-  return `checklist:${token}:${tipo}`
+function claveBorrador(clave, tipo) {
+  return `checklist:${clave}:${tipo}`
 }
 
 function leerClave(clave) {
@@ -272,10 +280,10 @@ function borrarClave(clave) {
  * Borrador más reciente de un equipo, entre los tipos que hoy le ofrece el back. Uno con otra versión o
  * dañado se descarta. Devuelve { tipo, paso, datos, conFotos, actualizadoEn } o null
  */
-export function leerBorrador(token, tipos) {
+export function leerBorrador(clave, tipos) {
   let elegido = null
   for (const tipo of tipos) {
-    const borrador = leerClave(claveBorrador(token, tipo))
+    const borrador = leerClave(claveBorrador(clave, tipo))
     const esValido =
       borrador?.version === VERSION_BORRADOR && borrador.tipo === tipo && typeof borrador.paso === 'string'
     if (!esValido) continue
@@ -287,18 +295,18 @@ export function leerBorrador(token, tipos) {
   return { tipo, paso, datos: { ...DATOS_CHECKLIST_INICIALES, ...datos }, conFotos: conFotos === true, actualizadoEn }
 }
 
-export function guardarBorrador(token, tipos, { tipo, paso, datos, conFotos }) {
+export function guardarBorrador(clave, tipos, { tipo, paso, datos, conFotos }) {
   try {
     const borrador = { version: VERSION_BORRADOR, tipo, paso, datos, conFotos, actualizadoEn: new Date().toISOString() }
-    localStorage.setItem(claveBorrador(token, tipo), JSON.stringify(borrador))
+    localStorage.setItem(claveBorrador(clave, tipo), JSON.stringify(borrador))
   } catch {
     // Sin acceso a localStorage (o sin espacio): el checklist sigue, pero sin borrador
   }
-  tipos.filter((otro) => otro !== tipo).forEach((otro) => borrarClave(claveBorrador(token, otro)))
+  tipos.filter((otro) => otro !== tipo).forEach((otro) => borrarClave(claveBorrador(clave, otro)))
 }
 
-export function borrarBorradores(token, tipos) {
-  tipos.forEach((tipo) => borrarClave(claveBorrador(token, tipo)))
+export function borrarBorradores(clave, tipos) {
+  tipos.forEach((tipo) => borrarClave(claveBorrador(clave, tipo)))
 }
 
 /*
