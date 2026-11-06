@@ -23,6 +23,9 @@ export function getPestanaHistorial(valor) {
 // Checklists por página del historial
 export const CHECKLISTS_POR_PAGINA = 20
 
+// Checklists por pedido al exportar a PDF: el máximo que acepta el back, para recorrer todo con los menos pedidos
+export const CHECKLISTS_POR_PEDIDO_EXPORTACION = 100
+
 /*
  * Tipos de checklist del historial, con la clave del back y el mismo nombre que ve el mecánico al elegirlo.
  * La paleta no tiene más colores: cada tipo se distingue por tono, ícono y texto. El rojo sólido queda para los
@@ -132,6 +135,8 @@ export function separarRespuestas(respuestas) {
 export const TRANSFORMACION_FOTO = Object.freeze({
   miniatura: 'w_300,h_300,c_fill,g_auto,f_auto,q_auto',
   ampliada: 'w_1600,c_limit,f_auto,q_auto',
+  // Para imprimir: dos por fila en A4 (~9 cm de ancho), nítidas en papel sin pedir la original
+  impresion: 'w_1000,c_limit,f_auto,q_auto',
 })
 
 /*
@@ -178,9 +183,50 @@ export function esFechaFiltro(valor) {
   return existe && anio >= 1900
 }
 
+// Una fecha en la zona del navegador como YYYY-MM-DD
+function toFechaIso(date) {
+  const dosCifras = (valor) => String(valor).padStart(2, '0')
+  return `${date.getFullYear()}-${dosCifras(date.getMonth() + 1)}-${dosCifras(date.getDate())}`
+}
+
 // Hoy en la zona del navegador, como YYYY-MM-DD: tope de los filtros de fecha (no hay checklists del futuro)
 export function getHoyFiltro() {
-  const hoy = new Date()
-  const dosCifras = (valor) => String(valor).padStart(2, '0')
-  return `${hoy.getFullYear()}-${dosCifras(hoy.getMonth() + 1)}-${dosCifras(hoy.getDate())}`
+  return toFechaIso(new Date())
+}
+
+// Fecha de un filtro (YYYY-MM-DD) como se lee: "01/10/2026". Se arma a mano para no correrla de día por la zona
+function formatFechaFiltro(valor) {
+  const [anio, mes, dia] = valor.split('-')
+  return `${dia}/${mes}/${anio}`
+}
+
+/*
+ * Filtros aplicados al listado, en palabras, para el encabezado del PDF: [{ label: 'Tipo', valor: 'Entrega' }, …].
+ * Vacío si no hay ninguno. Un rango con un solo extremo se lee "Desde 01/10/2026" o "Hasta 31/10/2026"
+ */
+export function describirFiltros({ desde, hasta, tipo, responsable, q }) {
+  const filtros = []
+  if (tipo) filtros.push({ label: 'Tipo', valor: getTipoChecklist(tipo).label })
+  if (desde && hasta) {
+    filtros.push({ label: 'Fechas', valor: `${formatFechaFiltro(desde)} al ${formatFechaFiltro(hasta)}` })
+  } else if (desde) {
+    filtros.push({ label: 'Fechas', valor: `Desde ${formatFechaFiltro(desde)}` })
+  } else if (hasta) {
+    filtros.push({ label: 'Fechas', valor: `Hasta ${formatFechaFiltro(hasta)}` })
+  }
+  if (responsable) filtros.push({ label: 'Responsable contiene', valor: `“${responsable}”` })
+  if (q) filtros.push({ label: 'Observaciones contienen', valor: `“${q}”` })
+  return filtros
+}
+
+/*
+ * Título del documento mientras se imprime: el navegador lo propone como nombre del PDF
+ * ("Historial de checklists M027 2026-11-05"). Sin caracteres que un sistema de archivos rechace
+ */
+export function getNombreArchivo(partes, fecha) {
+  const nombre = [...partes, fecha && !Number.isNaN(new Date(fecha).getTime()) ? toFechaIso(new Date(fecha)) : null]
+    .map((parte) => (typeof parte === 'string' ? parte.trim() : parte))
+    .filter(Boolean)
+    .join(' ')
+  return nombre.replace(/[\\/:*?"<>|]+/g, '-')
 }
