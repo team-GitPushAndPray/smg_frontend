@@ -1,4 +1,4 @@
-import { Settings, Shield, Truck, Users } from 'lucide-react'
+import { KeyRound, Settings, Shield, Truck, Users } from 'lucide-react'
 
 /*
  * Única fuente de verdad del panel de gestión: el sidebar, las tarjetas de Inicio y las rutas protegidas
@@ -10,6 +10,7 @@ export const MODULOS = Object.freeze({
   MAQUINAS: 'MAQUINAS',
   CONFIGURACION: 'CONFIGURACION',
   VENDEDORES: 'VENDEDORES',
+  ALQUILERES: 'ALQUILERES',
 })
 
 // Los ítems con `grupo` se muestran juntos en un desplegable del sidebar. `descripcion` es el texto de su tarjeta en Inicio
@@ -20,6 +21,14 @@ export const RUTAS_PANEL = [
     label: 'Máquinas',
     descripcion: 'Alta, edición y estado de la maquinaria.',
     icon: Truck,
+  },
+  // Un solo ítem para todo el módulo: Alquileres y Clientes son pestañas dentro de él (RUTAS_ALQUILERES)
+  {
+    path: '/admin/alquileres',
+    modulo: MODULOS.ALQUILERES,
+    label: 'Alquileres',
+    descripcion: 'Alquileres en curso, vencimientos y clientes.',
+    icon: KeyRound,
   },
   {
     path: '/admin/configuracion/usuarios',
@@ -47,6 +56,19 @@ export const RUTAS_MAQUINAS = Object.freeze({
   editar: (id) => `/admin/maquinas/${id}/editar`,
   historial: (id) => `/admin/maquinas/${id}/historial`,
   checklist: (id, checklistId) => `/admin/maquinas/${id}/historial/checklists/${checklistId}`,
+})
+
+/*
+ * Pantallas del módulo Alquileres: las usan el router, las pestañas y los enlaces entre ellas. El listado es la sección
+ * de RUTAS_PANEL. `tipo` del checklist: 'ENTREGA' o 'DEVOLUCION' (TIPOS_CHECKLIST_ALQUILER, utils/alquileres.js)
+ */
+export const RUTAS_ALQUILERES = Object.freeze({
+  listado: '/admin/alquileres',
+  nuevo: '/admin/alquileres/nuevo',
+  detalle: (id) => `/admin/alquileres/${id}`,
+  checklist: (id, equipoId, tipo) => `/admin/alquileres/${id}/equipos/${equipoId}/checklist?tipo=${tipo}`,
+  clientes: '/admin/alquileres/clientes',
+  cliente: (id) => `/admin/alquileres/clientes/${id}`,
 })
 
 // Ícono del encabezado de cada grupo del sidebar
