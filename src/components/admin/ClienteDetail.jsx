@@ -37,8 +37,8 @@ function countAlquileres(cantidad) {
 /**
  * Detalle de un cliente: encabezado con su estado y, con `canEdit`, "Editar" y "Desactivar" / "Reactivar" (llegan como
  * callbacks, igual que en la tabla). No hay acción de eliminar. Un cliente inactivo se sigue mostrando con un aviso:
- * se conserva con su historial y se puede editar o reactivar.
- * El historial de alquileres del cliente llega en su propia issue; por ahora se muestra cuántos tiene
+ * se conserva con su historial y se puede editar o reactivar. El encabezado muestra cuántos alquileres tiene; la lista
+ * va aparte (HistorialAlquileresCliente)
  * @param {{
  *   cliente: ClienteDetalle,
  *   canEdit: boolean,
