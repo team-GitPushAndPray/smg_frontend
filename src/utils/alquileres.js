@@ -1,4 +1,5 @@
 import { CalendarClock, CircleCheck, CirclePlay, CircleX, Clock, History } from 'lucide-react'
+import { normalizeText } from './text'
 
 /** @import { AlquilerListado, AlquilerListadoEquipo, EstadoAlquiler } from '../types/alquileres' */
 
@@ -154,4 +155,84 @@ export function linkMaps(lat, lng) {
   const longitud = Number(lng)
   if (!Number.isFinite(latitud) || !Number.isFinite(longitud)) return null
   return `https://www.google.com/maps?q=${latitud},${longitud}`
+}
+
+// ── Alta de un alquiler ──────────────────────────────────────────────────────
+
+/**
+ * Fecha de calendario 'aaaa-mm-dd' de un Date en la zona del navegador (la que usan los input date y el back). No usa
+ * toISOString(), que la pasa a UTC y de noche en Argentina da el día siguiente
+ * @param {Date} [fecha]
+ * @returns {string}
+ */
+export function fechaCalendario(fecha = new Date()) {
+  const anio = fecha.getFullYear()
+  const mes = String(fecha.getMonth() + 1).padStart(2, '0')
+  const dia = String(fecha.getDate()).padStart(2, '0')
+  return `${anio}-${mes}-${dia}`
+}
+
+/**
+ * Días de calendario que dura un alquiler, contando el de inicio y el de fin (del 6 al 6 es 1 día). null si alguna
+ * fecha falta o el fin es anterior
+ * @param {string} inicio 'aaaa-mm-dd'
+ * @param {string} fin 'aaaa-mm-dd'
+ * @returns {number | null}
+ */
+export function duracionAlquiler(inicio, fin) {
+  const desde = /^(\d{4})-(\d{2})-(\d{2})$/.exec(inicio ?? '')
+  const hasta = /^(\d{4})-(\d{2})-(\d{2})$/.exec(fin ?? '')
+  if (!desde || !hasta) return null
+  const dias = Math.round((Date.UTC(hasta[1], hasta[2] - 1, hasta[3]) - Date.UTC(desde[1], desde[2] - 1, desde[3])) / MS_POR_DIA)
+  return dias < 0 ? null : dias + 1
+}
+
+// Mismos máximos que el DTO del alta en el back
+export const MAX_CONTACTO_OBRA = { nombre: 100, telefono: 50 }
+
+export const ERROR_FIN_ANTERIOR = 'La fecha de fin no puede ser anterior a la de inicio.'
+
+/**
+ * Lo que el formulario de alta no deja enviar, por campo (vacío si está todo bien): cliente, al menos un equipo, las
+ * dos fechas con el fin igual o posterior al inicio. La ubicación se valida aparte, con validarUbicacion
+ * @param {{ clienteId: number | null, equipos: unknown[], fecha_inicio: string, fecha_fin_prevista: string }} valores
+ * @returns {{ cliente?: string, equipos?: string, fecha_inicio?: string, fecha_fin_prevista?: string }}
+ */
+export function validarAltaAlquiler({ clienteId, equipos, fecha_inicio, fecha_fin_prevista }) {
+  const errores = {}
+  if (!clienteId) errores.cliente = 'Elegí el cliente.'
+  if (equipos.length === 0) errores.equipos = 'Elegí al menos un equipo.'
+  if (!fecha_inicio) errores.fecha_inicio = 'Ingresá la fecha de inicio.'
+  if (!fecha_fin_prevista) errores.fecha_fin_prevista = 'Ingresá la fecha de fin prevista.'
+  else if (fecha_inicio && fecha_fin_prevista < fecha_inicio) errores.fecha_fin_prevista = ERROR_FIN_ANTERIOR
+  return errores
+}
+
+/**
+ * Códigos internos que nombra el 409 del alta ("Los siguientes equipos no están disponibles para alquilar: MC-01,
+ * AD-03"). Vacío si el mensaje no los trae (el de dos altas simultáneas no dice cuáles)
+ * @param {string | null | undefined} mensaje
+ * @returns {string[]}
+ */
+export function codigosNoDisponibles(mensaje) {
+  const partes = /no est[aá]n disponibles[^:]*:\s*(.+)$/i.exec(mensaje ?? '')
+  if (!partes) return []
+  return partes[1]
+    .split(',')
+    .map((codigo) => codigo.trim().replace(/\.$/, ''))
+    .filter(Boolean)
+}
+
+/**
+ * Equipos que coinciden con lo buscado en el código interno o la categoría, sin importar mayúsculas ni tildes
+ * @param {Array<{ codigoInterno: string, categoria?: { nombre?: string } | null }>} equipos
+ * @param {string} busqueda
+ */
+export function filtrarEquipos(equipos, busqueda) {
+  const texto = normalizeText(busqueda)
+  if (!texto) return equipos
+  return equipos.filter(
+    (equipo) =>
+      normalizeText(equipo.codigoInterno).includes(texto) || normalizeText(equipo.categoria?.nombre).includes(texto),
+  )
 }
