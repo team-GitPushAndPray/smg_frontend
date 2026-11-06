@@ -65,8 +65,15 @@
  */
 
 /**
- * Body de PATCH /clientes/:id: solo los campos a cambiar. `activo` desactiva o reactiva al cliente
- * @typedef {Partial<ClienteAlta> & { activo?: boolean }} ClienteEdicion
+ * Body de PATCH /clientes/:id: solo los campos a cambiar. `activo` desactiva o reactiva al cliente.
+ * Para borrar un dato opcional se manda null: un texto vacío el back lo descarta y el dato queda como estaba
+ * @typedef {object} ClienteEdicion
+ * @property {string} [razon_social]
+ * @property {string | null} [cuit]
+ * @property {string | null} [email]
+ * @property {string | null} [telefono]
+ * @property {string | null} [direccion]
+ * @property {boolean} [activo]
  */
 
 // ── Alquileres ───────────────────────────────────────────────────────────────
