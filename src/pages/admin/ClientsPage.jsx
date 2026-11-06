@@ -1,5 +1,6 @@
 import { Building2, CloudOff, Plus, RotateCw, SearchX } from 'lucide-react'
 import { useState } from 'react'
+import ClienteEstadoDialog from '../../components/admin/ClienteEstadoDialog'
 import ClienteFormModal from '../../components/admin/ClienteFormModal'
 import ClientesTable, { ClientesTableSkeleton } from '../../components/admin/ClientesTable'
 import ClientesToolbar from '../../components/admin/ClientesToolbar'
@@ -10,6 +11,7 @@ import { useClientes } from '../../hooks/useClientes'
 import { useFiltrosClientes } from '../../hooks/useFiltrosClientes'
 import { usePermiso } from '../../hooks/usePermiso'
 import { useTextoDiferido } from '../../hooks/useTextoDiferido'
+import { useToast } from '../../hooks/useToast'
 
 // Espera desde la última tecla antes de buscar en el back
 const ESPERA_BUSQUEDA_CLIENTES = 300
@@ -23,14 +25,33 @@ const getHrefCliente = (cliente) => RUTAS_ALQUILERES.cliente(cliente.id)
 /*
  * Alquileres › Clientes: todos los clientes con buscador por razón social y filtro de estado (Activos por defecto),
  * ambos en la URL. El back los devuelve ordenados por razón social. Toda la fila abre el detalle.
- * "Nuevo cliente" solo con edición en Alquileres; sin ella, la pantalla es de solo lectura
+ * Con edición en Alquileres: "Nuevo cliente" y, por fila, Editar y Desactivar / Reactivar (con confirmación). Después
+ * de cada uno la lista se vuelve a pedir: un cliente desactivado sale de "Activos". Los clientes no se eliminan.
+ * Sin edición, la pantalla es de solo lectura
  */
 export default function ClientsPage() {
   const { puedeEditar } = usePermiso(MODULOS.ALQUILERES)
+  const { showToast } = useToast()
   const { filtros, setFiltros, limpiarFiltros } = useFiltrosClientes()
-  const { status, clientes, isLoading, hasData, retry } = useClientes(filtros)
+  const { status, clientes, isLoading, hasData, retry, reload } = useClientes(filtros)
   const busqueda = useTextoDiferido(filtros.q, (q) => setFiltros({ q }), ESPERA_BUSQUEDA_CLIENTES)
-  const [isFormOpen, setIsFormOpen] = useState(false)
+  // Formulario abierto: { cliente: null } para crear, { cliente } para editar
+  const [form, setForm] = useState(null)
+  // Cliente con la confirmación de desactivar / reactivar abierta
+  const [clienteEstado, setClienteEstado] = useState(null)
+
+  const onSaved = () => {
+    const isEdit = Boolean(form.cliente)
+    setForm(null)
+    showToast(isEdit ? 'Cambios guardados' : 'Cliente creado', { tipo: 'exito' })
+    reload()
+  }
+
+  const onEstadoCambiado = (guardado) => {
+    setClienteEstado(null)
+    showToast(guardado.activo ? 'Cliente reactivado' : 'Cliente desactivado', { tipo: 'exito' })
+    reload()
+  }
 
   const clearFilters = () => {
     busqueda.descartar()
@@ -95,7 +116,15 @@ export default function ClientsPage() {
       />
     )
   } else {
-    content = <ClientesTable clientes={clientes} getHref={getHrefCliente} />
+    content = (
+      <ClientesTable
+        clientes={clientes}
+        getHref={getHrefCliente}
+        canEdit={puedeEditar}
+        onEdit={(cliente) => setForm({ cliente })}
+        onToggleEstado={setClienteEstado}
+      />
+    )
   }
 
   return (
@@ -109,7 +138,7 @@ export default function ClientsPage() {
           <p className="text-neutral-600 dark:text-neutral-400">Empresas a las que se les alquila maquinaria.</p>
         </div>
         {puedeEditar && (
-          <button type="button" onClick={() => setIsFormOpen(true)} className="btn-primary shrink-0">
+          <button type="button" onClick={() => setForm({ cliente: null })} className="btn-primary shrink-0">
             <Plus size={18} strokeWidth={1.75} aria-hidden="true" />
             Nuevo cliente
           </button>
@@ -136,7 +165,15 @@ export default function ClientsPage() {
         {content}
       </div>
 
-      {isFormOpen && <ClienteFormModal onClose={() => setIsFormOpen(false)} />}
+      {form && <ClienteFormModal cliente={form.cliente} onClose={() => setForm(null)} onSaved={onSaved} />}
+
+      {clienteEstado && (
+        <ClienteEstadoDialog
+          cliente={clienteEstado}
+          onClose={() => setClienteEstado(null)}
+          onDone={onEstadoCambiado}
+        />
+      )}
     </section>
   )
 }
