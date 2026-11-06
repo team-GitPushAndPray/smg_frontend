@@ -4,7 +4,8 @@ import { normalizeText } from './text'
 
 /*
  * Ícono de cada tipo de checklist, con la clave tal cual la manda el back. El título y qué opciones se muestran
- * los decide el back: el front no filtra ni reordena, solo les pone ícono (y uno genérico si llega uno nuevo)
+ * los decide el back: el front no filtra ni reordena, solo les pone ícono (y uno genérico si llega uno nuevo).
+ * Por QR solo llegan Diario y Mantenimiento; Entrega y Devolución son del alquiler y del historial del equipo
  */
 const ICONOS_CHECKLIST = Object.freeze({
   DIARIO: ClipboardCheck,
@@ -19,7 +20,8 @@ export function getIconoChecklist(tipo) {
 
 /*
  * Respuesta de GET /public/checklists/:token con los nombres del front. El equipo lleva `tipo` ('maquina' o
- * 'aditamento') como en el panel, así sirven los mismos formatos de horas (formatHorasMotor)
+ * 'aditamento') como en el panel, así sirven los mismos formatos de horas (formatHorasMotor). Las opciones son las
+ * que el back habilita por QR (Diario y Mantenimiento), tal cual llegan
  */
 export function adaptarFormularioChecklist(data) {
   const equipo = data?.equipo ?? {}
@@ -108,7 +110,8 @@ export function getEstadoItem(respuestas, itemId) {
   return VALORES_ESTADO.has(estado) ? estado : null
 }
 
-// En entrega y devolución hay ítems que no corresponden a todos los equipos: ahí se pueden marcar en bloque como No aplica
+// En la entrega y la devolución de un alquiler hay ítems que no corresponden a todos los equipos: ahí se pueden
+// marcar en bloque como No aplica. Por QR no llegan esos tipos, así que en el flujo público no aparece
 const TIPOS_CON_NO_APLICA_MASIVO = new Set(['ENTREGA', 'DEVOLUCION'])
 
 export function permiteNoAplicaMasivo(tipo) {
@@ -227,8 +230,10 @@ function getPasoDelMensaje(mensaje) {
 
 /*
  * Qué hacer con un error del envío: { paso, mensaje, red }. `paso` es adonde se lleva al mecánico para corregirlo
- * (un 400 de horas, a horas; un 409, también a horas, que se actualizan). Sin conexión o con el back caído es
- * `red`: se queda en la revisión para reintentar. Si el paso no existe en este equipo, se queda en la revisión
+ * (un 400 de horas, a horas; un 409, también a horas, que se actualizan). Un 400 que no nombra un paso (por
+ * ejemplo, si el back rechaza el tipo de checklist) se muestra en la revisión con su message. Sin conexión o con el
+ * back caído es `red`: se queda en la revisión para reintentar. Si el paso no existe en este equipo, se queda en la
+ * revisión
  */
 export function getErrorEnvio(error, pasos) {
   const enPaso = (paso) => (pasos.includes(paso) ? paso : 'revision')

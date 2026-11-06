@@ -11,8 +11,8 @@ function cantidadItems(items) {
 }
 
 /*
- * Primer paso: el equipo y un botón grande por cada opción que mandó el back (el front no decide cuáles van).
- * Tocar una opción ya avanza al paso siguiente
+ * Primer paso del QR: el equipo y un botón grande por cada opción que mandó el back (el front no decide cuáles van:
+ * por QR son Diario y Mantenimiento). Tocar una opción ya avanza al paso siguiente
  */
 export default function ChecklistStart({ header }) {
   const { equipo, opciones, elegirTipo } = useChecklist()
