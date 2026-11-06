@@ -1,15 +1,22 @@
 import { createBrowserRouter } from 'react-router'
 import { MODULOS, RUTAS_PANEL } from '../config/rutasPanel'
 import AdminLayout from '../layouts/AdminLayout'
+import AlquileresLayout from '../layouts/AlquileresLayout'
 import FieldLayout from '../layouts/FieldLayout'
 import PublicLayout from '../layouts/PublicLayout'
 import AdminHomePage from '../pages/admin/AdminHomePage'
+import ClientDetailPage from '../pages/admin/ClientDetailPage'
+import ClientsPage from '../pages/admin/ClientsPage'
 import LoginPage from '../pages/admin/LoginPage'
 import MachineChecklistPage from '../pages/admin/MachineChecklistPage'
 import MachineDetailPage from '../pages/admin/MachineDetailPage'
 import MachineFormPage from '../pages/admin/MachineFormPage'
 import MachineHistoryPage from '../pages/admin/MachineHistoryPage'
 import MachinesPage from '../pages/admin/MachinesPage'
+import RentalChecklistPage from '../pages/admin/RentalChecklistPage'
+import RentalDetailPage from '../pages/admin/RentalDetailPage'
+import RentalFormPage from '../pages/admin/RentalFormPage'
+import RentalsPage from '../pages/admin/RentalsPage'
 import RolesPage from '../pages/admin/RolesPage'
 import UsersPage from '../pages/admin/UsersPage'
 import ChecklistPage from '../pages/field/ChecklistPage'
@@ -21,18 +28,54 @@ import HomePage from '../pages/public/HomePage'
 import RutaModulo from './RutaModulo'
 import RutaPrivada from './RutaPrivada'
 
-// Página de cada sección del panel, por el mismo path que tiene en RUTAS_PANEL
+/*
+ * Pantallas del módulo Alquileres dentro de su layout (pestañas Alquileres / Clientes), relativas a /admin/alquileres.
+ * El módulo ya lo exige la sección; el alta, además, poder editarlo. Ver RUTAS_ALQUILERES
+ */
+const rutasAlquileres = [
+  { index: true, element: <RentalsPage /> },
+  {
+    path: 'nuevo',
+    element: (
+      <RutaModulo modulo={MODULOS.ALQUILERES} requiereEdicion>
+        <RentalFormPage />
+      </RutaModulo>
+    ),
+  },
+  { path: ':id', element: <RentalDetailPage /> },
+  { path: 'clientes', element: <ClientsPage /> },
+  { path: 'clientes/:id', element: <ClientDetailPage /> },
+]
+
+// Página de cada sección del panel, por el mismo path que tiene en RUTAS_PANEL. Si la sección tiene pantallas propias
+// (subrutasPanel), su página es el layout del módulo, que las muestra en su <Outlet />
 const paginasPanel = {
   '/admin/maquinas': <MachinesPage />,
+  '/admin/alquileres': <AlquileresLayout />,
   '/admin/configuracion/usuarios': <UsersPage />,
   '/admin/configuracion/roles': <RolesPage />,
+}
+
+const subrutasPanel = {
+  '/admin/alquileres': rutasAlquileres,
 }
 
 // Cada sección exige el módulo que le asigna RUTAS_PANEL: el sidebar y la protección salen de la misma fuente
 const rutasPanel = RUTAS_PANEL.map(({ path, modulo }) => ({
   path: path.replace(/^\/admin\//, ''),
   element: <RutaModulo modulo={modulo}>{paginasPanel[path]}</RutaModulo>,
+  children: subrutasPanel[path],
 }))
+
+// El checklist de entrega/devolución va fuera del layout de Alquileres (sin pestañas) y exige poder editar el módulo
+const rutaChecklistAlquiler = {
+  path: 'alquileres/:id/equipos/:equipoId/checklist',
+  element: (
+    <RutaModulo modulo={MODULOS.ALQUILERES} requiereEdicion>
+      <RentalChecklistPage />
+    </RutaModulo>
+  ),
+}
 
 // Pantallas de Máquinas fuera del sidebar (RUTAS_MAQUINAS): el alta y la edición exigen poder editar el módulo; el detalle y el historial, solo verlo
 const rutasMaquinas = [
@@ -106,7 +149,7 @@ export const router = createBrowserRouter([
         <AdminLayout />
       </RutaPrivada>
     ),
-    children: [{ index: true, element: <AdminHomePage /> }, ...rutasPanel, ...rutasMaquinas],
+    children: [{ index: true, element: <AdminHomePage /> }, ...rutasPanel, ...rutasMaquinas, rutaChecklistAlquiler],
   },
   { path: '*', element: <NotFoundPage /> },
 ])
