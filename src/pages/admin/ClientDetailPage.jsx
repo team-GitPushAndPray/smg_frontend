@@ -4,8 +4,10 @@ import { Link, useParams } from 'react-router'
 import ClienteDetail, { ClienteDetailSkeleton } from '../../components/admin/ClienteDetail'
 import ClienteEstadoDialog from '../../components/admin/ClienteEstadoDialog'
 import ClienteFormModal from '../../components/admin/ClienteFormModal'
+import HistorialAlquileresCliente from '../../components/admin/HistorialAlquileresCliente'
 import PanelMessage from '../../components/admin/PanelMessage'
 import { MODULOS, RUTAS_ALQUILERES } from '../../config/rutasPanel'
+import { useAlquileresCliente } from '../../hooks/useAlquileresCliente'
 import { useCliente } from '../../hooks/useCliente'
 import { usePermiso } from '../../hooks/usePermiso'
 import { useToast } from '../../hooks/useToast'
@@ -13,13 +15,15 @@ import { useToast } from '../../hooks/useToast'
 /*
  * /admin/alquileres/clientes/:id: datos del cliente, activo o no, con Editar y Desactivar / Reactivar si se puede
  * editar Alquileres. Después de guardar se queda acá y el cliente se vuelve a pedir sin pasar por la carga.
- * El historial de alquileres del cliente llega en su propia issue
+ * Debajo, el historial de alquileres del cliente (todos los estados, el más nuevo arriba); cada uno abre su detalle.
+ * El historial se pide a la vez que el cliente, pero solo se muestra cuando el cliente cargó
  */
 export default function ClientDetailPage() {
   const { id } = useParams()
   const { puedeEditar } = usePermiso(MODULOS.ALQUILERES)
   const { showToast } = useToast()
   const { status, cliente, retry, reload } = useCliente(id)
+  const historial = useAlquileresCliente(id)
   const [isFormOpen, setIsFormOpen] = useState(false)
   const [isEstadoOpen, setIsEstadoOpen] = useState(false)
 
@@ -80,12 +84,19 @@ export default function ClientDetailPage() {
     )
   } else {
     content = (
-      <ClienteDetail
-        cliente={cliente}
-        canEdit={puedeEditar}
-        onEdit={() => setIsFormOpen(true)}
-        onToggleEstado={() => setIsEstadoOpen(true)}
-      />
+      <div className="flex flex-col gap-8">
+        <ClienteDetail
+          cliente={cliente}
+          canEdit={puedeEditar}
+          onEdit={() => setIsFormOpen(true)}
+          onToggleEstado={() => setIsEstadoOpen(true)}
+        />
+        <HistorialAlquileresCliente
+          status={historial.status}
+          alquileres={historial.alquileres}
+          onRetry={historial.retry}
+        />
+      </div>
     )
   }
 

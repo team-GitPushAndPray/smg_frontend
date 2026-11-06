@@ -39,6 +39,20 @@ export function getEstadoAlquiler(estado) {
   return Object.hasOwn(ESTADOS_ALQUILER, estado) ? ESTADOS_ALQUILER[estado] : null
 }
 
+/**
+ * Fecha de calendario de un alquiler (fecha_inicio, fecha_fin_prevista) como "06/11/2026". El back la manda como ISO a
+ * medianoche UTC: se leen los primeros 10 caracteres, sin pasar por `new Date()`, que en Argentina la corre un día para
+ * atrás. Devuelve "—" si no vino o no tiene la forma aaaa-mm-dd
+ * @param {string | null | undefined} valor
+ * @returns {string}
+ */
+export function formatFechaAlquiler(valor) {
+  const partes = /^(\d{4})-(\d{2})-(\d{2})/.exec(valor ?? '')
+  if (!partes) return '—'
+  const [, anio, mes, dia] = partes
+  return `${dia}/${mes}/${anio}`
+}
+
 // Tipos de checklist de un equipo alquilado: el `?tipo=` de la ruta y del GET del formulario
 export const TIPOS_CHECKLIST_ALQUILER = Object.freeze({
   ENTREGA: 'Entrega',
