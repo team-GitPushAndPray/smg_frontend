@@ -44,4 +44,12 @@
  * @property {TipoAviso} [tipo]
  */
 
+/**
+ * GET /avisos/resumen, para la campanita. `vencidos` es una parte de `pendientes` (los que ya pasaron su hito o su
+ * fecha; 0 cuenta como vencido), no un número aparte
+ * @typedef {object} ResumenAvisos
+ * @property {number} pendientes
+ * @property {number} vencidos
+ */
+
 export {}
