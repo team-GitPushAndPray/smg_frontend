@@ -157,6 +157,21 @@
  */
 
 /**
+ * Alquiler visto desde el historial de un equipo (lo arma el front con el detalle, ver listarAlquileresDeEquipo).
+ * `entrega` y `devolucion` son las fechas (ISO) de los checklists de ESE equipo, no de los otros del alquiler; null
+ * mientras no se hicieron
+ * @typedef {object} AlquilerDeEquipo
+ * @property {number} id
+ * @property {EstadoAlquiler} estado
+ * @property {string | null} cliente Razón social
+ * @property {number} latitud
+ * @property {number} longitud
+ * @property {string} ubicacion_referencia
+ * @property {string | null} entrega
+ * @property {string | null} devolucion
+ */
+
+/**
  * Lo que devuelven POST /alquileres, PATCH /alquileres/:id, POST /alquileres/:id/anular y el POST de un checklist:
  * la fila del alquiler con el cliente resumido y los vínculos con sus equipos (cada uno con el equipo completo, tal
  * cual la tabla). No tiene la forma del detalle: para mostrar el alquiler actualizado se vuelve a pedir el detalle

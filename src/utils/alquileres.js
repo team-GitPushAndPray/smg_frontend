@@ -5,8 +5,8 @@ import { getErrorGenerico } from './usuarios'
 
 /**
  * @import {
- *   AlquilerEquipo, AlquilerListado, AlquilerListadoEquipo, EstadoAlquiler, FormularioChecklistAlquiler,
- *   TipoChecklistAlquiler,
+ *   AlquilerDeEquipo, AlquilerDetalle, AlquilerEquipo, AlquilerListado, AlquilerListadoEquipo, EstadoAlquiler,
+ *   FormularioChecklistAlquiler, TipoChecklistAlquiler,
  * } from '../types/alquileres'
  */
 
@@ -291,6 +291,27 @@ export function nombreCompleto(nombre, apellido) {
     .map((valor) => valor?.trim())
     .filter(Boolean)
     .join(' ')
+}
+
+/**
+ * Un alquiler (su detalle) visto desde el historial de uno de sus equipos: los datos del alquiler y las fechas de
+ * entrega y devolución de ESE equipo, que salen de sus checklists (null mientras no se hicieron)
+ * @param {AlquilerDetalle} alquiler
+ * @param {number | string} equipoId
+ * @returns {AlquilerDeEquipo}
+ */
+export function adaptarAlquilerDeEquipo(alquiler, equipoId) {
+  const equipo = (alquiler.equipos ?? []).find((item) => item.id === Number(equipoId))
+  return {
+    id: alquiler.id,
+    estado: alquiler.estado,
+    cliente: alquiler.cliente?.razon_social ?? null,
+    latitud: alquiler.latitud,
+    longitud: alquiler.longitud,
+    ubicacion_referencia: alquiler.ubicacion_referencia,
+    entrega: equipo?.entrega?.fecha ?? null,
+    devolucion: equipo?.devolucion?.fecha ?? null,
+  }
 }
 
 /**
