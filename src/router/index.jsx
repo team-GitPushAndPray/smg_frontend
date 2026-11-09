@@ -5,6 +5,7 @@ import AlquileresLayout from '../layouts/AlquileresLayout'
 import FieldLayout from '../layouts/FieldLayout'
 import PublicLayout from '../layouts/PublicLayout'
 import AdminHomePage from '../pages/admin/AdminHomePage'
+import AlertsPage from '../pages/admin/AlertsPage'
 import ClientDetailPage from '../pages/admin/ClientDetailPage'
 import ClientsPage from '../pages/admin/ClientsPage'
 import LoginPage from '../pages/admin/LoginPage'
@@ -52,6 +53,7 @@ const rutasAlquileres = [
 const paginasPanel = {
   '/admin/maquinas': <MachinesPage />,
   '/admin/alquileres': <AlquileresLayout />,
+  '/admin/avisos': <AlertsPage />,
   '/admin/configuracion/usuarios': <UsersPage />,
   '/admin/configuracion/roles': <RolesPage />,
 }
