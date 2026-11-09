@@ -1,16 +1,18 @@
 import { ArrowLeft, CloudOff, PackageX, RotateCw } from 'lucide-react'
 import { useEffect } from 'react'
 import { Link, useParams, useSearchParams } from 'react-router'
+import HistorialAlquileresEquipo from '../../components/admin/HistorialAlquileresEquipo'
 import HistorialChecklists from '../../components/admin/HistorialChecklists'
 import HistorialHeader, { HistorialSkeleton } from '../../components/admin/HistorialHeader'
 import HistorialTabs from '../../components/admin/HistorialTabs'
 import PanelMessage from '../../components/admin/PanelMessage'
-import { RUTAS_MAQUINAS } from '../../config/rutasPanel'
+import { MODULOS, RUTAS_MAQUINAS } from '../../config/rutasPanel'
 import { useEquipo } from '../../hooks/useEquipo'
+import { usePermiso } from '../../hooks/usePermiso'
 import { obtenerEquipo } from '../../services/equiposService'
-import { getPestanaHistorial, PARAM_PESTANA } from '../../utils/historial'
+import { getPestanaHistorial, getPestanasHistorial, PARAM_PESTANA } from '../../utils/historial'
 
-// Contenido de una pestaña cuyo módulo todavía no existe (Alquileres, Mantenimiento)
+// Contenido de una pestaña cuyo módulo todavía no existe (Mantenimiento)
 function PestanaPendiente({ pestana }) {
   return (
     <PanelMessage
@@ -25,14 +27,17 @@ function PestanaPendiente({ pestana }) {
  * Historial de un equipo (/admin/maquinas/:id/historial), activo o dado de baja. Es de solo lectura: no hay ningún
  * botón de editar ni de borrar. La pestaña activa va en la URL (?tab=checklists) y reemplaza la entrada del
  * historial del navegador: sobrevive a recargar y "atrás" lleva a la pantalla anterior, no a la pestaña anterior.
- * Checklists lista los del equipo con filtros (HistorialChecklists); Alquileres y Mantenimiento muestran un estado
- * vacío hasta que existan sus módulos (M-08 y M-10)
+ * Checklists lista los del equipo con filtros (HistorialChecklists); Alquileres, los alquileres en los que participó
+ * (HistorialAlquileresEquipo), y solo aparece con el módulo ALQUILERES: sin él, el back no deja verlos y un enlace con
+ * ?tab=alquileres abre Checklists. Mantenimiento muestra un estado vacío hasta que exista su módulo (M-10)
  */
 export default function MachineHistoryPage() {
   const { id } = useParams()
   const { status, equipo, retry } = useEquipo(id, obtenerEquipo)
+  const { puedeVer: veAlquileres } = usePermiso(MODULOS.ALQUILERES)
   const [searchParams, setSearchParams] = useSearchParams()
-  const pestana = getPestanaHistorial(searchParams.get(PARAM_PESTANA))
+  const pestanas = getPestanasHistorial({ veAlquileres })
+  const pestana = getPestanaHistorial(searchParams.get(PARAM_PESTANA), pestanas)
 
   const cambiarPestana = (nueva) => {
     setSearchParams(
@@ -89,11 +94,16 @@ export default function MachineHistoryPage() {
       </PanelMessage>
     )
   } else {
+    let panel
+    if (pestana.pendiente) panel = <PestanaPendiente pestana={pestana} />
+    else if (pestana.id === 'alquileres') panel = <HistorialAlquileresEquipo equipoId={equipo.id} />
+    else panel = <HistorialChecklists equipo={equipo} />
+
     content = (
       <>
         <HistorialHeader equipo={equipo} />
-        <HistorialTabs activa={pestana.id} onCambiar={cambiarPestana}>
-          {pestana.pendiente ? <PestanaPendiente pestana={pestana} /> : <HistorialChecklists equipo={equipo} />}
+        <HistorialTabs pestanas={pestanas} activa={pestana.id} onCambiar={cambiarPestana}>
+          {panel}
         </HistorialTabs>
       </>
     )

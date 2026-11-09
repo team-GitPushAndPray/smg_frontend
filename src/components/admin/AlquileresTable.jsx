@@ -1,8 +1,9 @@
-import { ChevronRight, MapPin } from 'lucide-react'
+import { ChevronRight } from 'lucide-react'
 import { Link, useNavigate } from 'react-router'
 import { RUTAS_ALQUILERES } from '../../config/rutasPanel'
-import { formatFechaAlquiler, getVencimiento, linkMaps, resumirEquipos } from '../../utils/alquileres'
+import { formatFechaAlquiler, getVencimiento, resumirEquipos } from '../../utils/alquileres'
 import EstadoAlquilerBadge from './EstadoAlquilerBadge'
+import UbicacionLink from './UbicacionLink'
 import VencimientoTag from './VencimientoTag'
 
 /** @import { AlquilerListado } from '../../types/alquileres' */
@@ -33,30 +34,6 @@ function EquiposResumen({ equipos }) {
 // "2/4": equipos entregados sobre el total del alquiler
 function entregadosLabel(alquiler) {
   return `${alquiler.entregados ?? 0}/${alquiler.equipos?.length ?? 0}`
-}
-
-/*
- * Ubicación de la obra como enlace a Google Maps, en otra pestaña: muestra la referencia, o "Ver mapa" si no tiene.
- * Rojo de la paleta para que se lea como enlace. Sin coordenadas válidas no hay enlace: queda la referencia como texto.
- * `className` ajusta el área táctil según dónde va
- */
-function UbicacionLink({ alquiler, className = '' }) {
-  const href = linkMaps(alquiler.latitud, alquiler.longitud)
-  const referencia = alquiler.ubicacion_referencia?.trim()
-  if (!href) return referencia || '—'
-  return (
-    <a
-      href={href}
-      target="_blank"
-      rel="noopener noreferrer"
-      aria-label={`${referencia ? `Ubicación: ${referencia}` : 'Ver mapa'}. Abre Google Maps en otra pestaña`}
-      title={referencia ? `${referencia} · Abrir en Google Maps` : 'Abrir en Google Maps'}
-      className={`interactive inline-flex max-w-full min-w-0 items-center gap-1.5 rounded-sm font-medium text-brand-700 hover:underline dark:text-brand-400 ${focusRing} ${className}`}
-    >
-      <MapPin size={14} strokeWidth={1.75} aria-hidden="true" className="shrink-0" />
-      <span className="truncate">{referencia || 'Ver mapa'}</span>
-    </a>
-  )
 }
 
 /**

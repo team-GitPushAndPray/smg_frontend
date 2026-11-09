@@ -1,9 +1,10 @@
+import { adaptarAlquilerDeEquipo } from '../utils/alquileres'
 import { apiFetch, toQuery } from './api'
 import { listarEquipos } from './equiposService'
 
 /**
  * @import {
- *   Alquiler, AlquilerAlta, AlquilerDetalle, AlquilerEdicion, AlquilerListado, DatosChecklistAlquiler,
+ *   Alquiler, AlquilerAlta, AlquilerDeEquipo, AlquilerDetalle, AlquilerEdicion, AlquilerListado, DatosChecklistAlquiler,
  *   FiltrosAlquileres, FormularioChecklistAlquiler, TipoChecklistAlquiler,
  * } from '../types/alquileres'
  */
@@ -33,6 +34,20 @@ export async function listarAlquileres(filtros = {}, { signal } = {}) {
  */
 export function obtenerAlquiler(id, { signal } = {}) {
   return apiFetch(`/alquileres/${id}`, { signal })
+}
+
+/**
+ * Historial de alquileres de un equipo: todos los alquileres en los que participó (de cualquier estado), del más nuevo
+ * al más viejo, con las fechas de entrega y devolución de ESE equipo. El listado no las trae (solo cuenta entregados y
+ * devueltos), así que se pide el detalle de cada alquiler en paralelo y se toma el equipo que coincide. Si falla uno,
+ * falla todo: una lista a medias haría creer que el equipo tuvo menos alquileres
+ * @param {number | string} equipoId
+ * @returns {Promise<AlquilerDeEquipo[]>}
+ */
+export async function listarAlquileresDeEquipo(equipoId, { signal } = {}) {
+  const alquileres = await listarAlquileres({ equipo_id: Number(equipoId) }, { signal })
+  const detalles = await Promise.all(alquileres.map((alquiler) => obtenerAlquiler(alquiler.id, { signal })))
+  return detalles.map((detalle) => adaptarAlquilerDeEquipo(detalle, equipoId))
 }
 
 /**
