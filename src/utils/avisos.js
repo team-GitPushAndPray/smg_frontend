@@ -2,8 +2,9 @@ import { BellRing, CheckCheck, FileBadge, Wrench } from 'lucide-react'
 import { formatFechaAlquiler, formatFechaHoraAlquiler, nombreCompleto } from './alquileres'
 import { formatHoras } from './equipos'
 import { formatFechaChecklist } from './historial'
+import { getErrorGenerico } from './usuarios'
 
-/** @import { Aviso, EstadoAviso, TipoAviso } from '../types/avisos' */
+/** @import { Aviso, EstadoAviso, ResumenAvisos, TipoAviso } from '../types/avisos' */
 
 /*
  * Pestañas del centro de avisos (/admin/avisos?tab=atendidos). `id` es el valor de la URL; `estado`, lo que viaja a
@@ -158,4 +159,54 @@ export function getAtencionAviso(aviso) {
 // Día en que se generó el aviso ("06/11/2026"), o null si la fecha no sirve
 export function formatCreacionAviso(iso) {
   return formatFechaChecklist(iso)?.fecha ?? null
+}
+
+// "EXC-01 · Bobcat 1QA1", o solo el código si no vino el nombre
+export function describirMaquinaAviso(aviso) {
+  const codigo = aviso.maquina?.codigo_interno ?? '—'
+  return aviso.maquina?.nombre ? `${codigo} · ${aviso.maquina.nombre}` : codigo
+}
+
+// Largo máximo de la nota al marcar un aviso como atendido: el mismo que valida el back
+export const MAX_NOTA_ATENCION = 500
+
+export const ERROR_SIN_NOTA = 'Escribí una nota con lo que se hizo para atender el aviso.'
+
+// 409 al atender: otro usuario lo atendió antes (o lo cerró en cascada el service de un hito mayor)
+export const ERROR_YA_ATENDIDO = 'Este aviso ya lo atendió otro usuario. Actualizamos la lista.'
+
+export const ERROR_AVISO_INEXISTENTE = 'El aviso ya no existe. Actualizamos la lista.'
+
+/**
+ * Mensaje para un error al marcar un aviso como atendido. 400: lo que dice la validación del back (va en el campo de
+ * la nota). 404 y 409: la lista quedó desactualizada. null en 401 y 403, que ya avisó apiFetch
+ * @param {{ status?: number, message?: string, data?: any }} error
+ * @returns {string | null}
+ */
+export function getErrorAtencion(error) {
+  if (error.status === 400) {
+    const mensajes = error.data?.message
+    return Array.isArray(mensajes) ? mensajes.join('. ') : error.message
+  }
+  if (error.status === 404) return ERROR_AVISO_INEXISTENTE
+  if (error.status === 409) return ERROR_YA_ATENDIDO
+  return getErrorGenerico(error)
+}
+
+// Cuántos pendientes muestra el desplegable de la campanita (los más urgentes: el back ya los manda ordenados)
+export const MAX_AVISOS_CAMPANITA = 5
+
+// Número del badge de la campanita: hasta 99, después "99+" para que no se ensanche
+export function formatBadgeAvisos(cantidad) {
+  return cantidad > 99 ? '99+' : String(cantidad)
+}
+
+/**
+ * Resumen en palabras para la campanita: "5 pendientes · 2 vencidos", "1 pendiente", "Sin avisos pendientes"
+ * @param {ResumenAvisos} resumen
+ */
+export function describirResumenAvisos({ pendientes, vencidos }) {
+  if (pendientes === 0) return 'Sin avisos pendientes'
+  const texto = `${pendientes} ${pendientes === 1 ? 'pendiente' : 'pendientes'}`
+  return vencidos > 0 ? `${texto} · ${vencidos} ${vencidos === 1 ? 'vencido' : 'vencidos'}` : texto
 }

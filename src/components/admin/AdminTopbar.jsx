@@ -5,12 +5,17 @@ import { useAuth } from '../../hooks/useAuth'
 import ThemeToggle from '../ThemeToggle'
 import AdminBrand from './AdminBrand'
 import AdminNav from './AdminNav'
+import CampanitaAvisos from './CampanitaAvisos'
 import UserMenu from './UserMenu'
 
 const iconButton =
   'interactive grid size-11 place-items-center rounded-control text-neutral-700 hover:bg-black/5 hover:text-black dark:text-neutral-300 dark:hover:bg-white/10 dark:hover:text-white'
 
-// Barra superior del panel. En celular el sidebar se oculta y su menú se despliega desde acá
+/*
+ * Barra superior del panel. En celular el sidebar se oculta y su menú se despliega desde acá.
+ * A la derecha: "Ver sitio" (solo el ícono en celular, para que entre todo en 360px), tema, campanita de avisos (si el
+ * rol tiene el módulo) y cuenta
+ */
 export default function AdminTopbar() {
   const { usuario } = useAuth()
   const [isMenuOpen, setIsMenuOpen] = useState(false)
@@ -60,12 +65,15 @@ export default function AdminTopbar() {
         <div className="ml-auto flex items-center gap-1">
           <Link
             to="/"
-            className="interactive flex h-11 items-center gap-1.5 rounded-control px-3 text-sm font-medium text-neutral-700 hover:bg-black/5 hover:text-black dark:text-neutral-300 dark:hover:bg-white/10 dark:hover:text-white"
+            aria-label="Ver sitio"
+            title="Ver sitio"
+            className="interactive flex h-11 min-w-11 items-center justify-center gap-1.5 rounded-control text-sm font-medium text-neutral-700 hover:bg-black/5 hover:text-black sm:px-3 dark:text-neutral-300 dark:hover:bg-white/10 dark:hover:text-white"
           >
-            Ver sitio
+            <span className="hidden sm:inline">Ver sitio</span>
             <ArrowUpRight size={16} strokeWidth={1.75} aria-hidden="true" />
           </Link>
           <ThemeToggle />
+          <CampanitaAvisos />
           <UserMenu />
         </div>
       </div>
