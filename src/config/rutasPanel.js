@@ -14,6 +14,11 @@ export const MODULOS = Object.freeze({
   AVISOS: 'AVISOS',
 })
 
+// Pantallas del módulo Avisos: el centro de avisos es la sección de RUTAS_PANEL y el destino de "Ver todos" de la campanita
+export const RUTAS_AVISOS = Object.freeze({
+  centro: '/admin/avisos',
+})
+
 // Los ítems con `grupo` se muestran juntos en un desplegable del sidebar. `descripcion` es el texto de su tarjeta en Inicio
 export const RUTAS_PANEL = [
   {
@@ -33,7 +38,7 @@ export const RUTAS_PANEL = [
   },
   // Centro de avisos: services y certificaciones, en pestañas Pendientes / Atendidos (?tab=)
   {
-    path: '/admin/avisos',
+    path: RUTAS_AVISOS.centro,
     modulo: MODULOS.AVISOS,
     label: 'Avisos',
     descripcion: 'Services y certificaciones por vencer, vencidos y atendidos.',
