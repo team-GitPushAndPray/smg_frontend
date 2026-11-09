@@ -8,16 +8,24 @@ import { formatHoras } from './equipos'
  */
 export const PESTANAS_HISTORIAL = Object.freeze([
   { id: 'checklists', label: 'Checklists', Icon: ClipboardCheck },
-  { id: 'alquileres', label: 'Alquileres', Icon: KeyRound, pendiente: 'Alquileres' },
+  { id: 'alquileres', label: 'Alquileres', Icon: KeyRound },
   { id: 'mantenimiento', label: 'Mantenimiento', Icon: Wrench, pendiente: 'Taller' },
 ])
 
 // Nombre del parámetro de la URL con la pestaña activa
 export const PARAM_PESTANA = 'tab'
 
-// Pestaña de la URL; si no vino o no existe, la primera (Checklists)
-export function getPestanaHistorial(valor) {
-  return PESTANAS_HISTORIAL.find(({ id }) => id === valor) ?? PESTANAS_HISTORIAL[0]
+/**
+ * Pestañas que ve el usuario. Alquileres solo con el módulo ALQUILERES: sin él, el back no deja ver los alquileres
+ * @param {{ veAlquileres: boolean }} permisos
+ */
+export function getPestanasHistorial({ veAlquileres }) {
+  return veAlquileres ? PESTANAS_HISTORIAL : PESTANAS_HISTORIAL.filter(({ id }) => id !== 'alquileres')
+}
+
+// Pestaña de la URL entre las que ve el usuario; si no vino, no existe o no la puede ver, la primera (Checklists)
+export function getPestanaHistorial(valor, pestanas = PESTANAS_HISTORIAL) {
+  return pestanas.find(({ id }) => id === valor) ?? pestanas[0]
 }
 
 // Checklists por página del historial
