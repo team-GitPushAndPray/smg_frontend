@@ -47,6 +47,16 @@
   --color-ok-300: #86efac;
   --color-ok-700: #15803d;
 
+  /*
+   * Ámbar de estado: solo para "por vencer" en los avisos de service y certificación, siempre con ícono y texto.
+   * Tampoco es un acento. warn-800 sobre warn-100 da AA en claro; warn-300 sobre su tinte, en oscuro. warn-400 es la
+   * franja de color de la tarjeta (decorativa: la urgencia también va escrita)
+   */
+  --color-warn-100: #fef3c7;
+  --color-warn-300: #fcd34d;
+  --color-warn-400: #fbbf24;
+  --color-warn-800: #92400e;
+
   /* Tipografía del sistema Apple */
   --font-sans: -apple-system, BlinkMacSystemFont, 'SF Pro Display', Inter, system-ui, sans-serif;
 
@@ -237,6 +247,18 @@
   @media (prefers-reduced-transparency: reduce) {
     backdrop-filter: none;
   }
+}
+
+/*
+ * Nivel 1 sin blur: tarjetas de una lista que puede crecer mucho (avisos). Mismo borde, brillo y sombra que .glass,
+ * con el fondo opaco de .glass-strong para que se lea igual sin desenfocar lo de atrás (backdrop-filter repetido en
+ * cada tarjeta es caro, sobre todo en celular)
+ */
+@utility glass-flat {
+  background: var(--glass-bg-strong);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--glass-highlight), var(--glass-shadow);
+  border-radius: var(--radius-card);
 }
 
 /* Contenedor de página: ancho máximo y márgenes laterales por breakpoint */

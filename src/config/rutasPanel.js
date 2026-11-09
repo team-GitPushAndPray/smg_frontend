@@ -1,4 +1,4 @@
-import { KeyRound, Settings, Shield, Truck, Users } from 'lucide-react'
+import { Bell, KeyRound, Settings, Shield, Truck, Users } from 'lucide-react'
 
 /*
  * Única fuente de verdad del panel de gestión: el sidebar, las tarjetas de Inicio y las rutas protegidas
@@ -11,6 +11,7 @@ export const MODULOS = Object.freeze({
   CONFIGURACION: 'CONFIGURACION',
   VENDEDORES: 'VENDEDORES',
   ALQUILERES: 'ALQUILERES',
+  AVISOS: 'AVISOS',
 })
 
 // Los ítems con `grupo` se muestran juntos en un desplegable del sidebar. `descripcion` es el texto de su tarjeta en Inicio
@@ -29,6 +30,14 @@ export const RUTAS_PANEL = [
     label: 'Alquileres',
     descripcion: 'Alquileres en curso, vencimientos y clientes.',
     icon: KeyRound,
+  },
+  // Centro de avisos: services y certificaciones, en pestañas Pendientes / Atendidos (?tab=)
+  {
+    path: '/admin/avisos',
+    modulo: MODULOS.AVISOS,
+    label: 'Avisos',
+    descripcion: 'Services y certificaciones por vencer, vencidos y atendidos.',
+    icon: Bell,
   },
   {
     path: '/admin/configuracion/usuarios',
