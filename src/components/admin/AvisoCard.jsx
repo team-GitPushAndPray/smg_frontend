@@ -35,10 +35,11 @@ const badgeAtendido = 'bg-black/5 text-neutral-700 dark:bg-white/10 dark:text-ne
 
 /**
  * Estado del aviso arriba a la derecha: la urgencia si está pendiente ("Vencido hace 20 hs", "Faltan 30 hs"),
- * "Atendido" si ya se resolvió. Un pendiente sin el dato de lo que falta no muestra nada
+ * "Atendido" si ya se resolvió. Un pendiente sin el dato de lo que falta no muestra nada.
+ * También lo usan el modal de atención y el desplegable de la campanita
  * @param {{ aviso: Aviso }} props
  */
-function EstadoAviso({ aviso }) {
+export function EstadoAviso({ aviso }) {
   if (aviso.estado === 'ATENDIDO') {
     return (
       <span className={`${badgeBase} ${badgeAtendido}`}>
@@ -106,13 +107,13 @@ function AtencionAviso({ aviso }) {
  * Tarjeta de un aviso del centro de avisos: la máquina (código interno y nombre, que abre su detalle si el rol tiene
  * Máquinas), qué pide (service con su hito y las horas actuales, o certificación con su vencimiento), la urgencia si
  * está pendiente y, si ya se atendió, la nota con quién y cuándo.
- * "Marcar atendido" va solo en los pendientes y con `puedeAtender` (edición en Avisos); `onMarcarAtendido` es opcional:
- * mientras no esté el modal de atención el botón se ve, pero todavía no hace nada
+ * "Marcar atendido" va solo en los pendientes y con `puedeAtender` (edición en Avisos): llama a `onMarcarAtendido`,
+ * que abre el modal de atención
  * @param {{
  *   aviso: Aviso,
  *   puedeVerMaquina: boolean,
  *   puedeAtender: boolean,
- *   onMarcarAtendido?: (aviso: Aviso) => void,
+ *   onMarcarAtendido: (aviso: Aviso) => void,
  * }} props
  */
 export default function AvisoCard({ aviso, puedeVerMaquina, puedeAtender, onMarcarAtendido }) {
@@ -184,7 +185,7 @@ export default function AvisoCard({ aviso, puedeVerMaquina, puedeAtender, onMarc
           {pendiente && puedeAtender && (
             <button
               type="button"
-              onClick={onMarcarAtendido ? () => onMarcarAtendido(aviso) : undefined}
+              onClick={() => onMarcarAtendido(aviso)}
               className="btn-tonal w-full shrink-0 sm:ml-auto sm:w-auto"
             >
               <CheckCheck size={18} strokeWidth={1.75} aria-hidden="true" />
