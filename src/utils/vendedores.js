@@ -22,14 +22,15 @@ export function getIniciales(nombre) {
 }
 
 /*
- * Enlace de WhatsApp a partir del contacto que carga el admin.
- * El back lo guarda como número local ("2996225551"): se le agrega 54 (Argentina) + 9 (celular).
- * Si ya viene en formato internacional (empieza con 54) se usa tal cual. Sin número válido devuelve null.
+ * Enlace de WhatsApp a partir de un teléfono escrito a mano (contacto del admin, teléfono de un postulante).
+ * Normalización simple: solo los dígitos y sin los 0 del principio ("0299…", "0054…"); a un número local
+ * ("2996225551") se le agrega 54 (Argentina) + 9 (celular), y uno que ya empieza con 54 se usa tal cual.
+ * Es un mejor esfuerzo: un número escrito con el 15 queda mal armado. Sin dígitos devuelve null.
  */
 export function getWhatsappUrl(contacto, mensaje) {
-  let numero = String(contacto ?? '').replace(/\D/g, '')
+  let numero = String(contacto ?? '').replace(/\D/g, '').replace(/^0+/, '')
   if (!numero) return null
-  if (!numero.startsWith('54')) numero = `549${numero.replace(/^0+/, '')}`
+  if (!numero.startsWith('54')) numero = `549${numero}`
 
   const texto = mensaje ? `?text=${encodeURIComponent(mensaje)}` : ''
   return `https://wa.me/${numero}${texto}`
