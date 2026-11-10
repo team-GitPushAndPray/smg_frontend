@@ -1,0 +1,100 @@
+import { ArrowLeft, CloudOff, PackageX, RotateCw } from 'lucide-react'
+import { useEffect, useState } from 'react'
+import { Link, useParams } from 'react-router'
+import EquipoAccionModal from '../../components/admin/EquipoAccionModal'
+import EquipoDetail, { EquipoDetailSkeleton } from '../../components/admin/EquipoDetail'
+import EquipoQrModal from '../../components/admin/EquipoQrModal'
+import PanelMessage from '../../components/admin/PanelMessage'
+import { MODULOS, RUTAS_MAQUINAS } from '../../config/rutasPanel'
+import { useEquipo } from '../../hooks/useEquipo'
+import { usePermiso } from '../../hooks/usePermiso'
+import { obtenerEquipo } from '../../services/equiposService'
+
+/*
+ * Detalle de un equipo del panel (/admin/maquinas/:id), activo o dado de baja. Después de actualizar horas,
+ * cambiar el estado o dar de baja, el equipo se vuelve a pedir sin pasar por la carga (tras la baja se queda acá,
+ * con el aviso de dado de baja). Las fotos todavía no forman parte de esta pantalla; el historial tiene la suya (MachineHistoryPage)
+ */
+export default function MachineDetailPage() {
+  const { id } = useParams()
+  const { puedeEditar } = usePermiso(MODULOS.MAQUINAS)
+  const { status, equipo, retry, reload } = useEquipo(id, obtenerEquipo)
+  // Acción con modal abierta: { tipo: 'horas' | 'estado' | 'baja', equipo }
+  const [accion, setAccion] = useState(null)
+  // Equipo con el modal del QR abierto (lo ven todos, también sin edición), o null
+  const [equipoQr, setEquipoQr] = useState(null)
+  const abrir = (tipo) => (equipoElegido) => setAccion({ tipo, equipo: equipoElegido })
+
+  // Desde el inventario se llega con la página scrolleada: cada equipo se ve desde arriba
+  useEffect(() => {
+    window.scrollTo(0, 0)
+  }, [id])
+
+  let content
+  if (status === 'loading') {
+    content = (
+      <div aria-busy="true">
+        <p role="status" className="sr-only">
+          Cargando equipo…
+        </p>
+        <EquipoDetailSkeleton />
+      </div>
+    )
+  } else if (status === 'not-found') {
+    content = (
+      <PanelMessage
+        titleAs="h1"
+        icon={PackageX}
+        title="Equipo no encontrado"
+        description="El equipo que buscás no existe en el inventario. Revisá el enlace o buscalo en el listado."
+      >
+        <Link to={RUTAS_MAQUINAS.inventario} className="btn-tonal">
+          Volver al inventario
+        </Link>
+      </PanelMessage>
+    )
+  } else if (status === 'error') {
+    content = (
+      <PanelMessage
+        role="alert"
+        titleAs="h1"
+        icon={CloudOff}
+        title="No pudimos cargar el equipo"
+        description="Revisá tu conexión o intentá de nuevo en unos minutos."
+      >
+        <button type="button" onClick={retry} className="btn-tonal">
+          <RotateCw size={18} strokeWidth={1.75} aria-hidden="true" />
+          Reintentar
+        </button>
+      </PanelMessage>
+    )
+  } else {
+    content = (
+      <EquipoDetail
+        equipo={equipo}
+        canEdit={puedeEditar}
+        onVerQr={setEquipoQr}
+        onActualizarHoras={abrir('horas')}
+        onCambiarEstado={abrir('estado')}
+        onDarDeBaja={abrir('baja')}
+      />
+    )
+  }
+
+  return (
+    <article className="flex flex-col gap-4">
+      <Link
+        to={RUTAS_MAQUINAS.inventario}
+        className="interactive -ml-3 inline-flex min-h-11 items-center gap-2 self-start rounded-control px-3 text-sm font-medium text-neutral-700 hover:bg-black/5 hover:text-black dark:text-neutral-300 dark:hover:bg-white/10 dark:hover:text-white"
+      >
+        <ArrowLeft size={18} strokeWidth={1.75} aria-hidden="true" />
+        Volver al inventario
+      </Link>
+
+      {content}
+
+      <EquipoAccionModal accion={accion} onClose={() => setAccion(null)} onDone={reload} />
+      {equipoQr && <EquipoQrModal equipo={equipoQr} onClose={() => setEquipoQr(null)} />}
+    </article>
+  )
+}

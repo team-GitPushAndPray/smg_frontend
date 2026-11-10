@@ -1,111 +1,593 @@
+@import 'tailwindcss';
+
+/* Modo oscuro por clase: se activa con .dark en <html> */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/*
+ * Paleta del proyecto: rojo, negro y blanco.
+ * Se anulan los colores por defecto de Tailwind para usar solo estos.
+ */
+@theme {
+  --color-*: initial;
+
+  --color-white: #ffffff;
+  --color-black: #0a0a0a;
+
+  --color-brand-50: #fef2f2;
+  --color-brand-100: #fde3e3;
+  --color-brand-200: #fbcbcc;
+  --color-brand-300: #f7a3a6;
+  --color-brand-400: #f06b70;
+  --color-brand-500: #e43d44;
+  --color-brand-600: #d01f27;
+  --color-brand-700: #ae171e;
+  --color-brand-800: #90171d;
+  --color-brand-900: #78191e;
+  --color-brand-950: #41080b;
+
+  --color-neutral-50: #fafafa;
+  --color-neutral-100: #f4f4f5;
+  --color-neutral-200: #e4e4e7;
+  --color-neutral-300: #d4d4d8;
+  --color-neutral-400: #a1a1aa;
+  --color-neutral-500: #71717a;
+  --color-neutral-600: #52525b;
+  --color-neutral-700: #3f3f46;
+  --color-neutral-800: #27272a;
+  --color-neutral-900: #18181b;
+  --color-neutral-950: #0f0f10;
+
+  /*
+   * Verde de estado: solo para "Normal" en los ítems de un checklist (el de campo y su detalle en el historial),
+   * donde el estado lleva color, ícono y texto. No es un acento: las acciones y lo activo siguen en rojo.
+   * ok-700 da AA sobre blanco y con texto blanco; ok-300 es su versión para texto en modo oscuro
+   */
+  --color-ok-50: #f0fdf4;
+  --color-ok-200: #bbf7d0;
+  --color-ok-300: #86efac;
+  --color-ok-700: #15803d;
+
+  /*
+   * Ámbar de estado: solo para "por vencer" en los avisos de service y certificación, siempre con ícono y texto.
+   * Tampoco es un acento. warn-800 sobre warn-100 da AA en claro; warn-300 sobre su tinte, en oscuro. warn-400 es la
+   * franja de color de la tarjeta (decorativa: la urgencia también va escrita)
+   */
+  --color-warn-100: #fef3c7;
+  --color-warn-300: #fcd34d;
+  --color-warn-400: #fbbf24;
+  --color-warn-800: #92400e;
+
+  /* Tipografía del sistema Apple */
+  --font-sans: -apple-system, BlinkMacSystemFont, 'SF Pro Display', Inter, system-ui, sans-serif;
+
+  /* Radios: superficies y controles (genera rounded-card y rounded-control) */
+  --radius-card: 1.5rem;
+  --radius-control: 0.875rem;
+
+  /* Curva de las transiciones (genera ease-glass) */
+  --ease-glass: cubic-bezier(0.22, 1, 0.36, 1);
+
+  /* Entrada de los avisos, de los modales y de su velo (genera animate-toast-in, animate-dialog-in y animate-fade-in) */
+  --animate-toast-in: toast-in 300ms var(--ease-glass);
+  --animate-dialog-in: toast-in 250ms var(--ease-glass);
+  --animate-fade-in: fade-in 200ms var(--ease-glass);
+
+  @keyframes toast-in {
+    from {
+      opacity: 0;
+      transform: translateY(0.5rem) scale(0.98);
+    }
+  }
+
+  @keyframes fade-in {
+    from {
+      opacity: 0;
+    }
+  }
+}
+
+/*
+ * Tokens de vidrio y fondo global, diseñados por separado para cada modo.
+ * En celular el blur es menor para cuidar el rendimiento.
+ */
 :root {
-  --text: #6b6375;
-  --text-h: #08060d;
-  --bg: #fff;
-  --border: #e5e4e7;
-  --code-bg: #f4f3ec;
-  --accent: #aa3bff;
-  --accent-bg: rgba(170, 59, 255, 0.1);
-  --accent-border: rgba(170, 59, 255, 0.5);
-  --social-bg: rgba(244, 243, 236, 0.5);
-  --shadow:
-    rgba(0, 0, 0, 0.1) 0 10px 15px -3px, rgba(0, 0, 0, 0.05) 0 4px 6px -2px;
+  --glass-bg: color-mix(in srgb, var(--color-white) 60%, transparent);
+  --glass-bg-strong: color-mix(in srgb, var(--color-white) 78%, transparent);
+  --glass-border: color-mix(in srgb, var(--color-white) 60%, transparent);
+  --glass-highlight: inset 0 1px 0 color-mix(in srgb, var(--color-white) 70%, transparent);
+  --glass-shadow:
+    0 8px 32px color-mix(in srgb, var(--color-brand-950) 8%, transparent),
+    0 1px 2px color-mix(in srgb, var(--color-black) 4%, transparent);
+  --glass-shadow-strong:
+    0 12px 40px color-mix(in srgb, var(--color-brand-950) 12%, transparent),
+    0 2px 6px color-mix(in srgb, var(--color-black) 6%, transparent);
+  --glass-blur: 12px;
+  --glass-blur-strong: 16px;
+  --glass-saturate: 160%;
 
-  --sans: system-ui, 'Segoe UI', Roboto, sans-serif;
-  --heading: system-ui, 'Segoe UI', Roboto, sans-serif;
-  --mono: ui-monospace, Consolas, monospace;
+  --focus-ring: var(--color-brand-600);
 
-  font: 18px/145% var(--sans);
-  letter-spacing: 0.18px;
-  color-scheme: light dark;
-  color: var(--text);
-  background: var(--bg);
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+  /* Campos de formulario dentro de una superficie de vidrio */
+  --field-bg: color-mix(in srgb, var(--color-white) 85%, transparent);
+  --field-border: var(--color-neutral-300);
+  --field-border-invalid: var(--color-brand-600);
 
-  @media (max-width: 1024px) {
-    font-size: 16px;
+  /* Velo detrás de los modales */
+  --overlay-bg: color-mix(in srgb, var(--color-black) 35%, transparent);
+
+  /*
+   * Visor de fotos: casi negro en los dos modos, para que la foto no compita con el fondo. Los controles van en
+   * blanco sobre un círculo oscuro, así se leen aunque queden encima de una parte clara de la foto
+   */
+  --visor-bg: color-mix(in srgb, var(--color-black) 94%, transparent);
+  --visor-control-bg: color-mix(in srgb, var(--color-black) 55%, transparent);
+  --visor-control-bg-hover: color-mix(in srgb, var(--color-neutral-800) 85%, transparent);
+
+  /* Opción elegida de un control segmentado (niveles de la matriz de permisos) */
+  --segment-active-bg: var(--color-white);
+  --segment-active-shadow:
+    0 1px 3px color-mix(in srgb, var(--color-black) 10%, transparent),
+    0 1px 1px color-mix(in srgb, var(--color-black) 4%, transparent);
+
+  --bg-base: var(--color-neutral-50);
+  --bg-blob-1: color-mix(in srgb, var(--color-brand-300) 45%, transparent);
+  --bg-blob-2: color-mix(in srgb, var(--color-brand-500) 18%, transparent);
+  --bg-blob-3: color-mix(in srgb, var(--color-neutral-300) 70%, transparent);
+
+  @media (width >= 48rem) {
+    --glass-blur: 20px;
+    --glass-blur-strong: 28px;
   }
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --text: #9ca3af;
-    --text-h: #f3f4f6;
-    --bg: #16171d;
-    --border: #2e303a;
-    --code-bg: #1f2028;
-    --accent: #c084fc;
-    --accent-bg: rgba(192, 132, 252, 0.15);
-    --accent-border: rgba(192, 132, 252, 0.5);
-    --social-bg: rgba(47, 48, 58, 0.5);
-    --shadow:
-      rgba(0, 0, 0, 0.4) 0 10px 15px -3px, rgba(0, 0, 0, 0.25) 0 4px 6px -2px;
+.dark {
+  --glass-bg: color-mix(in srgb, var(--color-neutral-900) 50%, transparent);
+  --glass-bg-strong: color-mix(in srgb, var(--color-neutral-900) 72%, transparent);
+  --glass-border: color-mix(in srgb, var(--color-white) 12%, transparent);
+  --glass-highlight: inset 0 1px 0 color-mix(in srgb, var(--color-white) 10%, transparent);
+  --glass-shadow:
+    0 8px 32px color-mix(in srgb, var(--color-black) 45%, transparent),
+    0 1px 2px color-mix(in srgb, var(--color-black) 30%, transparent);
+  --glass-shadow-strong:
+    0 12px 40px color-mix(in srgb, var(--color-black) 55%, transparent),
+    0 2px 6px color-mix(in srgb, var(--color-black) 35%, transparent);
+
+  --focus-ring: var(--color-brand-400);
+
+  --field-bg: color-mix(in srgb, var(--color-black) 55%, transparent);
+  --field-border: color-mix(in srgb, var(--color-white) 16%, transparent);
+  --field-border-invalid: var(--color-brand-400);
+
+  --overlay-bg: color-mix(in srgb, var(--color-black) 60%, transparent);
+
+  --segment-active-bg: color-mix(in srgb, var(--color-white) 16%, transparent);
+  --segment-active-shadow: 0 1px 3px color-mix(in srgb, var(--color-black) 40%, transparent);
+
+  --bg-base: var(--color-black);
+  --bg-blob-1: color-mix(in srgb, var(--color-brand-700) 35%, transparent);
+  --bg-blob-2: color-mix(in srgb, var(--color-brand-950) 80%, transparent);
+  --bg-blob-3: color-mix(in srgb, var(--color-neutral-800) 60%, transparent);
+}
+
+@layer base {
+  html {
+    color-scheme: light;
   }
 
-  #social .button-icon {
-    filter: invert(1) brightness(2);
+  html.dark {
+    color-scheme: dark;
+  }
+
+  body {
+    @apply text-black antialiased dark:text-white;
+    background-color: var(--bg-base);
+  }
+
+  /* Fondo global: manchas difusas de la paleta, fijas al hacer scroll */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    background:
+      radial-gradient(60rem 40rem at 5% -10%, var(--bg-blob-1), transparent 70%),
+      radial-gradient(50rem 36rem at 100% 30%, var(--bg-blob-2), transparent 70%),
+      radial-gradient(56rem 40rem at 30% 110%, var(--bg-blob-3), transparent 70%);
+  }
+
+  h1,
+  h2,
+  h3 {
+    @apply tracking-tight;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    ::before,
+    ::after {
+      transition-duration: 0.01ms !important;
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+    }
   }
 }
 
-body {
-  margin: 0;
-}
+/*
+ * El prefijo -webkit-backdrop-filter lo agrega Tailwind al compilar.
+ * No escribirlo a mano: el compilador descarta la versión estándar y Firefox pierde el blur.
+ */
 
-#root {
-  width: 1126px;
-  max-width: 100%;
-  margin: 0 auto;
-  text-align: center;
-  border-inline: 1px solid var(--border);
-  min-height: 100svh;
-  display: flex;
-  flex-direction: column;
-  box-sizing: border-box;
-}
+/* Nivel 1: superficies de contenido (cards, paneles, footer) */
+@utility glass {
+  background: var(--glass-bg);
+  backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--glass-highlight), var(--glass-shadow);
+  border-radius: var(--radius-card);
 
-h1,
-h2 {
-  font-family: var(--heading);
-  font-weight: 500;
-  color: var(--text-h);
-}
+  @supports not (backdrop-filter: blur(1px)) {
+    background: var(--glass-bg-strong);
+  }
 
-h1 {
-  font-size: 56px;
-  letter-spacing: -1.68px;
-  margin: 32px 0;
-  @media (max-width: 1024px) {
-    font-size: 36px;
-    margin: 20px 0;
+  @media (prefers-reduced-transparency: reduce) {
+    background: var(--glass-bg-strong);
+    backdrop-filter: none;
   }
 }
-h2 {
-  font-size: 24px;
-  line-height: 118%;
-  letter-spacing: -0.24px;
-  margin: 0 0 8px;
-  @media (max-width: 1024px) {
-    font-size: 20px;
+
+/* Nivel 2: elementos flotantes (navbar, modales, menús): más opaco y con más sombra */
+@utility glass-strong {
+  background: var(--glass-bg-strong);
+  backdrop-filter: blur(var(--glass-blur-strong)) saturate(var(--glass-saturate));
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--glass-highlight), var(--glass-shadow-strong);
+  border-radius: var(--radius-card);
+
+  @media (prefers-reduced-transparency: reduce) {
+    backdrop-filter: none;
   }
 }
-p {
-  margin: 0;
+
+/*
+ * Nivel 1 sin blur: tarjetas de una lista que puede crecer mucho (avisos). Mismo borde, brillo y sombra que .glass,
+ * con el fondo opaco de .glass-strong para que se lea igual sin desenfocar lo de atrás (backdrop-filter repetido en
+ * cada tarjeta es caro, sobre todo en celular)
+ */
+@utility glass-flat {
+  background: var(--glass-bg-strong);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--glass-highlight), var(--glass-shadow);
+  border-radius: var(--radius-card);
 }
 
-code,
-.counter {
-  font-family: var(--mono);
-  display: inline-flex;
-  border-radius: 4px;
-  color: var(--text-h);
+/* Contenedor de página: ancho máximo y márgenes laterales por breakpoint */
+@utility page-container {
+  width: 100%;
+  max-width: 72rem;
+  margin-inline: auto;
+  padding-inline: 1rem;
+
+  @media (width >= 40rem) {
+    padding-inline: 1.5rem;
+  }
+
+  @media (width >= 64rem) {
+    padding-inline: 2rem;
+  }
 }
 
-code {
-  font-size: 15px;
-  line-height: 135%;
-  padding: 4px 8px;
-  background: var(--code-bg);
+/* Estados comunes de cualquier elemento interactivo: foco, press y deshabilitado */
+@utility interactive {
+  transition-property: color, background-color, border-color, box-shadow, transform, opacity;
+  transition-duration: 200ms;
+  transition-timing-function: var(--ease-glass);
+
+  &:focus-visible {
+    outline: 2px solid var(--focus-ring);
+    outline-offset: 2px;
+  }
+
+  &:active {
+    transform: scale(0.98);
+  }
+
+  &:disabled,
+  &[aria-disabled='true'] {
+    opacity: 0.5;
+    pointer-events: none;
+  }
+}
+
+/* Botón principal: acento sólido. Blanco sobre brand-600/700 pasa AA en ambos modos */
+@utility btn-primary {
+  @apply interactive inline-flex min-h-11 items-center justify-center gap-2 rounded-control bg-brand-600 px-5 font-medium text-white hover:bg-brand-700;
+  box-shadow: var(--glass-highlight), var(--glass-shadow);
+}
+
+/* Botón secundario: vidrio opaco. No usarlo dentro de una superficie .glass (serían 3 capas) */
+@utility btn-secondary {
+  @apply interactive inline-flex min-h-11 items-center justify-center gap-2 rounded-control px-5 font-medium text-black hover:text-brand-700 dark:text-white dark:hover:text-brand-300;
+  background: var(--glass-bg-strong);
+  backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--glass-highlight), var(--glass-shadow);
+}
+
+/* Botón tonal: tinte del acento sin vidrio, para acciones secundarias dentro de una superficie .glass */
+@utility btn-tonal {
+  @apply interactive inline-flex min-h-11 items-center justify-center gap-2 rounded-control bg-brand-600/10 px-5 font-medium text-brand-700 hover:bg-brand-600/15 dark:bg-brand-500/15 dark:text-brand-300 dark:hover:bg-brand-500/25;
+}
+
+/*
+ * Campo de texto: vidrio opaco para que lo escrito se lea bien. Igual que btn-secondary, no va dentro de un .glass.
+ * El padding lo define cada campo (los que llevan ícono necesitan más lugar a los costados)
+ */
+@utility field-glass {
+  @apply min-h-11 w-full rounded-control text-black placeholder:text-neutral-500 dark:text-white dark:placeholder:text-neutral-400;
+  background: var(--glass-bg-strong);
+  backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--glass-highlight), var(--glass-shadow);
+  transition: box-shadow 200ms var(--ease-glass);
+
+  &:focus-visible {
+    outline: 2px solid var(--focus-ring);
+    outline-offset: 2px;
+  }
+
+  &::-webkit-search-cancel-button {
+    appearance: none;
+  }
+}
+
+/* Ícono dentro de un campo (lupa, flecha de un select). z-10: el blur del campo crea su propia capa y lo taparía */
+@utility field-icon {
+  @apply pointer-events-none absolute top-1/2 z-10 -translate-y-1/2 text-neutral-500 dark:text-neutral-400;
+}
+
+/*
+ * Campo de formulario dentro de una superficie .glass (login, formularios del panel): fondo casi opaco
+ * y sin blur, para no apilar una tercera capa de vidrio. El padding lo define cada campo
+ */
+@utility field {
+  @apply min-h-11 w-full rounded-control text-black placeholder:text-neutral-500 dark:text-white dark:placeholder:text-neutral-400;
+  background: var(--field-bg);
+  border: 1px solid var(--field-border);
+  transition: border-color 200ms var(--ease-glass);
+
+  &:focus-visible {
+    outline: 2px solid var(--focus-ring);
+    outline-offset: 2px;
+  }
+
+  &[aria-invalid='true'] {
+    border-color: var(--field-border-invalid);
+  }
+
+  &:disabled {
+    opacity: 0.6;
+  }
+}
+
+/*
+ * Campo trampa para bots (honeypot): fuera de la pantalla y sin ocupar lugar. Se oculta con CSS y no con display:none
+ * ni type="hidden", que algunos bots reconocen y saltean. El input lleva además tabIndex={-1} y autoComplete="off"
+ */
+@utility honeypot {
+  position: absolute;
+  left: -9999px;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+}
+
+/* Contenedor de ícono con tinte del acento (cards de servicios, ubicación, contacto) */
+@utility icon-badge {
+  @apply grid size-11 shrink-0 place-items-center rounded-control bg-brand-600/10 text-brand-700 dark:bg-brand-500/15 dark:text-brand-400;
+}
+
+/* Secciones de la home: separación vertical y margen para que el header fijo no tape el título al navegar por ancla */
+@utility page-section {
+  @apply page-container scroll-mt-24 py-16 sm:py-24;
+}
+
+/*
+ * Módulo de campo (QR): se usa al sol, con una mano y a veces con guantes. Sin vidrio: fondos sólidos,
+ * alto contraste, texto de 16px como mínimo y áreas táctiles de 48px o más.
+ * Va siempre en modo claro (FieldLayout lo fuerza), por eso estas clases no tienen variante oscura
+ */
+@utility campo-page {
+  @apply min-h-svh bg-neutral-100 text-base text-black;
+}
+
+/* Superficie de contenido: blanca, borde visible y sombra apenas marcada */
+@utility campo-card {
+  @apply rounded-card border border-neutral-300 bg-white;
+  box-shadow: 0 1px 2px color-mix(in srgb, var(--color-black) 6%, transparent);
+}
+
+/*
+ * Botón principal: va fijo abajo, a lo ancho y al alcance del pulgar. Deshabilitado dice qué falta,
+ * así que en vez de transparentarse pasa a gris sólido y se sigue leyendo
+ */
+@utility campo-btn-primary {
+  @apply interactive flex min-h-14 w-full items-center justify-center gap-2 rounded-control bg-brand-700 px-5 text-lg font-semibold text-white hover:bg-brand-800;
+
+  /* Incompleto se ve igual que deshabilitado, pero se puede tocar: lleva a lo que falta */
+  &:disabled,
+  &[data-incompleto] {
+    @apply bg-neutral-200 text-neutral-700 opacity-100;
+  }
+}
+
+/* Botón secundario de pantalla completa: mismo tamaño que el principal, sin relleno */
+@utility campo-btn-secondary {
+  @apply interactive flex min-h-14 w-full items-center justify-center gap-2 rounded-control border-2 border-neutral-300 bg-white px-5 text-lg font-semibold text-black hover:border-neutral-400;
+}
+
+/* Opción grande que se elige con un toque (tipo de revisión) */
+@utility campo-option {
+  @apply interactive campo-card flex min-h-18 w-full items-center gap-4 px-4 py-3 text-left hover:border-brand-700;
+}
+
+/*
+ * Lugar de una foto sin cargar: un área grande que se toca entera para abrir la cámara, con borde punteado
+ * para que se lea como "acá falta algo". Mientras se procesa queda deshabilitado, pero se sigue leyendo
+ */
+@utility campo-foto {
+  @apply interactive campo-card flex min-h-48 w-full flex-col items-center justify-center gap-2 border-2 border-dashed border-neutral-500 p-4 text-center hover:border-brand-700;
+
+  &:disabled {
+    @apply opacity-100;
+  }
+}
+
+/*
+ * Tarjeta de un ítem del checklist. Pendiente es blanca; respondida toma un tinte leve de su estado, para
+ * distinguir de un vistazo lo que falta. `data-resaltado` la marca cuando el botón principal lleva hasta ella
+ */
+@utility campo-item {
+  @apply campo-card ease-glass flex flex-col gap-3 p-3 transition-colors duration-200;
+
+  &[data-estado='NORMAL'] {
+    @apply border-ok-200 bg-ok-50;
+  }
+  &[data-estado='ANORMAL'] {
+    @apply border-brand-200 bg-brand-50;
+  }
+  &[data-estado='NO_APLICA'] {
+    @apply bg-neutral-100;
+  }
+  &[data-resaltado] {
+    outline: 3px solid var(--color-brand-700);
+    outline-offset: 2px;
+  }
+}
+
+/*
+ * Botón de estado de un ítem (Normal, Anormal, No aplica): ícono arriba y texto abajo, así los tres entran
+ * en una línea a 360px. Sin elegir es blanco con el ícono en el color del estado; elegido se rellena con ese color
+ */
+@utility campo-estado {
+  @apply interactive flex min-h-16 min-w-0 flex-1 flex-col items-center justify-center gap-1 rounded-control border-2 border-neutral-300 bg-white px-1 py-2 font-semibold whitespace-nowrap text-black hover:border-neutral-400;
+
+  &[data-estado='NORMAL'] {
+    --estado: var(--color-ok-700);
+  }
+  &[data-estado='ANORMAL'] {
+    --estado: var(--color-brand-700);
+  }
+  &[data-estado='NO_APLICA'] {
+    --estado: var(--color-neutral-700);
+  }
+
+  & > svg {
+    color: var(--estado);
+  }
+
+  &[aria-pressed='true'] {
+    border-color: var(--estado);
+    background: var(--estado);
+    color: var(--color-white);
+
+    & > svg {
+      color: var(--color-white);
+    }
+  }
+}
+
+/*
+ * Campo de texto grande (horas del horómetro): borde de 2px con contraste suficiente sobre blanco.
+ * Con error, el borde pasa al rojo; el mensaje de abajo lleva ícono y texto, no depende solo del color
+ */
+@utility campo-input {
+  @apply interactive min-h-16 w-full rounded-control border-2 border-neutral-500 bg-white px-4 text-black placeholder:text-neutral-500;
+
+  &[aria-invalid='true'] {
+    @apply border-brand-700;
+  }
+}
+
+/*
+ * Pregunta que frena el flujo (dialog nativo con showModal): sale desde abajo, al alcance del pulgar,
+ * sobre un velo sólido. Sin vidrio, como el resto del módulo
+ */
+@utility campo-dialog {
+  @apply mx-auto mt-auto mb-0 w-full max-w-md animate-dialog-in rounded-t-card bg-white px-4 pt-6 pb-[calc(1rem+env(safe-area-inset-bottom))] text-black;
+
+  &::backdrop {
+    @apply animate-fade-in;
+    background: color-mix(in srgb, var(--color-black) 50%, transparent);
+  }
+}
+
+/*
+ * Hoja de impresión (exportar el historial a PDF e imprimir un checklist). La arma HojaImpresion en un portal,
+ * directo en <body>: en pantalla no se ve y al imprimir es lo único que sale. Así el PDF nunca lleva sidebar,
+ * topbar, botones ni filtros, venga del botón o de Ctrl + P mientras la hoja está armada.
+ * El papel va siempre en claro y sin vidrio, como el módulo de campo: estas clases no tienen variante oscura
+ */
+@page {
+  size: A4;
+  margin: 14mm 12mm;
+}
+
+@media screen {
+  .hoja-impresion {
+    display: none;
+  }
+}
+
+@media print {
+  html,
+  html.dark {
+    color-scheme: light;
+  }
+
+  body:has(> .hoja-impresion) {
+    background: var(--color-white);
+
+    &::before {
+      display: none;
+    }
+
+    & > :not(.hoja-impresion) {
+      display: none !important;
+    }
+  }
+}
+
+/* Contenedor de la hoja: blanco y negro, y los tintes (anormales, encabezados) se imprimen aunque no se pidan fondos */
+@utility impresion-hoja {
+  @apply flex flex-col gap-6 bg-white text-sm text-black;
+  print-color-adjust: exact;
+  -webkit-print-color-adjust: exact;
+}
+
+/* Título de un bloque: no queda solo al pie de una hoja, separado de lo que titula */
+@utility impresion-titulo {
+  @apply text-base font-semibold tracking-tight;
+  break-after: avoid;
+}
+
+/* Tabla de la hoja: bordes finos visibles en papel; el encabezado se repite en cada hoja y ninguna fila se corta */
+@utility impresion-tabla {
+  @apply w-full border-collapse text-left text-xs;
+
+  & thead {
+    display: table-header-group;
+  }
+
+  & th {
+    @apply border-b-2 border-neutral-400 bg-neutral-100 px-2 py-1.5 font-semibold text-neutral-800;
+  }
+
+  & td {
+    @apply border-b border-neutral-300 px-2 py-1.5 align-top;
+  }
+
+  & tr {
+    break-inside: avoid;
+  }
 }

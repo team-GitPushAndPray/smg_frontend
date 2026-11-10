@@ -1,0 +1,125 @@
+/*
+ * Contenido institucional del portal público.
+ * Es la única fuente de estos textos: si más adelante vienen de la API, solo se cambia este archivo.
+ */
+
+export const presentacion = {
+  titulo: 'Venta y alquiler de maquinaria vial en Neuquén y Patagonia',
+  // Fragmento del título que se resalta con el color de acento
+  tituloDestacado: 'maquinaria vial',
+  bajada:
+    'Alquiler y venta de minicargadoras, palas cargadoras, excavadoras y aditamentos. Servicio técnico especializado, repuestos y atención personalizada en toda la región.',
+}
+
+export const servicios = {
+  titulo: 'Venta, alquiler y servicios para la construcción',
+  parrafos: [
+    'Brindamos soluciones integrales para la construcción y el movimiento de suelos, combinando la venta, alquiler y servicio de maquinaria y equipos para obras de todas las dimensiones.',
+    'Disponemos de una amplia flota de maquinaria moderna y confiable, junto con equipos y aditamentos disponibles tanto para alquiler como para venta, permitiendo a nuestros clientes elegir la opción más conveniente para su proyecto.',
+    'Además, ofrecemos servicios como movimiento de suelos, limpieza de terrenos, fletes y provisión de materiales, brindando una respuesta rápida y profesional.',
+    'Trabajamos con responsabilidad, puntualidad y atención personalizada, construyendo relaciones de confianza a largo plazo. Nuestro objetivo es ser un aliado estratégico que aporte soluciones concretas, optimizando tiempos, costos y resultados.',
+  ],
+  // `icono` es una clave que el componente traduce a un ícono
+  tarjetas: [
+    {
+      icono: 'venta',
+      titulo: 'Venta de maquinaria',
+      descripcion: 'Maquinaria moderna y confiable, con la opción más conveniente para tu proyecto.',
+    },
+    {
+      icono: 'alquiler',
+      titulo: 'Alquiler de maquinaria y aditamentos',
+      descripcion: 'Una amplia flota de equipos y aditamentos para obras de todas las dimensiones.',
+    },
+    {
+      icono: 'movimientoSuelos',
+      titulo: 'Movimiento de suelos',
+      descripcion: 'Soluciones integrales para la construcción, con respuesta rápida y profesional.',
+    },
+    {
+      icono: 'limpiezaTerrenos',
+      titulo: 'Limpieza de terrenos',
+      descripcion: 'Terrenos en condiciones para tu obra, con respuesta rápida y profesional.',
+    },
+    {
+      icono: 'fletes',
+      titulo: 'Fletes',
+      descripcion: 'Traslados con responsabilidad y puntualidad, optimizando tiempos y costos.',
+    },
+    {
+      icono: 'materiales',
+      titulo: 'Provisión de materiales',
+      descripcion: 'Los materiales que tu obra necesita, con atención personalizada.',
+    },
+  ],
+}
+
+export const ubicacion = {
+  direccion: 'JJ Lastra 4220',
+  localidad: 'Neuquén Capital',
+  codigoPostal: '8300',
+  // Texto que se le pasa a Google Maps para ubicar el punto
+  consultaMapa: 'JJ Lastra 4220, Neuquén Capital, Neuquén, Argentina',
+}
+
+/*
+ * Los números se contactan por WhatsApp.
+ * `whatsapp` va en formato internacional sin signos: 54 (Argentina) + 9 (celular) + característica + número.
+ */
+export const contacto = [
+  {
+    icono: 'cotizaciones',
+    area: 'Cotizaciones',
+    telefonos: [
+      { numero: '(299) 627-5227', whatsapp: '5492996275227' },
+      { numero: '(299) 588-1040', whatsapp: '5492995881040' },
+    ],
+  },
+  {
+    icono: 'logistica',
+    area: 'Logística y servicio técnico',
+    telefonos: [{ numero: '(299) 621-9355', whatsapp: '5492996219355' }],
+  },
+  {
+    icono: 'ventas',
+    area: 'Ventas y repuestos',
+    telefonos: [{ numero: '(299) 586-4236', whatsapp: '5492995864236' }],
+  },
+]
+
+// WhatsApp al que se piden las cotizaciones desde el catálogo; el mensaje se completa con tipo, marca y modelo
+export const cotizacion = {
+  whatsapp: '5492996225551',
+  mensaje: 'Hola, quisiera una cotización por',
+}
+
+/*
+ * Textos de la sección de equipo comercial. Las personas (foto, nombre, cargo, descripción y contacto)
+ * vienen de la API; acá solo va el encabezado y el mensaje precargado del WhatsApp.
+ * En `mensaje`, {nombre} se reemplaza por el nombre de pila del vendedor.
+ */
+export const equipoComercial = {
+  titulo: 'Hablá directo con quien te atiende',
+  bajada: 'Escribile por WhatsApp a la persona del área que necesites.',
+  mensaje: 'Hola {nombre}, quisiera hacer una consulta.',
+}
+
+/*
+ * Textos del detalle de un equipo: el botón de cotización y el bloque del equipo comercial.
+ * En `mensaje`, {nombre} se reemplaza por el nombre de pila del vendedor y {equipo} por tipo, marca y modelo.
+ */
+export const consultaEquipo = {
+  titulo: 'Consultá con el equipo comercial',
+  bajada: 'Escribile por WhatsApp a quien prefieras: el mensaje ya incluye el equipo que estás viendo.',
+  mensaje: 'Hola {nombre}, quisiera consultar por {equipo}.',
+}
+
+/*
+ * Textos de la página "Trabajá con nosotros". Las vacantes vienen de la API; acá va el encabezado
+ * y el texto del consentimiento, que solo se muestra (no viaja al back)
+ */
+export const trabajaConNosotros = {
+  titulo: 'Sumate a nuestro equipo',
+  bajada: 'Mirá las búsquedas abiertas y postulate con tu CV en pocos minutos, desde el celular o la computadora.',
+  consentimiento: 'Acepto que SGM utilice mis datos para procesos de selección.',
+}
