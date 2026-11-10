@@ -12,7 +12,7 @@ sgm_frontend/
 └── src/
     ├── main.jsx                # Punto de entrada: monta <App /> en el DOM
     ├── App.jsx                 # Componente raíz: monta el tema, la sesión y el router
-    ├── index.css               # Tailwind, paleta, tokens de vidrio, fondo global, clases .glass / .glass-strong, botones, campos e ícono dentro de un campo (field-icon); clases sólidas del módulo de campo (campo-*), el verde de estado (ok-*), solo para "Normal" en los ítems de un checklist (campo e historial), el ámbar de estado (warn-*), solo para "por vencer" en los avisos, la tarjeta de vidrio sin blur para listas largas (glass-flat), los tokens del visor de fotos (--visor-*) y la hoja de impresión (hoja-impresion e impresion-*: A4, papel siempre claro, sin vidrio; al imprimir oculta todo lo demás)
+    ├── index.css               # Tailwind, paleta, tokens de vidrio, fondo global, clases .glass / .glass-strong, botones, campos e ícono dentro de un campo (field-icon); clases sólidas del módulo de campo (campo-*), el verde de estado (ok-*), solo para "Normal" en los ítems de un checklist (campo e historial), el ámbar de estado (warn-*), solo para "por vencer" en los avisos, la tarjeta de vidrio sin blur para listas largas (glass-flat), el campo trampa para bots oculto fuera de la pantalla (honeypot), los tokens del visor de fotos (--visor-*) y la hoja de impresión (hoja-impresion e impresion-*: A4, papel siempre claro, sin vidrio; al imprimir oculta todo lo demás)
     │
     ├── config/                 # Configuración global
     │   ├── env.js              # Lee y expone las variables de entorno (API_URL)
@@ -38,7 +38,7 @@ sgm_frontend/
     │   └── VendedoresProvider.jsx # Carga el equipo comercial una vez para la home, el detalle de equipo y el navbar
     │
     ├── data/                   # Contenido fijo del front (hasta que lo provea la API)
-    │   └── empresa.js          # Textos institucionales: presentación, servicios, equipo comercial, ubicación, contacto, WhatsApp de cotizaciones y consulta por equipo
+    │   └── empresa.js          # Textos institucionales: presentación, servicios, equipo comercial, ubicación, contacto, WhatsApp de cotizaciones, consulta por equipo y textos de "Trabajá con nosotros" (encabezado y consentimiento)
     │
     ├── hooks/                  # Lógica reutilizable
     │   ├── useTheme.js         # Acceso al tema actual y a toggleTheme
@@ -48,6 +48,7 @@ sgm_frontend/
     │   ├── useHashScroll.js    # Scroll suave a la sección del ancla (#servicios, #contacto...)
     │   ├── useActiveSection.js # Sección visible en pantalla, para marcarla en el navbar
     │   ├── useCatalogo.js      # Carga los equipos del catálogo público, con estado de carga/error y reintento
+    │   ├── useVacantesPublicas.js # Carga las vacantes activas de "Trabajá con nosotros", con carga, error y reintento; `recargar` las vuelve a pedir sin pasar por la carga (si una búsqueda se cerró mientras alguien se postulaba)
     │   ├── useEquipo.js        # Carga un equipo por id (catálogo o panel, según la función del service que recibe), con estado de carga/no encontrado/error, reintento y recarga sin pasar por la carga
     │   ├── useVendedores.js    # Acceso al equipo comercial (estado, vendedores y reintento)
     │   ├── useUsuarios.js      # Carga usuarios y roles juntos, con reintento, refresco en segundo plano y reemplazo de una fila
@@ -113,7 +114,8 @@ sgm_frontend/
     │   └── public/
     │       ├── HomePage.jsx    # Home con las secciones institucionales y el equipo comercial
     │       ├── CatalogPage.jsx # Catálogo: tarjetas por equipo, búsqueda y filtro por tipo en tiempo real
-    │       └── EquipmentDetailPage.jsx # Detalle de un equipo (/catalogo/:id): una sola página, el id de la URL decide qué equipo se carga
+    │       ├── EquipmentDetailPage.jsx # Detalle de un equipo (/catalogo/:id): una sola página, el id de la URL decide qué equipo se carga
+    │       └── CareersPage.jsx # /trabaja-con-nosotros: vacantes activas (una tarjeta por vacante) con carga, error con reintento y "Por el momento no hay búsquedas abiertas"; "Postularme" abre el modal de postulación con esa vacante
     │
     ├── components/             # Piezas reutilizables entre páginas
     │   ├── ThemeToggle.jsx     # Botón de modo claro/oscuro (compartido)
@@ -214,7 +216,7 @@ sgm_frontend/
     │   │   └── steps/              # Pasos del asistente: HorasStep (horas del horómetro: no menos que las actuales y confirmación si suben más de 200 hs); ItemsStep (lista de ítems con contador fijo, marcado en bloque de los pendientes y botón que lleva al primero que falta); CierreStep (observaciones con ayuda según el tipo, contador y aviso si hay ítems Anormales sin contar, foto del equipo y nombre y apellido obligatorios, salvo que el responsable sea el usuario de la sesión); RevisionStep (todo lo cargado de solo lectura con un "Editar" por bloque (el del tipo, solo si había para elegir), horas con la diferencia, conteo por estado con los Anormales por nombre, "Enviar" / "Enviando…" / "Reintentar"). Llegando desde la revisión, el botón de cada paso dice "Volver a la revisión"
     │   └── public/             # Componentes del portal público
     │       ├── NavBar.jsx          # Header con anclas a las secciones, enlace al catálogo, "Ir al panel" con sesión y menú de celular
-    │       ├── Footer.jsx          # Footer con el acceso discreto al login
+    │       ├── Footer.jsx          # Footer con el link a "Trabajá con nosotros" y el acceso discreto al login
     │       ├── SectionHeading.jsx  # Encabezado común de las secciones (h2, o h1 en páginas propias)
     │       ├── HeroSection.jsx     # Presentación con acceso al catálogo
     │       ├── ServicesSection.jsx # Texto institucional y tarjetas de servicios
@@ -228,13 +230,18 @@ sgm_frontend/
     │       ├── EquipmentCard.jsx   # Tarjeta de un equipo (toda clickeable hacia el detalle) con "Ver detalle" y "Cotizar", y su versión de carga
     │       ├── EquipmentDetail.jsx # Detalle de un equipo: galería, datos, cotización y equipo comercial, y su versión de carga
     │       ├── EquipmentGallery.jsx # Galería del detalle (provisional: ícono del tipo de equipo hasta que el back devuelva fotos)
-    │       └── CatalogMessage.jsx  # Avisos de carga: error, sin equipos y sin resultados (catálogo y equipo comercial)
+    │       ├── JobOpeningCard.jsx  # Tarjeta de una vacante (título, descripción y requisitos con sus saltos de línea) con "Postularme", y su versión de carga
+    │       ├── ApplicationModal.jsx # Modal de postulación a una vacante: formulario, confirmación al enviar (con el formulario ya limpio) o aviso si la búsqueda se cerró mientras se completaba; no se cierra mientras se envía
+    │       ├── ApplicationForm.jsx # Formulario de postulación: nombre, apellido, email, teléfono, mensaje opcional con contador, CV (solo PDF, hasta 4 MB, validado al elegirlo), consentimiento obligatorio (solo de front) y honeypot `website`; valida todo antes de enviar, bloquea el botón mientras envía y muestra los errores del back en palabras simples
+    │       └── CatalogMessage.jsx  # Avisos de carga: error, sin equipos y sin resultados (catálogo, equipo comercial y vacantes)
     │
     ├── services/               # Comunicación con el backend
     │   ├── api.js              # Cliente HTTP base (apiFetch) que usan todos los services: token, 401, 403, errores de conexión y mensajes de validación del back; body JSON o FormData (archivos). También arma el query string de los filtros (toQuery)
     │   ├── authService.js      # POST /auth/login, GET /auth/me y PATCH /auth/password
     │   ├── catalogoService.js  # GET /catalogo y GET /catalogo/id=:id: equipos disponibles y detalle de uno
     │   ├── vendedoresService.js # GET /vendedores/public: vendedores activos, ordenados por cargo
+    │   ├── vacantesService.js  # GET /vacantes/publicas (sin sesión): vacantes activas ({ id, titulo, descripcion, requisitos })
+    │   ├── postulacionesService.js # POST /postulaciones (sin sesión, multipart): vacante_id, datos del candidato, honeypot `website` y el CV en `cv`
     │   ├── usuariosService.js  # ABM de usuarios (GET, POST y PATCH /usuarios, PATCH /usuarios/:id/estado)
     │   ├── rolesService.js     # Roles y permisos: GET /roles, GET /modulos, POST y PATCH /roles, PUT /roles/:id/modulos
     │   ├── equiposService.js   # Equipos del panel: GET /equipos (paginado, con filtros), GET /equipos/:id, POST y PATCH /equipos, PATCH /equipos/:id/horas y /estado, y DELETE /equipos/:id (baja lógica)
@@ -255,6 +262,7 @@ sgm_frontend/
         ├── equipos.js          # Datos de un equipo listos para mostrar, WhatsApp de cotización, categorías del listado, tipos, estados (etiqueta, ícono y color, y clave, por clave o etiqueta), nombre del equipo, el equipo en una línea (código · categoría marca modelo), formato de horas ("Sin registrar" si no hay carga), campos modificados de un equipo (body del PATCH) y mensajes de error del módulo máquinas
         ├── historial.js        # Pestañas del historial de un equipo (id de la URL, etiqueta, ícono y módulo pendiente), las que ve el usuario (Alquileres solo con su módulo) y lectura de la pestaña activa (?tab=), con Checklists por defecto; tipos de checklist (etiqueta, ícono y tono), checklist del listado y su detalle con los nombres del front, separación de los ítems ANORMAL del resto, URL de las fotos con la transformación de Cloudinary (miniatura, ampliada e impresión), formatos de fecha y horas, validación de las fechas de los filtros, filtros aplicados en palabras y nombre del archivo PDF
         ├── vendedores.js       # Nombre del cargo, iniciales y enlace de WhatsApp de un vendedor
+        ├── postulaciones.js    # Postulación a una vacante: tope del CV (MAX_CV_MB = 4, se valida sí o sí en el front porque Vercel corta antes de los ~4,5 MB), largos máximos del back (LIMITES), datos con trim, validación por campo y del CV (PDF y peso), peso del archivo en palabras y errores del envío en palabras del usuario (400 de vacante cerrada o PDF inválido, 413, red)
         ├── usuarios.js         # Normalización de los módulos (del usuario y de cada rol), nombre del rol, nombre completo, último acceso y error genérico
         ├── roles.js            # Niveles de acceso de la matriz (Sin acceso, Ver, Editar) y armado de la lista completa de módulos de un rol
         ├── qr.js               # Link del QR de un equipo (/c/<qr_token>) y etiqueta en PNG para imprimir: QR, código interno y "Escaneá para hacer el checklist", cuadrada y en alta resolución
@@ -270,7 +278,7 @@ sgm_frontend/
 ## Convenciones
 
 - **Services por recurso:** un archivo por entidad del back (`equiposService.js`, `alquileresService.js`, etc.), todos construidos sobre `apiFetch`. Ningún componente llama a `fetch` directamente.
-- **Sesión:** `apiFetch` agrega el token a cada request; ante un 401 cierra la sesión y ante un 403 muestra un aviso sin cerrarla. Si la sesión termina estando en el panel, `<RutaPrivada>` lleva al login. Solo el login usa `auth: false`. Los módulos del usuario se leen siempre como `{ codigo, puedeEditar }`: el formato del back se adapta únicamente en `normalizarModulos()` (`utils/usuarios.js`).
+- **Sesión:** `apiFetch` agrega el token a cada request; ante un 401 cierra la sesión y ante un 403 muestra un aviso sin cerrarla. Si la sesión termina estando en el panel, `<RutaPrivada>` lleva al login. Usan `auth: false` el login y las rutas públicas sin sesión (checklist por QR, vacantes y postulaciones). Los módulos del usuario se leen siempre como `{ codigo, puedeEditar }`: el formato del back se adapta únicamente en `normalizarModulos()` (`utils/usuarios.js`).
 - **Componentes por módulo:** si un componente lo usa un solo módulo, va en `components/public/`, `components/field/` o `components/admin/`. Los compartidos van en la raíz de `components/`.
 - **Idioma:** nombres de archivos y código en inglés (`HomePage`, `FieldLayout`); textos visibles y rutas en español (`/campo`, `/admin`).
 - **Secciones del panel:** para sumar una, se agrega su ítem en `RUTAS_PANEL` (`config/rutasPanel.js`) con su `modulo`, y su página en `paginasPanel` (`router/index.jsx`) con el mismo path. El sidebar, las tarjetas de Inicio y la protección por módulo se arman solos. Si la sección tiene varias pantallas bajo un mismo ítem del sidebar (como Alquileres o Máquinas), su página es el layout del módulo y sus pantallas van en `subrutasPanel`.
