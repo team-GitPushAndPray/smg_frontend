@@ -1,6 +1,6 @@
 import { apiFetch, toQuery } from './api'
 
-/** @import { FiltrosPostulaciones, Postulacion } from '../types/postulaciones' */
+/** @import { EstadoPostulacion, FiltrosPostulaciones, Postulacion } from '../types/postulaciones' */
 
 /*
  * Envía una postulación a una vacante (ruta pública, sin sesión), en multipart: los datos ya validados y con trim,
@@ -36,4 +36,29 @@ export async function enviarPostulacion({ vacanteId, datos, website, cv }) {
 export async function listarPostulaciones({ vacanteId, estado }, { signal } = {}) {
   const postulaciones = await apiFetch(`/postulaciones${toQuery({ vacante_id: vacanteId, estado })}`, { signal })
   return Array.isArray(postulaciones) ? postulaciones : []
+}
+
+/*
+ * Ficha del postulante (módulo POSTULACIONES). Ver exige el módulo; cambiar el estado, además, poder editarlo (403).
+ * Un id inexistente responde 404 y uno que no es un número, 400
+ */
+
+/**
+ * Una postulación con su vacante, el link al CV (cv_url) y el nombre original del archivo
+ * @param {number | string} id
+ * @returns {Promise<Postulacion>}
+ */
+export function obtenerPostulacion(id, { signal } = {}) {
+  return apiFetch(`/postulaciones/${id}`, { signal })
+}
+
+/**
+ * Cambia el estado de una postulación (a cualquier otro, sin un orden obligado) y devuelve el registro actualizado.
+ * 400 si el estado no es válido
+ * @param {number} id
+ * @param {EstadoPostulacion} estado
+ * @returns {Promise<Postulacion>}
+ */
+export function cambiarEstadoPostulacion(id, estado) {
+  return apiFetch(`/postulaciones/${id}/estado`, { method: 'PATCH', body: { estado } })
 }
