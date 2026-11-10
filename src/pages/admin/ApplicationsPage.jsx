@@ -1,5 +1,4 @@
-import { Construction } from 'lucide-react'
-import PanelMessage from '../../components/admin/PanelMessage'
+import BandejaTab from '../../components/admin/BandejaTab'
 import PermissionBadge from '../../components/admin/PermissionBadge'
 import SegmentedTabs from '../../components/admin/SegmentedTabs'
 import VacantesTab from '../../components/admin/VacantesTab'
@@ -10,8 +9,9 @@ import { PESTANAS_POSTULACIONES } from '../../utils/vacantes'
 
 /*
  * /admin/postulaciones (requiere ver Postulaciones): búsquedas laborales del portal "Trabajá con nosotros".
- * Dos pestañas, con la activa en la URL (?tab=): Bandeja (las postulaciones recibidas; se completa en otra issue) y
- * Vacantes (alta, edición y activación / desactivación). Solo se monta la pestaña abierta, que pide sus datos al abrirse
+ * Dos pestañas, con la activa en la URL (?tab=): Bandeja (las postulaciones recibidas, filtrables por vacante y estado,
+ * con los filtros también en la URL) y Vacantes (alta, edición y activación / desactivación). Solo se monta la pestaña
+ * abierta, que pide sus datos al abrirse
  */
 export default function ApplicationsPage() {
   const { puedeEditar } = usePermiso(MODULOS.POSTULACIONES)
@@ -30,15 +30,7 @@ export default function ApplicationsPage() {
       </header>
 
       <SegmentedTabs pestanas={PESTANAS_POSTULACIONES} activa={tab} onCambiar={setPestana} label="Postulaciones">
-        {tab === 'vacantes' ? (
-          <VacantesTab />
-        ) : (
-          <PanelMessage
-            icon={Construction}
-            title="Bandeja en construcción"
-            description="Acá vas a ver las postulaciones recibidas para cada vacante. Se habilita en una próxima etapa."
-          />
-        )}
+        {tab === 'vacantes' ? <VacantesTab /> : <BandejaTab />}
       </SegmentedTabs>
     </section>
   )
