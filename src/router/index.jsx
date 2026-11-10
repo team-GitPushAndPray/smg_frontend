@@ -3,6 +3,7 @@ import { MODULOS, RUTAS_PANEL } from '../config/rutasPanel'
 import AdminLayout from '../layouts/AdminLayout'
 import AlquileresLayout from '../layouts/AlquileresLayout'
 import FieldLayout from '../layouts/FieldLayout'
+import MaquinasLayout from '../layouts/MaquinasLayout'
 import PublicLayout from '../layouts/PublicLayout'
 import AdminHomePage from '../pages/admin/AdminHomePage'
 import AlertsPage from '../pages/admin/AlertsPage'
@@ -13,6 +14,7 @@ import MachineChecklistPage from '../pages/admin/MachineChecklistPage'
 import MachineDetailPage from '../pages/admin/MachineDetailPage'
 import MachineFormPage from '../pages/admin/MachineFormPage'
 import MachineHistoryPage from '../pages/admin/MachineHistoryPage'
+import MachineServicesPage from '../pages/admin/MachineServicesPage'
 import MachinesPage from '../pages/admin/MachinesPage'
 import RentalChecklistPage from '../pages/admin/RentalChecklistPage'
 import RentalDetailPage from '../pages/admin/RentalDetailPage'
@@ -48,10 +50,19 @@ const rutasAlquileres = [
   { path: 'clientes/:id', element: <ClientDetailPage /> },
 ]
 
+/*
+ * Pestañas del módulo Máquinas dentro de su layout (Inventario / Servicios), relativas a /admin/maquinas. Las dos solo
+ * exigen ver el módulo, que ya pide la sección. Las pantallas de un equipo van aparte, sin pestañas (rutasMaquinas)
+ */
+const rutasMaquinasTabs = [
+  { index: true, element: <MachinesPage /> },
+  { path: 'servicios', element: <MachineServicesPage /> },
+]
+
 // Página de cada sección del panel, por el mismo path que tiene en RUTAS_PANEL. Si la sección tiene pantallas propias
 // (subrutasPanel), su página es el layout del módulo, que las muestra en su <Outlet />
 const paginasPanel = {
-  '/admin/maquinas': <MachinesPage />,
+  '/admin/maquinas': <MaquinasLayout />,
   '/admin/alquileres': <AlquileresLayout />,
   '/admin/avisos': <AlertsPage />,
   '/admin/configuracion/usuarios': <UsersPage />,
@@ -59,6 +70,7 @@ const paginasPanel = {
 }
 
 const subrutasPanel = {
+  '/admin/maquinas': rutasMaquinasTabs,
   '/admin/alquileres': rutasAlquileres,
 }
 
@@ -92,7 +104,7 @@ const rutaChecklistAlquiler = {
   ],
 }
 
-// Pantallas de Máquinas fuera del sidebar (RUTAS_MAQUINAS): el alta y la edición exigen poder editar el módulo; el detalle y el historial, solo verlo
+// Pantallas de un equipo, fuera del sidebar y sin pestañas (RUTAS_MAQUINAS): el alta y la edición exigen poder editar el módulo; el detalle y el historial, solo verlo
 const rutasMaquinas = [
   {
     path: 'maquinas/nuevo',
