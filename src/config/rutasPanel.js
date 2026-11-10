@@ -62,9 +62,13 @@ export const RUTAS_PANEL = [
   },
 ]
 
-// Pantallas del módulo Máquinas: las usan el router y los enlaces entre ellas. El inventario es la sección de RUTAS_PANEL
+/*
+ * Pantallas del módulo Máquinas: las usan el router, las pestañas y los enlaces entre ellas. El inventario es la
+ * sección de RUTAS_PANEL; `servicios` es su otra pestaña (los tres tipos de service con su descripción)
+ */
 export const RUTAS_MAQUINAS = Object.freeze({
   inventario: '/admin/maquinas',
+  servicios: '/admin/maquinas/servicios',
   nuevo: '/admin/maquinas/nuevo',
   detalle: (id) => `/admin/maquinas/${id}`,
   editar: (id) => `/admin/maquinas/${id}/editar`,
