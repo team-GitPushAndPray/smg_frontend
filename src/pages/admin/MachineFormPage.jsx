@@ -5,6 +5,7 @@ import EquipoForm, { EquipoFormSkeleton } from '../../components/admin/EquipoFor
 import PanelMessage from '../../components/admin/PanelMessage'
 import { RUTAS_MAQUINAS } from '../../config/rutasPanel'
 import { useEquipo } from '../../hooks/useEquipo'
+import { useResumenAvisos } from '../../hooks/useResumenAvisos'
 import { useToast } from '../../hooks/useToast'
 import { crearEquipo, editarEquipo, obtenerEquipo } from '../../services/equiposService'
 import { getCambiosEquipo, getNombreEquipo } from '../../utils/equipos'
@@ -74,11 +75,13 @@ function NewMachine() {
 
 /*
  * Edición de los datos generales: horas, estado y baja tienen sus propias acciones. Envía solo los campos modificados.
- * Un equipo dado de baja no se puede editar; si se da de baja mientras se edita, el 409 lleva de vuelta al detalle
+ * Un equipo dado de baja no se puede editar; si se da de baja mientras se edita, el 409 lleva de vuelta al detalle.
+ * Si cambió la certificación, el back cierra solo el aviso pendiente (y puede abrir otro): se refresca la campanita
  */
 function EditMachine({ id }) {
   const navigate = useNavigate()
   const { showToast } = useToast()
+  const { refrescar: refrescarAvisos } = useResumenAvisos()
   const { status, equipo, retry } = useEquipo(id, obtenerEquipo)
   const detalle = RUTAS_MAQUINAS.detalle(id)
 
@@ -102,6 +105,7 @@ function EditMachine({ id }) {
       navigate(detalle, { replace: true })
       return
     }
+    if (Object.hasOwn(cambios, 'certificacion_vence_el')) refrescarAvisos()
     showToast('Se guardaron los cambios del equipo.', { tipo: 'exito' })
     navigate(detalle, { replace: true })
   }

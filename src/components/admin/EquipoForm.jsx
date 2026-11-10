@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router'
 import { useCategorias } from '../../hooks/useCategorias'
 import { useToast } from '../../hooks/useToast'
+import { getFechaCertificacionInput, validarFechaCertificacion } from '../../utils/certificacion'
 import { getErrorEquipo, TIPOS_EQUIPO } from '../../utils/equipos'
 import { Field } from './FormField'
 
@@ -18,8 +19,14 @@ const DESCRIPCION_TIPO = {
 }
 
 // Campos que solo tiene una máquina: en un aditamento quedan vacíos y no se envían
-const MAQUINA_VACIA = { modelo: '', anio: '', nSerie: '', horasMotorActual: '' }
-const SIN_ERRORES_DE_MAQUINA = { modelo: undefined, anio: undefined, nSerie: undefined, horasMotorActual: undefined }
+const MAQUINA_VACIA = { modelo: '', anio: '', nSerie: '', horasMotorActual: '', certificacionVenceEl: '' }
+const SIN_ERRORES_DE_MAQUINA = {
+  modelo: undefined,
+  anio: undefined,
+  nSerie: undefined,
+  horasMotorActual: undefined,
+  certificacionVenceEl: undefined,
+}
 
 const sectionClass = 'glass flex flex-col gap-5 p-6 sm:p-8'
 const textMuted = 'text-neutral-600 dark:text-neutral-400'
@@ -40,6 +47,7 @@ function getInitialValues(equipo) {
     anio: equipo?.anio != null ? String(equipo.anio) : '',
     nSerie: equipo?.nSerie ?? '',
     horasMotorActual: '',
+    certificacionVenceEl: getFechaCertificacionInput(equipo?.certificacionVenceEl),
   }
 }
 
@@ -54,7 +62,7 @@ function getOpcionalesFijos(equipo) {
   return { ubicacion: Boolean(equipo?.ubicacion?.trim()), descripcion: Boolean(equipo?.descripcion?.trim()) }
 }
 
-function validate(data, { conHoras, fijos }) {
+function validate(data, { conHoras, conCertificacion, certificacionIncompleta, fijos }) {
   const errors = {}
   if (!data.codigoInterno) errors.codigoInterno = 'Ingresá el código interno.'
   if (!data.categoriaId) errors.categoriaId = 'Elegí una categoría.'
@@ -76,11 +84,18 @@ function validate(data, { conHoras, fijos }) {
     if (!data.horasMotorActual) errors.horasMotorActual = 'Ingresá las horas de motor.'
     else if (!/^\d+$/.test(data.horasMotorActual)) errors.horasMotorActual = 'Ingresá un número entero, sin decimales.'
   }
+  if (conCertificacion) {
+    const error = validarFechaCertificacion(data.certificacionVenceEl, certificacionIncompleta)
+    if (error) errors.certificacionVenceEl = error
+  }
   return errors
 }
 
-// Datos con los nombres del DTO del back. Los opcionales pueden llegar vacíos: cada pantalla decide si los envía
-function getDatos(data, conHoras) {
+/*
+ * Datos con los nombres del DTO del back. Los opcionales pueden llegar vacíos: cada pantalla decide si los envía.
+ * La certificación es la excepción: vacía viaja como null, que en el back borra la fecha
+ */
+function getDatos(data, { conHoras, conCertificacion }) {
   const { tipo, codigoInterno, categoriaId, marca, ubicacion, descripcion } = data
   const datos = { tipo, codigoInterno, categoriaId: Number(categoriaId), marca, ubicacion, descripcion }
   if (tipo !== 'maquina') return datos
@@ -89,6 +104,7 @@ function getDatos(data, conHoras) {
   datos.anio = Number(data.anio)
   datos.nSerie = data.nSerie
   if (conHoras) datos.horasMotorActual = Number(data.horasMotorActual)
+  if (conCertificacion) datos.certificacion_vence_el = data.certificacionVenceEl || null
   return datos
 }
 
@@ -127,6 +143,8 @@ function Seccion({ id, title, description, children }) {
  * Formulario de un equipo del módulo Máquinas, pensado para el alta y la edición. Con `equipo` arranca precargado,
  * el tipo no se puede cambiar, no muestra las horas de motor (el PATCH no las acepta: tienen su propia acción) y
  * la ubicación y la descripción ya cargadas no se pueden vaciar.
+ * El vencimiento de la certificación está solo en la edición de máquinas: el POST del back no lo acepta.
+ * Es opcional; vaciarlo lo borra.
  * Valida en el front y llama a `onSubmit(datos)` con los nombres del DTO; en un aditamento, sin campos de máquina.
  * Si `onSubmit` termina sin salir de la pantalla (por ejemplo, no había cambios), el formulario vuelve a habilitarse.
  * Si falla: 409 se marca en el código interno, 400 muestra los mensajes del back arriba y el resto va a un aviso
@@ -134,6 +152,7 @@ function Seccion({ id, title, description, children }) {
 export default function EquipoForm({ equipo, submitLabel, cancelTo, onSubmit }) {
   const isEdit = Boolean(equipo)
   const conHoras = !isEdit
+  const conCertificacion = isEdit
   const fijos = getOpcionalesFijos(equipo)
   const { showToast } = useToast()
   const { status: categoriasStatus, categorias, retry: retryCategorias } = useCategorias()
@@ -171,7 +190,9 @@ export default function EquipoForm({ equipo, submitLabel, cancelTo, onSubmit }) 
   const handleSubmit = async (event) => {
     event.preventDefault()
     const data = getData(values)
-    const errors = validate(data, { conHoras, fijos })
+    // Un input date a medio completar tiene value '' (igual que vacío): solo `badInput` dice que no está vacío
+    const certificacionIncompleta = Boolean(formRef.current.elements.certificacionVenceEl?.validity.badInput)
+    const errors = validate(data, { conHoras, conCertificacion, certificacionIncompleta, fijos })
     setFieldErrors(errors)
     setFormErrors([])
     if (Object.keys(errors).length > 0) {
@@ -182,7 +203,7 @@ export default function EquipoForm({ equipo, submitLabel, cancelTo, onSubmit }) 
 
     setIsSubmitting(true)
     try {
-      await onSubmit(getDatos(data, conHoras))
+      await onSubmit(getDatos(data, { conHoras, conCertificacion }))
       setIsSubmitting(false)
     } catch (error) {
       setIsSubmitting(false)
@@ -431,6 +452,27 @@ export default function EquipoForm({ equipo, submitLabel, cancelTo, onSubmit }) 
                 )}
               </Field>
             )}
+
+            {conCertificacion && (
+              <Field
+                name="certificacionVenceEl"
+                label="Vencimiento de certificación"
+                optional
+                hint="Si la renovás, el aviso pendiente de certificación se cierra solo."
+                error={fieldErrors.certificacionVenceEl}
+              >
+                {(props) => (
+                  <input
+                    {...props}
+                    type="date"
+                    value={values.certificacionVenceEl}
+                    onChange={onChange}
+                    disabled={isSubmitting}
+                    className="field px-3.5 tabular-nums"
+                  />
+                )}
+              </Field>
+            )}
           </div>
         </Seccion>
       )}
@@ -479,7 +521,7 @@ export function EquipoFormSkeleton() {
         <span className={`h-12 w-full sm:w-64 ${skeletonBar}`} />
       </div>
       <SkeletonSeccion count={4} />
-      <SkeletonSeccion count={3} />
+      <SkeletonSeccion count={4} />
     </div>
   )
 }

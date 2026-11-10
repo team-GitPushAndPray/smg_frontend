@@ -8,7 +8,9 @@ import {
   SIN_REGISTRAR,
   TIPOS_EQUIPO,
 } from '../../utils/equipos'
+import { getCertificacion } from '../../utils/certificacion'
 import AvisoDadoDeBaja from './AvisoDadoDeBaja'
+import CertificacionBadge from './CertificacionBadge'
 import EquipoActionsMenu from './EquipoActionsMenu'
 import EstadoEquipoBadge from './EstadoEquipoBadge'
 import PermissionBadge from './PermissionBadge'
@@ -37,6 +39,24 @@ function Dato({ label, value, wide = false }) {
     <div className={`flex min-w-0 flex-col gap-1 ${wide ? 'sm:col-span-full' : ''}`}>
       <dt className={`text-sm ${textMuted}`}>{label}</dt>
       <dd className={valueClass}>{isMissing ? '—' : value}</dd>
+    </div>
+  )
+}
+
+/*
+ * Vencimiento de la certificación: la fecha con su estado y, si está por vencer o vencida, cuánto falta o hace cuánto
+ * venció. Sin fecha, solo el estado "Sin cargar". Se ve con o sin edición en el módulo
+ */
+function DatoCertificacion({ venceEl }) {
+  const { estado, fecha, detalle } = getCertificacion(venceEl)
+  return (
+    <div className="flex min-w-0 flex-col items-start gap-1">
+      <dt className={`text-sm ${textMuted}`}>Vencimiento de certificación</dt>
+      <dd className="flex flex-wrap items-center gap-x-2 gap-y-1">
+        {fecha && <span className={`font-medium tabular-nums ${textStrong}`}>{fecha}</span>}
+        <CertificacionBadge estado={estado} />
+      </dd>
+      {detalle && <dd className={`text-sm ${textMuted}`}>{detalle}</dd>}
     </div>
   )
 }
@@ -137,6 +157,7 @@ export default function EquipoDetail({ equipo, canEdit, onVerQr, onActualizarHor
           <Dato label="N.º de serie" value={equipo.nSerie} />
           <Dato label="Horas de motor" value={formatHorasMotor(equipo)} />
           <Dato label="Última actualización de horas" value={formatHorasActualizadas(equipo)} />
+          <DatoCertificacion venceEl={equipo.certificacionVenceEl} />
         </Seccion>
       )}
     </div>
@@ -169,7 +190,7 @@ export function EquipoDetailSkeleton() {
         <span className={`h-5 w-48 ${skeletonBar}`} />
       </div>
       <SkeletonSeccion count={8} />
-      <SkeletonSeccion count={5} />
+      <SkeletonSeccion count={6} />
     </div>
   )
 }

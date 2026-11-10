@@ -1,5 +1,6 @@
 import { Ban, CircleCheck, KeyRound, Wrench } from 'lucide-react'
 import { cotizacion } from '../data/empresa'
+import { getFechaCertificacionInput } from './certificacion'
 import { normalizeText } from './text'
 import { getErrorGenerico } from './usuarios'
 import { getWhatsappUrl } from './vendedores'
@@ -110,6 +111,8 @@ function getDatosGuardados(equipo) {
     modelo: texto(equipo.modelo),
     anio: equipo.anio != null ? Number(equipo.anio) : null,
     nSerie: texto(equipo.nSerie),
+    // El form la manda como 'aaaa-mm-dd' o null; lo guardado viene como ISO a medianoche UTC
+    certificacion_vence_el: getFechaCertificacionInput(equipo.certificacionVenceEl) || null,
   }
 }
 
