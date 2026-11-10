@@ -1,3 +1,7 @@
+import { formatFechaChecklist } from './historial'
+
+/** @import { EstadoPostulacion } from '../types/postulaciones' */
+
 /*
  * Reglas del formulario de postulación ("Trabajá con nosotros"), espejo de las del back.
  * El tamaño del CV se valida acá sí o sí: Vercel corta las requests de más de ~4,5 MB antes de llegar al back,
@@ -126,4 +130,47 @@ export function getErrorPostulacion(error) {
     }
   }
   return { mensaje: 'Revisá los datos del formulario e intentá de nuevo.' }
+}
+
+/*
+ * Estados de una postulación, con la clave tal cual la manda el back y en el orden del proceso. Los usan la bandeja
+ * (badge y filtro) y la ficha. La paleta no tiene ámbar ni verde: cada estado se distingue por relleno y tono, siempre
+ * con su texto (sin íconos). Nuevo es el que más resalta (rojo sólido: pide atención); En revisión, solo contorno;
+ * Contactado, sólido en el color del texto; Descartado, gris apagado
+ */
+export const ESTADOS_POSTULACION = Object.freeze({
+  NUEVO: {
+    label: 'Nuevo',
+    className: 'bg-brand-600 text-white',
+  },
+  EN_REVISION: {
+    label: 'En revisión',
+    className: 'text-neutral-800 ring-1 ring-neutral-500 ring-inset dark:text-neutral-200 dark:ring-neutral-400',
+  },
+  CONTACTADO: {
+    label: 'Contactado',
+    className: 'bg-black text-white dark:bg-white dark:text-black',
+  },
+  DESCARTADO: {
+    label: 'Descartado',
+    className: 'bg-black/5 text-neutral-700 dark:bg-white/10 dark:text-neutral-300',
+  },
+})
+
+/**
+ * Configuración del estado de una postulación, o null si el front no lo conoce
+ * @param {EstadoPostulacion | string | null} estado
+ */
+export function getEstadoPostulacion(estado) {
+  return estado && Object.hasOwn(ESTADOS_POSTULACION, estado) ? ESTADOS_POSTULACION[estado] : null
+}
+
+// Día en que llegó la postulación ("06/11/2026"), en la hora del navegador. "—" si la fecha no sirve
+export function formatFechaPostulacion(iso) {
+  return formatFechaChecklist(iso)?.fecha ?? '—'
+}
+
+// Nombre y apellido del postulante, como se muestra en la bandeja y en la ficha
+export function getNombrePostulante(postulacion) {
+  return `${postulacion.nombre} ${postulacion.apellido}`.trim()
 }

@@ -1,4 +1,6 @@
-import { apiFetch } from './api'
+import { apiFetch, toQuery } from './api'
+
+/** @import { FiltrosPostulaciones, Postulacion } from '../types/postulaciones' */
 
 /*
  * Envía una postulación a una vacante (ruta pública, sin sesión), en multipart: los datos ya validados y con trim,
@@ -19,4 +21,19 @@ export async function enviarPostulacion({ vacanteId, datos, website, cv }) {
   body.append('cv', cv)
 
   await apiFetch('/postulaciones', { method: 'POST', auth: false, body })
+}
+
+/*
+ * Bandeja del panel (módulo POSTULACIONES, solo ver). Los filtros son opcionales y se combinan; "Todas" / "Todos"
+ * (null o '') no viajan. Un filtro inválido responde 400
+ */
+
+/**
+ * Postulaciones recibidas, ya ordenadas por el back de la más nueva a la más vieja (no se reordena)
+ * @param {FiltrosPostulaciones} filtros
+ * @returns {Promise<Postulacion[]>}
+ */
+export async function listarPostulaciones({ vacanteId, estado }, { signal } = {}) {
+  const postulaciones = await apiFetch(`/postulaciones${toQuery({ vacante_id: vacanteId, estado })}`, { signal })
+  return Array.isArray(postulaciones) ? postulaciones : []
 }

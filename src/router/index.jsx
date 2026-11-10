@@ -7,6 +7,7 @@ import MaquinasLayout from '../layouts/MaquinasLayout'
 import PublicLayout from '../layouts/PublicLayout'
 import AdminHomePage from '../pages/admin/AdminHomePage'
 import AlertsPage from '../pages/admin/AlertsPage'
+import ApplicationDetailPage from '../pages/admin/ApplicationDetailPage'
 import ApplicationsPage from '../pages/admin/ApplicationsPage'
 import ClientDetailPage from '../pages/admin/ClientDetailPage'
 import ClientsPage from '../pages/admin/ClientsPage'
@@ -152,6 +153,16 @@ const rutasMaquinas = [
   },
 ]
 
+// Ficha de un postulante, fuera de las pestañas de la bandeja (RUTAS_POSTULACIONES): solo exige ver el módulo
+const rutaFichaPostulacion = {
+  path: 'postulaciones/:id',
+  element: (
+    <RutaModulo modulo={MODULOS.POSTULACIONES}>
+      <ApplicationDetailPage />
+    </RutaModulo>
+  ),
+}
+
 export const router = createBrowserRouter([
   {
     element: <PublicLayout />,
@@ -180,7 +191,7 @@ export const router = createBrowserRouter([
         <AdminLayout />
       </RutaPrivada>
     ),
-    children: [{ index: true, element: <AdminHomePage /> }, ...rutasPanel, ...rutasMaquinas],
+    children: [{ index: true, element: <AdminHomePage /> }, ...rutasPanel, ...rutasMaquinas, rutaFichaPostulacion],
   },
   rutaChecklistAlquiler,
   { path: '*', element: <NotFoundPage /> },

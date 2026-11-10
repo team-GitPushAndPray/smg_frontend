@@ -15,6 +15,15 @@ export const MODULOS = Object.freeze({
   POSTULACIONES: 'POSTULACIONES',
 })
 
+/*
+ * Pantallas del módulo Postulaciones: la bandeja es la sección de RUTAS_PANEL (sus pestañas y filtros van en la URL);
+ * la ficha de cada postulante va aparte, sin pestañas
+ */
+export const RUTAS_POSTULACIONES = Object.freeze({
+  bandeja: '/admin/postulaciones',
+  ficha: (id) => `/admin/postulaciones/${id}`,
+})
+
 // Pantallas del módulo Avisos: el centro de avisos es la sección de RUTAS_PANEL y el destino de "Ver todos" de la campanita
 export const RUTAS_AVISOS = Object.freeze({
   centro: '/admin/avisos',
@@ -47,7 +56,7 @@ export const RUTAS_PANEL = [
   },
   // Búsquedas laborales: pestañas Bandeja (postulaciones recibidas) y Vacantes (?tab=)
   {
-    path: '/admin/postulaciones',
+    path: RUTAS_POSTULACIONES.bandeja,
     modulo: MODULOS.POSTULACIONES,
     label: 'Postulaciones',
     descripcion: 'Vacantes publicadas en el portal y postulaciones recibidas.',
