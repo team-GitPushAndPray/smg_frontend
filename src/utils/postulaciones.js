@@ -1,6 +1,7 @@
 import { formatFechaChecklist } from './historial'
+import { getErrorGenerico } from './usuarios'
 
-/** @import { EstadoPostulacion } from '../types/postulaciones' */
+/** @import { EstadoPostulacion, Postulacion } from '../types/postulaciones' */
 
 /*
  * Reglas del formulario de postulación ("Trabajá con nosotros"), espejo de las del back.
@@ -173,4 +174,32 @@ export function formatFechaPostulacion(iso) {
 // Nombre y apellido del postulante, como se muestra en la bandeja y en la ficha
 export function getNombrePostulante(postulacion) {
   return `${postulacion.nombre} ${postulacion.apellido}`.trim()
+}
+
+// Día y hora en que llegó la postulación ("06/11/2026, 14:32"), en la hora del navegador. "—" si la fecha no sirve
+export function formatFechaHoraPostulacion(iso) {
+  const formateada = formatFechaChecklist(iso)
+  return formateada ? `${formateada.fecha}, ${formateada.hora}` : '—'
+}
+
+/**
+ * Enlace para escribirle al postulante desde el cliente de correo, con el asunto ya cargado
+ * ("Postulación a Mecánico de equipos pesados")
+ * @param {Postulacion} postulacion
+ */
+export function getMailtoPostulacion(postulacion) {
+  const titulo = postulacion.vacante?.titulo
+  const asunto = titulo ? `Postulación a ${titulo}` : 'Postulación'
+  return `mailto:${postulacion.email}?subject=${encodeURIComponent(asunto)}`
+}
+
+/*
+ * Mensaje simple para un cambio de estado que falló (el estado en pantalla vuelve al anterior).
+ * null si ya lo avisó apiFetch: 401 cierra la sesión y 403 muestra su propio aviso
+ */
+export function getErrorEstadoPostulacion(error) {
+  if (error.status === 404) return 'Esta postulación ya no existe. Volvé a la bandeja.'
+  if (error.status === 400) return 'No pudimos cambiar el estado. Recargá la página e intentá de nuevo.'
+  const generico = getErrorGenerico(error)
+  return generico && `No pudimos cambiar el estado. ${generico}`
 }
