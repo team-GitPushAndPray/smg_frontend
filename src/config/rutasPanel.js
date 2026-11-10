@@ -1,4 +1,4 @@
-import { Bell, KeyRound, Settings, Shield, Truck, Users } from 'lucide-react'
+import { Bell, BriefcaseBusiness, KeyRound, Settings, Shield, Truck, Users } from 'lucide-react'
 
 /*
  * Única fuente de verdad del panel de gestión: el sidebar, las tarjetas de Inicio y las rutas protegidas
@@ -12,6 +12,7 @@ export const MODULOS = Object.freeze({
   VENDEDORES: 'VENDEDORES',
   ALQUILERES: 'ALQUILERES',
   AVISOS: 'AVISOS',
+  POSTULACIONES: 'POSTULACIONES',
 })
 
 // Pantallas del módulo Avisos: el centro de avisos es la sección de RUTAS_PANEL y el destino de "Ver todos" de la campanita
@@ -43,6 +44,14 @@ export const RUTAS_PANEL = [
     label: 'Avisos',
     descripcion: 'Services y certificaciones por vencer, vencidos y atendidos.',
     icon: Bell,
+  },
+  // Búsquedas laborales: pestañas Bandeja (postulaciones recibidas) y Vacantes (?tab=)
+  {
+    path: '/admin/postulaciones',
+    modulo: MODULOS.POSTULACIONES,
+    label: 'Postulaciones',
+    descripcion: 'Vacantes publicadas en el portal y postulaciones recibidas.',
+    icon: BriefcaseBusiness,
   },
   {
     path: '/admin/configuracion/usuarios',
