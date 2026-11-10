@@ -11,14 +11,16 @@ const FOCUSABLE = [
   '[tabindex]:not([tabindex="-1"])',
 ].join(',')
 
+const ANCHOS = { md: 'max-w-lg', lg: 'max-w-2xl' }
+
 /*
  * Modal del panel: se muestra mientras está montado. Se cierra con Escape o con la X (no con un clic afuera,
  * para no perder un formulario a medio completar); con `isBusy` no se puede cerrar.
  * El foco queda atrapado adentro y, al cerrarse, vuelve al elemento que lo abrió.
  * Va en un portal a <body> para que ningún ancestro con blur o transform lo recorte. z-50: sobre la topbar (z-40)
- * y debajo de los avisos (z-60)
+ * y debajo de los avisos (z-60). `size="lg"` lo ensancha para formularios con textos largos
  */
-export default function Modal({ title, description, onClose, isBusy = false, children }) {
+export default function Modal({ title, description, onClose, isBusy = false, size = 'md', children }) {
   const titleId = useId()
   const descriptionId = useId()
   const dialogRef = useRef(null)
@@ -77,7 +79,7 @@ export default function Modal({ title, description, onClose, isBusy = false, chi
           aria-modal="true"
           aria-labelledby={titleId}
           aria-describedby={description ? descriptionId : undefined}
-          className="glass-strong flex w-full max-w-lg animate-dialog-in flex-col gap-6 p-5 sm:p-7"
+          className={`glass-strong flex w-full ${ANCHOS[size]} animate-dialog-in flex-col gap-6 p-5 sm:p-7`}
         >
           <header className="flex items-start justify-between gap-4">
             <div className="flex flex-col gap-1 pt-1.5">
