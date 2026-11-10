@@ -20,6 +20,13 @@
  */
 
 /**
+ * Un tipo de service de GET /escalones-servicio (pestaña Servicios de Máquinas), tal cual el modelo del back. Dentro de
+ * un aviso el escalón viene sin la descripción. `descripcion` es null hasta que se carga una; después no puede volver a
+ * quedar vacía. Los tipos son fijos: solo se edita la descripción
+ * @typedef {EscalonServicio & { descripcion: string | null }} EscalonServicioDetalle
+ */
+
+/**
  * Un aviso de GET /avisos ya pasado por adaptarAviso (utils/avisos.js): el back hoy lo manda plano y con `marca` y
  * `modelo` en vez de `nombre`; el adaptador lo deja con esta forma, la del contrato, y `nombre` como "Bobcat 1QA1".
  * Si es SERVICIO viene `servicio` y `certificacion` en null; si es CERTIFICACION, al revés.
