@@ -113,3 +113,13 @@ export const consultaEquipo = {
   bajada: 'Escribile por WhatsApp a quien prefieras: el mensaje ya incluye el equipo que estás viendo.',
   mensaje: 'Hola {nombre}, quisiera consultar por {equipo}.',
 }
+
+/*
+ * Textos de la página "Trabajá con nosotros". Las vacantes vienen de la API; acá va el encabezado
+ * y el texto del consentimiento, que solo se muestra (no viaja al back)
+ */
+export const trabajaConNosotros = {
+  titulo: 'Sumate a nuestro equipo',
+  bajada: 'Mirá las búsquedas abiertas y postulate con tu CV en pocos minutos, desde el celular o la computadora.',
+  consentimiento: 'Acepto que SGM utilice mis datos para procesos de selección.',
+}

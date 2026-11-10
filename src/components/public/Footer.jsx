@@ -1,4 +1,4 @@
-import { LockKeyhole } from 'lucide-react'
+import { BriefcaseBusiness, LockKeyhole } from 'lucide-react'
 import { Link } from 'react-router'
 
 export default function Footer() {
@@ -14,6 +14,13 @@ export default function Footer() {
           <p className="text-sm text-neutral-600 dark:text-neutral-400">
             Alquiler, venta y mantenimiento de maquinaria pesada.
           </p>
+          <Link
+            to="/trabaja-con-nosotros"
+            className="interactive -mx-2 mt-1 inline-flex min-h-11 w-fit items-center gap-1.5 rounded-control px-2 text-sm font-medium text-brand-700 hover:bg-brand-600/10 dark:text-brand-400 dark:hover:bg-brand-500/15"
+          >
+            <BriefcaseBusiness size={16} strokeWidth={1.75} aria-hidden="true" />
+            Trabajá con nosotros
+          </Link>
         </div>
 
         <div className="flex items-center justify-between gap-4 text-xs text-neutral-600 sm:flex-col sm:items-end sm:gap-1 dark:text-neutral-400">
