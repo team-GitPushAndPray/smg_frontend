@@ -16,7 +16,7 @@ sgm_frontend/
     │
     ├── config/                 # Configuración global
     │   ├── env.js              # Lee y expone las variables de entorno (API_URL)
-    │   └── rutasPanel.js       # Única fuente de verdad del panel: códigos de módulo (MODULOS), secciones (RUTAS_PANEL) para sidebar, Inicio y rutas protegidas, pantallas de Máquinas (RUTAS_MAQUINAS: inventario, servicios, alta, detalle, edición, historial y detalle de un checklist del historial) y de Alquileres (RUTAS_ALQUILERES: listado, alta, detalle, checklist de entrega/devolución, clientes y detalle de un cliente). Avisos es una sección suelta (RUTAS_AVISOS.centro: /admin/avisos, módulo AVISOS; también es el destino de "Ver todos" de la campanita)
+    │   └── rutasPanel.js       # Única fuente de verdad del panel: códigos de módulo (MODULOS), secciones (RUTAS_PANEL) para sidebar, Inicio y rutas protegidas, pantallas de Máquinas (RUTAS_MAQUINAS: inventario, servicios, alta, detalle, edición, historial y detalle de un checklist del historial) y de Alquileres (RUTAS_ALQUILERES: listado, alta, detalle, checklist de entrega/devolución, clientes y detalle de un cliente). Avisos es una sección suelta (RUTAS_AVISOS.centro: /admin/avisos, módulo AVISOS; también es el destino de "Ver todos" de la campanita), igual que Postulaciones (/admin/postulaciones, módulo POSTULACIONES)
     │
     ├── router/                 # Definición de rutas
     │   ├── index.jsx           # Rutas de cada módulo con su layout, login del panel (sin layout) + 404. Las del panel se generan desde RUTAS_PANEL; una sección con pantallas propias (subrutasPanel, hoy Alquileres) monta su layout con ellas adentro. El checklist de entrega/devolución de un alquiler va fuera del panel: sesión + FieldLayout + edición en Alquileres
@@ -71,6 +71,8 @@ sgm_frontend/
     │   ├── useAvisos.js        # Carga GET /avisos con una consulta (estado y tipo); con null no pide nada. Conserva la lista anterior mientras llega la nueva; error de red con reintento y 403 aparte (forbidden)
     │   ├── useResumenAvisos.js # Acceso al resumen de avisos: habilitado (el rol tiene AVISOS), resumen ({ pendientes, vencidos }) y refrescar
     │   ├── useFiltrosAvisos.js # Pestaña del centro de avisos (Pendientes por defecto) y filtro por tipo (Todos, Service, Certificación), guardados en la URL; cambiar de pestaña conserva el tipo
+    │   ├── useVacantes.js      # Carga las vacantes del panel (GET /vacantes, activas e inactivas, en el orden del back), conservando la lista anterior mientras llega la nueva, con reintento y recarga después de guardar
+    │   ├── useFiltrosPostulaciones.js # Pestaña del módulo Postulaciones (Bandeja por defecto, o Vacantes), guardada en la URL (?tab=)
     │   ├── useEquiposDisponibles.js # Cantidad de equipos activos y disponibles (total de GET /equipos?estado=disponible&activo=true), con carga, error y reintento. Exige el módulo Máquinas
     │   ├── useTextoDiferido.js # Campo de texto que se aplica cuando se deja de tipear (400 ms por defecto), con borrar al momento y puesta al día si cambia la URL
     │   ├── useCategorias.js    # Carga las categorías de equipo para filtros y formularios, con reintento
@@ -106,6 +108,7 @@ sgm_frontend/
     │   │   ├── ClientsPage.jsx   # /admin/alquileres/clientes: clientes ordenados por razón social, con buscador por razón social (espera de 300 ms) y filtro de estado (Activos por defecto), ambos en la URL; estados de carga, error, sin clientes y sin resultados; toda la fila abre el detalle; con edición en Alquileres, "Nuevo cliente" y, por fila, Editar y Desactivar / Reactivar (con confirmación), con aviso de éxito y la lista recargada; no hay eliminar
     │   │   ├── ClientDetailPage.jsx # /admin/alquileres/clientes/:id: datos del cliente (activo o no) con la cantidad de alquileres; Editar y Desactivar / Reactivar con edición en Alquileres; estados de carga, no encontrado y error. Debajo, el historial de alquileres del cliente; cada uno abre su detalle
     │   │   ├── AlertsPage.jsx    # /admin/avisos (requiere ver Avisos): centro de avisos de service y certificación; pestañas Pendientes / Atendidos y filtro por tipo que vale para las dos, en la URL (?tab=, ?tipo=); una tarjeta por aviso en el orden del back (no reordena); estados de carga, vacío por pestaña y tipo, error con reintento y 403. "Marcar atendido" en los pendientes con edición en Avisos abre el modal de atención; al atender se recargan los pendientes y el badge de la campanita
+    │   │   ├── ApplicationsPage.jsx # /admin/postulaciones (requiere ver Postulaciones): pestañas Bandeja (en construcción, se completa en otra issue) / Vacantes, con la activa en la URL (?tab=); "Solo lectura" si el rol no edita el módulo
     │   │   ├── UsersPage.jsx     # /admin/configuracion/usuarios: ABM de usuarios (tabla, búsqueda, filtro por estado, alta, edición, baja y reactivación); solo lectura con Configuración en "Ver"
     │   │   └── RolesPage.jsx     # /admin/configuracion/roles: matriz de permisos roles × módulos, alta y edición de roles, activación y desactivación; solo lectura con Configuración en "Ver"
     │   ├── field/              # Módulo de campo (QR)
@@ -130,12 +133,12 @@ sgm_frontend/
     │   │   ├── PermissionBadge.jsx # Indicador del nivel de permiso sobre un módulo: Edición o Solo lectura
     │   │   ├── AdminPlaceholder.jsx # Contenido provisorio de las páginas del panel
     │   │   ├── PanelMessage.jsx    # Aviso de una sección del panel: error de carga, sin datos, sin resultados o no encontrado
-    │   │   ├── Modal.jsx           # Modal base del panel: portal, foco atrapado, Escape y bloqueo mientras se envía
+    │   │   ├── Modal.jsx           # Modal base del panel: portal, foco atrapado, Escape y bloqueo mientras se envía; `size="lg"` lo ensancha para formularios con textos largos
     │   │   ├── ConfirmDialog.jsx   # Confirmación de una acción delicada, con carga y error
 │   │   ├── FormField.jsx       # Campo de formulario (label, ayuda y error) e input de contraseña con mostrar/ocultar
     │   │   ├── UsersToolbar.jsx    # Buscador por nombre o email y filtro por estado de la pantalla de usuarios
     │   │   ├── UsersTable.jsx      # Tabla de usuarios (tarjetas debajo de lg) con rol, estado y último acceso, y su versión de carga
-    │   │   ├── EstadoActivoBadge.jsx # Estado Activo / Inactivo de un registro (usuarios, clientes): punto lleno o hueco y su texto
+    │   │   ├── EstadoActivoBadge.jsx # Estado Activo / Inactivo de un registro (usuarios, clientes; Activa / Inactiva con `femenino`, para vacantes): punto lleno o hueco y su texto
     │   │   ├── UserActionsMenu.jsx # Menú ⋯ de una fila: Editar y Dar de baja / Reactivar
     │   │   ├── UserFormModal.jsx   # Alta y edición de un usuario con validación y errores del back (409 en el email, 400 arriba)
     │   │   ├── PermissionsMatrix.jsx # Matriz de permisos (filas = roles, columnas = módulos) con la columna del rol fija al hacer scroll, y su versión de carga
@@ -183,6 +186,10 @@ sgm_frontend/
     │   │   ├── EscalonServicioCard.jsx # Tarjeta de un tipo de service: nombre, "Cada 250 hs de motor", descripción con sus saltos de línea (o "Sin descripción") y, con edición, "Editar descripción" (al final y a lo ancho en celular). Incluye su versión de carga
     │   │   ├── EditarDescripcionServicioModal.jsx # Modal "Editar descripción" de un tipo de service: textarea precargado, obligatorio y de hasta 500 caracteres con contador (una vez cargada, no puede quedar vacía); "Guardar" deshabilitado sin cambios; envía solo { descripcion }. 400 en el campo; 404 avisa, cierra y recarga
     │   │   ├── AvisosToolbar.jsx   # Filtro por tipo del centro de avisos: Todos / Service / Certificación, como botones
+    │   │   ├── VacantesTab.jsx     # Pestaña Vacantes de Postulaciones: listado con su conteo (total y activas), estados de carga, vacío y error con reintento; con edición, "Nueva vacante" y, por fila, Editar y Desactivar (con confirmación: deja de verse en el portal y de recibir postulaciones) / Activar (directo). Después de cada cambio avisa y recarga el listado; un 404 avisa y recarga
+    │   │   ├── VacantesTable.jsx   # Tabla de vacantes desde md (título, estado Activa / Inactiva, cantidad de postulaciones y fecha de alta) y tarjetas en celular, en el orden del back; con edición, un menú ⋯ por fila. Incluye su versión de carga
+    │   │   ├── VacanteActionsMenu.jsx # Menú ⋯ de una vacante (en un portal): Editar y Desactivar / Activar; muestra la carga mientras se activa. No hay eliminar
+    │   │   ├── VacanteFormModal.jsx # Alta (POST) y edición (PATCH, solo lo que cambió) de una vacante: título, descripción y requisitos obligatorios con trim y largos máximos del back (con contador), ayuda debajo de Requisitos; bloqueado mientras guarda. 400 arriba del formulario; 404 avisa, cierra y recarga
     │   │   ├── HistorialChecklists.jsx # Pestaña Checklists del historial: filtros, listado de a 20 (el más nuevo arriba), paginación y estados (cargando, sin checklists, sin resultados y error con reintento); "Exportar PDF" con todos los checklists filtrados, no solo la página
     │   │   ├── ChecklistsToolbar.jsx # Filtros de los checklists: buscador en las observaciones, responsable, tipo, rango de fechas (Desde/Hasta), "Limpiar filtros" y, al lado, las acciones sobre el listado (Exportar PDF)
     │   │   ├── HistorialChecklistsTable.jsx # Checklists de un equipo: tabla desde md (fecha, tipo, horas motor, responsable, anormales y fotos) y tarjetas en celular; toda la fila abre el detalle. Incluye su versión de carga
@@ -240,7 +247,7 @@ sgm_frontend/
     │   ├── authService.js      # POST /auth/login, GET /auth/me y PATCH /auth/password
     │   ├── catalogoService.js  # GET /catalogo y GET /catalogo/id=:id: equipos disponibles y detalle de uno
     │   ├── vendedoresService.js # GET /vendedores/public: vendedores activos, ordenados por cargo
-    │   ├── vacantesService.js  # GET /vacantes/publicas (sin sesión): vacantes activas ({ id, titulo, descripcion, requisitos })
+    │   ├── vacantesService.js  # GET /vacantes/publicas (sin sesión): vacantes activas ({ id, titulo, descripcion, requisitos }). Panel (módulo POSTULACIONES): GET /vacantes (activas e inactivas, con cantidad_postulaciones), POST /vacantes y PATCH /vacantes/:id (edición parcial y activar/desactivar: no hay DELETE)
     │   ├── postulacionesService.js # POST /postulaciones (sin sesión, multipart): vacante_id, datos del candidato, honeypot `website` y el CV en `cv`
     │   ├── usuariosService.js  # ABM de usuarios (GET, POST y PATCH /usuarios, PATCH /usuarios/:id/estado)
     │   ├── rolesService.js     # Roles y permisos: GET /roles, GET /modulos, POST y PATCH /roles, PUT /roles/:id/modulos
@@ -255,6 +262,7 @@ sgm_frontend/
     │
     ├── types/                  # Tipos en JSDoc (el proyecto es JavaScript): VS Code los usa para autocompletar
     │   ├── alquileres.js       # Cliente, Alquiler, AlquilerListado, AlquilerDetalle, AlquilerEquipo, AlquilerDeEquipo (historial de un equipo), EstadoAlquiler, filtros y bodies de alta y edición, formulario y datos del checklist, tal cual el back (snake_case)
+    │   ├── vacantes.js         # Vacante (GET /vacantes), VacanteDatos (alta) y VacanteEdicion (PATCH parcial), tal cual el back (snake_case)
     │   └── avisos.js           # Aviso, TipoAviso, EstadoAviso, EscalonServicio (y EscalonServicioDetalle, con la descripción, de GET /escalones-servicio), filtros de GET /avisos y ResumenAvisos de GET /avisos/resumen, tal cual el back (snake_case)
     │
     └── utils/                  # Funciones auxiliares
@@ -263,6 +271,7 @@ sgm_frontend/
         ├── historial.js        # Pestañas del historial de un equipo (id de la URL, etiqueta, ícono y módulo pendiente), las que ve el usuario (Alquileres solo con su módulo) y lectura de la pestaña activa (?tab=), con Checklists por defecto; tipos de checklist (etiqueta, ícono y tono), checklist del listado y su detalle con los nombres del front, separación de los ítems ANORMAL del resto, URL de las fotos con la transformación de Cloudinary (miniatura, ampliada e impresión), formatos de fecha y horas, validación de las fechas de los filtros, filtros aplicados en palabras y nombre del archivo PDF
         ├── vendedores.js       # Nombre del cargo, iniciales y enlace de WhatsApp de un vendedor
         ├── postulaciones.js    # Postulación a una vacante: tope del CV (MAX_CV_MB = 4, se valida sí o sí en el front porque Vercel corta antes de los ~4,5 MB), largos máximos del back (LIMITES), datos con trim, validación por campo y del CV (PDF y peso), peso del archivo en palabras y errores del envío en palabras del usuario (400 de vacante cerrada o PDF inválido, 413, red)
+        ├── vacantes.js         # Vacantes del panel: pestañas del módulo Postulaciones (Bandeja, Vacantes), largos máximos del back (LIMITES_VACANTE), datos con trim, validación por campo, campos modificados (body del PATCH), fecha de alta (dd/mm/aaaa) y mensajes de error (400 y 404 en palabras del usuario)
         ├── usuarios.js         # Normalización de los módulos (del usuario y de cada rol), nombre del rol, nombre completo, último acceso y error genérico
         ├── roles.js            # Niveles de acceso de la matriz (Sin acceso, Ver, Editar) y armado de la lista completa de módulos de un rol
         ├── qr.js               # Link del QR de un equipo (/c/<qr_token>) y etiqueta en PNG para imprimir: QR, código interno y "Escaneá para hacer el checklist", cuadrada y en alta resolución
