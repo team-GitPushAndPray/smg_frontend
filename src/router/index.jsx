@@ -25,6 +25,7 @@ import UsersPage from '../pages/admin/UsersPage'
 import ChecklistPage from '../pages/field/ChecklistPage'
 import FieldHomePage from '../pages/field/FieldHomePage'
 import NotFoundPage from '../pages/NotFoundPage'
+import CareersPage from '../pages/public/CareersPage'
 import CatalogPage from '../pages/public/CatalogPage'
 import EquipmentDetailPage from '../pages/public/EquipmentDetailPage'
 import HomePage from '../pages/public/HomePage'
@@ -156,6 +157,7 @@ export const router = createBrowserRouter([
       { index: true, element: <HomePage /> },
       { path: 'catalogo', element: <CatalogPage /> },
       { path: 'catalogo/:id', element: <EquipmentDetailPage /> },
+      { path: 'trabaja-con-nosotros', element: <CareersPage /> },
     ],
   },
   // Módulo de campo: público y sin el layout del portal ni del panel. /c/:token es lo que abre el QR de cada equipo
