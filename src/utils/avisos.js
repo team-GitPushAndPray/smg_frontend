@@ -1,4 +1,4 @@
-import { BellRing, CheckCheck, FileBadge, Wrench } from 'lucide-react'
+import { Bell, BellRing, CheckCheck, FileBadge, History, SlidersHorizontal, Wrench } from 'lucide-react'
 import { formatFechaAlquiler, formatFechaHoraAlquiler, nombreCompleto } from './alquileres'
 import { formatHoras } from './equipos'
 import { formatFechaChecklist } from './historial'
@@ -7,8 +7,18 @@ import { getErrorGenerico } from './usuarios'
 /** @import { Aviso, EstadoAviso, ResumenAvisos, TipoAviso } from '../types/avisos' */
 
 /*
- * Pestañas del centro de avisos (/admin/avisos?tab=atendidos). `id` es el valor de la URL; `estado`, lo que viaja a
- * GET /avisos. La primera es la de por defecto
+ * Secciones de /admin/avisos (?tab=configuracion): los avisos de la flota, a quién le llegan y por qué canal, y el
+ * registro de lo que se envió. `id` es el valor de la URL; la primera es la de por defecto
+ */
+export const SECCIONES_AVISOS = Object.freeze([
+  { id: 'avisos', label: 'Avisos', Icon: Bell },
+  { id: 'configuracion', label: 'Configuración', Icon: SlidersHorizontal },
+  { id: 'registro', label: 'Registro de envíos', labelCorto: 'Registro', Icon: History },
+])
+
+/*
+ * Pestañas de la sección Avisos (/admin/avisos?estado=atendidos). `id` es el valor de la URL; `estado`, lo que viaja
+ * a GET /avisos. La primera es la de por defecto
  */
 export const PESTANAS_AVISOS = Object.freeze([
   { id: 'pendientes', label: 'Pendientes', Icon: BellRing, estado: /** @type {EstadoAviso} */ ('PENDIENTE') },

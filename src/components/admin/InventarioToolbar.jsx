@@ -2,29 +2,7 @@ import { FilterX } from 'lucide-react'
 import { ESTADOS_EQUIPO, TIPOS_EQUIPO } from '../../utils/equipos'
 import FilterSelect from './FilterSelect'
 import SearchField from './SearchField'
-
-// Switch con el acento cuando está prendido. El gris de apagado (neutral-500) pasa 3:1 sobre el fondo en ambos modos
-function Switch({ checked, onChange, label }) {
-  return (
-    <button
-      type="button"
-      role="switch"
-      aria-checked={checked}
-      onClick={() => onChange(!checked)}
-      className="interactive inline-flex min-h-11 shrink-0 items-center gap-3 rounded-control px-1 text-sm font-medium text-neutral-700 hover:text-black dark:text-neutral-300 dark:hover:text-white"
-    >
-      <span
-        aria-hidden="true"
-        className={`relative h-6 w-10 shrink-0 rounded-full transition-colors duration-200 ease-glass ${checked ? 'bg-brand-600' : 'bg-neutral-500'}`}
-      >
-        <span
-          className={`absolute top-0.5 left-0.5 size-5 rounded-full bg-white shadow-(--segment-active-shadow) transition-transform duration-200 ease-glass ${checked ? 'translate-x-4' : ''}`}
-        />
-      </span>
-      {label}
-    </button>
-  )
-}
+import Switch from './Switch'
 
 /*
  * Buscador y filtros del inventario: tipo, estado, categoría y el switch de equipos dados de baja.

@@ -46,7 +46,7 @@ export const RUTAS_PANEL = [
     descripcion: 'Alquileres en curso, vencimientos y clientes.',
     icon: KeyRound,
   },
-  // Centro de avisos: services y certificaciones, en pestañas Pendientes / Atendidos (?tab=)
+  // Avisos: secciones Avisos (Pendientes / Atendidos, ?estado=), Configuración y Registro de envíos (?tab=)
   {
     path: RUTAS_AVISOS.centro,
     modulo: MODULOS.AVISOS,
