@@ -20,10 +20,17 @@ const GRID_COLS = { 2: 'grid-cols-2', 3: 'grid-cols-3', 4: 'grid-cols-4' }
  * pestaña; Tab pasa al contenido. `pestanas` es una lista de { id, label, Icon, contador? }; `activa` es el id de la
  * pestaña y `onCambiar` recibe el nuevo. `contador` (un número, o null mientras no se sabe) se muestra al lado del
  * texto y los lectores lo leen como parte del nombre ("Por vencer, 3").
- * En celular el ícono va arriba del texto, así tres pestañas entran en una línea a 360px sin cortarse.
+ * En celular el ícono va arriba del texto, así tres pestañas entran en una línea a 360px sin cortarse. Si el texto igual
+ * es largo para un tercio de pantalla, `labelCorto` lo reemplaza por debajo de sm ("Registro" por "Registro de envíos")
  * Solo se monta el contenido de la activa: cada pestaña pide sus datos recién cuando se abre
  * @param {{
- *   pestanas: ReadonlyArray<{ id: string, label: string, Icon: import('react').ElementType, contador?: number | null }>,
+ *   pestanas: ReadonlyArray<{
+ *     id: string,
+ *     label: string,
+ *     labelCorto?: string,
+ *     Icon: import('react').ElementType,
+ *     contador?: number | null,
+ *   }>,
  *   activa: string,
  *   onCambiar: (id: string) => void,
  *   label: string,
@@ -64,7 +71,7 @@ export default function SegmentedTabs({ pestanas, activa, onCambiar, label, chil
         onKeyDown={onKeyDown}
         className={`glass grid w-full gap-0.5 p-1 sm:w-auto sm:self-start ${GRID_COLS[pestanas.length] ?? 'grid-flow-col'}`}
       >
-        {pestanas.map(({ id, label: texto, Icon, contador }, index) => {
+        {pestanas.map(({ id, label: texto, labelCorto, Icon, contador }, index) => {
           const isActive = id === activa
           return (
             <button
@@ -83,7 +90,14 @@ export default function SegmentedTabs({ pestanas, activa, onCambiar, label, chil
             >
               <Icon size={18} strokeWidth={1.75} aria-hidden="true" className={isActive ? iconActive : undefined} />
               <span className="inline-flex items-center gap-1.5">
-                {texto}
+                {labelCorto ? (
+                  <>
+                    <span className="sm:hidden">{labelCorto}</span>
+                    <span className="hidden sm:inline">{texto}</span>
+                  </>
+                ) : (
+                  texto
+                )}
                 {contador != null && (
                   <>
                     <span className="sr-only">, </span>
