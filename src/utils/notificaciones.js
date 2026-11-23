@@ -1,9 +1,17 @@
-import { Mail, MessageCircle, Send } from 'lucide-react'
+import { CircleAlert, CircleCheck, Layers, Mail, MessageCircle, Send } from 'lucide-react'
 import { ICONOS_TIPO_AVISO } from './avisos'
 import { getErrorGenerico } from './usuarios'
 
 /** @import { TipoAviso } from '../types/avisos' */
-/** @import { CanalNotificacion, ReglaNotificacion, ReglaNotificacionDatos } from '../types/notificaciones' */
+/**
+ * @import {
+ *   CanalNotificacion,
+ *   EstadoEnvio,
+ *   RegistroNotificacion,
+ *   ReglaNotificacion,
+ *   ReglaNotificacionDatos,
+ * } from '../types/notificaciones'
+ */
 
 /*
  * Canales del selector de la regla, en este orden. `disponible: false` se muestra deshabilitado con "No disponible" y
@@ -155,4 +163,80 @@ export function getErrorValidacionRegla(error) {
 export function getErrorPrueba(error) {
   if (error.status === 400) return `No se pudo enviar la prueba: ${error.message}`
   return getErrorGenerico(error)
+}
+
+// Registro de envíos: cuántos se ven por página (el back acepta hasta 100)
+export const ENVIOS_POR_PAGINA = 20
+
+/*
+ * Filtro por estado del registro. La clave es el valor de la URL (?envio=error); `estado`, lo que viaja a
+ * GET /notificaciones/registro (sin él, todos). `Icon` y `tono` son los del menú desplegable (y de la pastilla cuando
+ * el filtro está aplicado). El orden es el del menú; el primero es el de por defecto
+ */
+export const FILTROS_ESTADO_ENVIO = Object.freeze({
+  todos: { label: 'Todos los estados', estado: undefined, Icon: Layers, tono: null },
+  enviado: { label: 'Enviado', estado: /** @type {EstadoEnvio} */ ('ENVIADO'), Icon: CircleCheck, tono: 'ok' },
+  error: { label: 'Error', estado: /** @type {EstadoEnvio} */ ('ERROR'), Icon: CircleAlert, tono: 'error' },
+})
+
+// Filtro por canal del registro (?canal=telegram), igual que el de estado. Solo los canales que existen en el back
+export const FILTROS_CANAL_ENVIO = Object.freeze({
+  todos: { label: 'Todos los canales', canal: undefined, Icon: Layers, tono: null },
+  telegram: { label: 'Telegram', canal: /** @type {CanalNotificacion} */ ('TELEGRAM'), Icon: Send, tono: null },
+  email: { label: 'Email', canal: /** @type {CanalNotificacion} */ ('EMAIL'), Icon: Mail, tono: null },
+})
+
+// Qué aviso disparó el envío, en singular (en la regla va en plural: "Recibe Services")
+const TIPOS_AVISO_ENVIO = Object.freeze({
+  SERVICIO: { label: 'Service', Icon: ICONOS_TIPO_AVISO.SERVICIO },
+  CERTIFICACION: { label: 'Certificación', Icon: ICONOS_TIPO_AVISO.CERTIFICACION },
+})
+
+export function getTipoAvisoEnvio(tipo) {
+  return TIPOS_AVISO_ENVIO[tipo] ?? { label: tipo || '—', Icon: null }
+}
+
+/*
+ * Los envíos se guardan en UTC y se muestran siempre en hora de Argentina, se mire desde donde se mire: es la hora en
+ * que el taller recibió el aviso. Sin horario de verano (UTC−3 todo el año)
+ */
+const fechaHoraArgentina = new Intl.DateTimeFormat('es-AR', {
+  timeZone: 'America/Argentina/Buenos_Aires',
+  day: '2-digit',
+  month: '2-digit',
+  year: 'numeric',
+  hour: '2-digit',
+  minute: '2-digit',
+  hourCycle: 'h23',
+})
+
+/**
+ * Un timestamp del back en hora de Argentina: "23/11/2026 14:05". Se arma con las partes, porque el separador que
+ * pone Intl entre fecha y hora cambia según el navegador. "—" si no vino o no es una fecha
+ * @param {string | null | undefined} iso
+ * @returns {string}
+ */
+export function formatFechaHoraArgentina(iso) {
+  const date = new Date(iso)
+  if (!iso || Number.isNaN(date.getTime())) return '—'
+  const partes = Object.fromEntries(fechaHoraArgentina.formatToParts(date).map(({ type, value }) => [type, value]))
+  return `${partes.day}/${partes.month}/${partes.year} ${partes.hour}:${partes.minute}`
+}
+
+/**
+ * A quién se le mandó: la etiqueta de la regla ("Grupo Taller") o, si la regla ya no existe o no tiene, el chat_id o
+ * el mail tal cual
+ * @param {RegistroNotificacion} envio
+ */
+export function getDestinoEnvio(envio) {
+  return envio.regla_etiqueta?.trim() || envio.destino || '—'
+}
+
+/**
+ * La máquina del aviso: el código y, aparte, el nombre (marca y modelo), que puede no venir
+ * @param {RegistroNotificacion} envio
+ * @returns {{ codigo: string, nombre: string | null }}
+ */
+export function getMaquinaEnvio(envio) {
+  return { codigo: envio.maquina?.codigo || '—', nombre: envio.maquina?.nombre?.trim() || null }
 }
