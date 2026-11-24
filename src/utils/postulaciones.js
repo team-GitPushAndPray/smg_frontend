@@ -263,6 +263,15 @@ const FRANJAS_AFINIDAD = Object.freeze([
 ])
 
 /**
+ * Franja de un puntaje de afinidad (0 a 100): su etiqueta ("Afinidad alta") y el color del badge. La usan la bandeja
+ * y el top del resumen de la vacante
+ * @param {number} puntaje
+ */
+export function getFranjaAfinidad(puntaje) {
+  return FRANJAS_AFINIDAD.find(({ minimo }) => puntaje >= minimo) ?? FRANJAS_AFINIDAD.at(-1)
+}
+
+/**
  * Cómo se muestra el análisis con IA de una postulación en la bandeja:
  * - { tipo: 'sin-analizar' }: PENDIENTE o sin registro de análisis.
  * - { tipo: 'error', detalle }: ERROR, con el `error_detalle` del back. Gana sobre "desactualizado": no hay puntaje.
@@ -275,7 +284,7 @@ export function getAfinidad(postulacion) {
   const analisis = postulacion.analisis
   if (analisis?.estado === 'ERROR') return { tipo: 'error', detalle: analisis.error_detalle }
   if (analisis?.estado === 'COMPLETADO' && typeof analisis.puntaje === 'number') {
-    const franja = FRANJAS_AFINIDAD.find(({ minimo }) => analisis.puntaje >= minimo) ?? FRANJAS_AFINIDAD.at(-1)
+    const franja = getFranjaAfinidad(analisis.puntaje)
     return { tipo: 'puntaje', puntaje: analisis.puntaje, franja, desactualizado: analisis.desactualizado === true }
   }
   return { tipo: 'sin-analizar' }

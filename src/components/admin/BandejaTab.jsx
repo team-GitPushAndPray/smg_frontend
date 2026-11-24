@@ -5,12 +5,14 @@ import { useAnalisisPendientes } from '../../hooks/useAnalisisPendientes'
 import { useFiltrosPostulaciones } from '../../hooks/useFiltrosPostulaciones'
 import { usePermiso } from '../../hooks/usePermiso'
 import { usePostulaciones } from '../../hooks/usePostulaciones'
+import { useResumenVacante } from '../../hooks/useResumenVacante'
 import { useVacantes } from '../../hooks/useVacantes'
 import { contar } from '../../utils/historial'
 import AnalisisProgreso from './AnalisisProgreso'
 import PanelMessage from './PanelMessage'
 import PostulacionesTable, { PostulacionesTableSkeleton } from './PostulacionesTable'
 import PostulacionesToolbar from './PostulacionesToolbar'
+import ResumenVacanteCard from './ResumenVacanteCard'
 
 const NOUN = { one: 'postulación', other: 'postulaciones' }
 const textMuted = 'text-neutral-600 dark:text-neutral-400'
@@ -22,7 +24,9 @@ const textMuted = 'text-neutral-600 dark:text-neutral-400'
  * vacante elegida se pueden ver como ranking por afinidad (orden=afinidad), con el puesto, el top 3 destacado y el
  * aviso de que el puntaje es una recomendación de la IA.
  * Con una vacante elegida y permiso de edición, "Analizar pendientes" analiza de a una las postulaciones de esa
- * vacante que lo necesiten (useAnalisisPendientes) y al terminar recarga la bandeja.
+ * vacante que lo necesiten (useAnalisisPendientes) y al terminar recarga la bandeja y el resumen.
+ * Con una vacante elegida (en cualquier orden), arriba de la tabla va la card con su resumen con IA para gerencia
+ * (ResumenVacanteCard): top 3, comparación y recomendación, con "Generar" / "Regenerar" si hay permiso de edición.
  * Las vacantes del filtro (activas e inactivas) se piden aparte; si fallan, solo ese filtro queda deshabilitado.
  * Sin resultados distingue "todavía no llegó ninguna" de "ninguna coincide con los filtros"
  */
@@ -31,8 +35,16 @@ export default function BandejaTab() {
   const { puedeEditar } = usePermiso(MODULOS.POSTULACIONES)
   const { filtros, hasFilters, setFiltros, limpiarFiltros } = useFiltrosPostulaciones()
   const { status, postulaciones, isLoading, hasData, retry } = usePostulaciones(filtros)
-  const analisis = useAnalisisPendientes({ onTerminar: retry })
+  const resumenVacante = useResumenVacante(filtros.vacanteId)
+  const { recargar: recargarResumen } = resumenVacante
+  // Al terminar "Analizar pendientes" cambian los puntajes: se recargan la bandeja y el resumen (queda desactualizado)
+  const onTerminarAnalisis = () => {
+    retry()
+    recargarResumen()
+  }
+  const analisis = useAnalisisPendientes({ onTerminar: onTerminarAnalisis })
   const vacantes = useVacantes()
+  const vacanteElegida = vacantes.vacantes.find(({ id }) => id === filtros.vacanteId)
   const vacantesStatus = vacantes.isLoading && !vacantes.hasData ? 'loading' : vacantes.status
 
   const total = postulaciones.length
@@ -90,6 +102,15 @@ export default function BandejaTab() {
         hasFilters={hasFilters}
         onClear={limpiarFiltros}
       />
+
+      {filtros.vacanteId !== null && (
+        <ResumenVacanteCard
+          resumenVacante={resumenVacante}
+          vacanteTitulo={vacanteElegida?.titulo}
+          puedeEditar={puedeEditar}
+          linkState={{ listado: search }}
+        />
+      )}
 
       {analisis.enCurso && <AnalisisProgreso progreso={analisis.progreso} onCancelar={analisis.cancelar} />}
 

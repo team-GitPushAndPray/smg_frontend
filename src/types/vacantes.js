@@ -30,4 +30,30 @@
  * @typedef {Partial<VacanteDatos> & { activa?: boolean }} VacanteEdicion
  */
 
+/**
+ * Un candidato del top del resumen con IA (TopCandidatoResumenView del back). `nombre` y `puntaje` son los actuales de
+ * la postulación (no los del momento en que se generó); `puntaje` es null si hoy no tiene un análisis con puntaje
+ * @typedef {object} TopCandidatoResumen
+ * @property {number} posicion 1, 2 o 3
+ * @property {number} postulacion_id
+ * @property {string} nombre
+ * @property {number | null} puntaje
+ * @property {string} motivo
+ */
+
+/**
+ * Resumen de una vacante para gerencia (ResumenVacanteEntity del back), de GET y POST /vacantes/:id/resumen-ia.
+ * `generado_en` es ISO con hora real. `desactualizado` es true si después de generarlo hubo análisis nuevos en la
+ * vacante o cambiaron sus requisitos
+ * @typedef {object} ResumenVacante
+ * @property {number} vacante_id
+ * @property {TopCandidatoResumen[]} top
+ * @property {string} comparacion
+ * @property {string} recomendacion
+ * @property {number} cantidad_analizadas
+ * @property {string} modelo
+ * @property {string} generado_en
+ * @property {boolean} desactualizado
+ */
+
 export {}
