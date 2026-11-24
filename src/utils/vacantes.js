@@ -84,3 +84,57 @@ export function getErrorVacante(error) {
   if (error.status === 400) return 'Revisá los datos de la vacante e intentá de nuevo.'
   return getErrorGenerico(error)
 }
+
+/*
+ * Mensaje para un "Generar resumen" que falló, o null si ya lo avisó apiFetch (401 cierra la sesión y 403 muestra su
+ * propio aviso).
+ * - 400 (la vacante no tiene postulaciones analizadas) y 429 (límite de consultas de la IA): el mensaje del back, que ya
+ *   está escrito para el usuario.
+ * - 502, 503 y 504: la IA falló, no está configurada o tardó demasiado. apiFetch los trata como "No se pudo conectar
+ *   con el servidor", que acá confundiría: el back respondió, la que no lo hizo fue la IA.
+ * - 404: la vacante ya no existe.
+ */
+export function getErrorResumenVacante(error) {
+  const mensajeBack = error.data?.message
+  if ((error.status === 400 || error.status === 429) && typeof mensajeBack === 'string') return mensajeBack
+  if ([502, 503, 504].includes(error.status)) return 'La IA no pudo generar el resumen. Intentá de nuevo en unos minutos.'
+  if (error.status === 404) return 'Esta vacante ya no existe. Recargá la página.'
+  const generico = getErrorGenerico(error)
+  return generico && `No pudimos generar el resumen. ${generico}`
+}
+
+// Puesto en el top del resumen: "1.º", "2.º", "3.º"
+export function formatPosicionResumen(posicion) {
+  return `${posicion}.º`
+}
+
+// "basado en 15 postulaciones analizadas" / "basado en 1 postulación analizada"
+export function formatBaseResumen(cantidad) {
+  return cantidad === 1
+    ? 'basado en 1 postulación analizada'
+    : `basado en ${cantidad} postulaciones analizadas`
+}
+
+/*
+ * Si la card del resumen de la vacante quedó colapsada. Se recuerda en localStorage (una sola para todas las vacantes):
+ * quien la cierra para ver la tabla no la vuelve a encontrar abierta al cambiar de vacante. Todo con try/catch: sin
+ * acceso a localStorage arranca abierta y no se recuerda
+ */
+const CLAVE_RESUMEN_COLAPSADO = 'bandeja:resumen-colapsado'
+
+export function leerResumenColapsado() {
+  try {
+    return localStorage.getItem(CLAVE_RESUMEN_COLAPSADO) === '1'
+  } catch {
+    return false
+  }
+}
+
+export function guardarResumenColapsado(colapsado) {
+  try {
+    if (colapsado) localStorage.setItem(CLAVE_RESUMEN_COLAPSADO, '1')
+    else localStorage.removeItem(CLAVE_RESUMEN_COLAPSADO)
+  } catch {
+    // Sin acceso a localStorage: el estado dura hasta recargar la página
+  }
+}

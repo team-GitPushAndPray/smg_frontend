@@ -1,6 +1,6 @@
 import { apiFetch } from './api'
 
-/** @import { Vacante, VacanteDatos, VacanteEdicion } from '../types/vacantes' */
+/** @import { ResumenVacante, Vacante, VacanteDatos, VacanteEdicion } from '../types/vacantes' */
 
 /**
  * Vacantes públicas (sin sesión): el back solo devuelve las activas, cada una con
@@ -43,4 +43,30 @@ export function crearVacante(datos) {
  */
 export function editarVacante(id, cambios) {
   return apiFetch(`/vacantes/${id}`, { method: 'PATCH', body: cambios })
+}
+
+/*
+ * Resumen de la vacante para gerencia (top 3, comparación y recomendación, generados por IA). Ver exige el módulo
+ * POSTULACIONES; generar, además, poder editarlo (403). Errores: 404 si la vacante no existe
+ */
+
+/**
+ * Último resumen guardado de la vacante, o null si todavía no se generó ninguno
+ * @param {number} vacanteId
+ * @returns {Promise<ResumenVacante | null>}
+ */
+export async function getResumenVacante(vacanteId, { signal } = {}) {
+  const resumen = await apiFetch(`/vacantes/${vacanteId}/resumen-ia`, { signal })
+  return resumen ?? null
+}
+
+/**
+ * Genera (o regenera) el resumen con los análisis completados de la vacante y lo devuelve ya guardado. Puede tardar
+ * unos segundos. Errores: 400 si la vacante no tiene postulaciones analizadas (con el motivo en `message`); 429 si se
+ * alcanzó el límite de consultas de la IA; 502, 503 o 504 si la IA falló, no está configurada o tardó demasiado
+ * @param {number} vacanteId
+ * @returns {Promise<ResumenVacante>}
+ */
+export function generarResumenVacante(vacanteId) {
+  return apiFetch(`/vacantes/${vacanteId}/resumen-ia`, { method: 'POST' })
 }
