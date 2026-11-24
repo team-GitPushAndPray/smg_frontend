@@ -6,7 +6,8 @@ import { apiFetch, toQuery } from './api'
  * Envía una postulación a una vacante (ruta pública, sin sesión), en multipart: los datos ya validados y con trim,
  * el CV en el campo `cv` y el honeypot `website` tal como quedó en el formulario (vacío salvo que lo complete un bot:
  * en ese caso el back responde 201 y la descarta). `acepta_tratamiento` es el consentimiento del checkbox: el back lo
- * exige en 'true' y guarda la fecha en que se dio. El back guarda la postulación con estado NUEVO.
+ * exige en 'true' y guarda la fecha en que se dio. El back guarda la postulación con estado NUEVO y, antes de
+ * responder, analiza el CV con IA: la respuesta puede tardar de 5 a 20 s (el formulario avisa la espera).
  * Un 400 avisa datos o archivo inválidos, falta de consentimiento o una vacante que ya no está activa, y un 413 un CV
  * de más de 4 MB (error.status)
  */

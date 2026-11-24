@@ -116,10 +116,12 @@ export const consultaEquipo = {
 
 /*
  * Textos de la página "Trabajá con nosotros". Las vacantes vienen de la API; acá va el encabezado
- * y el texto del consentimiento, que solo se muestra (no viaja al back)
+ * y el texto del consentimiento del checkbox. Aceptarlo es obligatorio: viaja al back como `acepta_tratamiento` y
+ * cubre también el análisis del CV con IA que hace el back al recibir la postulación
  */
 export const trabajaConNosotros = {
   titulo: 'Sumate a nuestro equipo',
   bajada: 'Mirá las búsquedas abiertas y postulate con tu CV en pocos minutos, desde el celular o la computadora.',
-  consentimiento: 'Acepto que SGM utilice mis datos para procesos de selección.',
+  consentimiento:
+    'Acepto que SGM utilice mis datos para procesos de selección, incluido el análisis automatizado de mi CV mediante servicios de inteligencia artificial de terceros.',
 }
