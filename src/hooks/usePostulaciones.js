@@ -4,16 +4,17 @@ import { listarPostulaciones } from '../services/postulacionesService'
 /** @import { FiltrosPostulaciones, Postulacion } from '../types/postulaciones' */
 
 /*
- * Postulaciones de la bandeja (GET /postulaciones) con los filtros de la URL, en el orden en que las manda el back.
+ * Postulaciones de la bandeja (GET /postulaciones) con los filtros y el orden de la URL, en el orden en que las manda
+ * el back (de la más nueva a la más vieja, o el ranking por afinidad).
  * Cada cambio de filtro vuelve a pedir; si llega tarde la respuesta de un filtro anterior, se descarta.
  * `status` es 'success' o 'error' de la última respuesta; `isLoading` indica que todavía no llegó la del pedido actual
  * (mientras tanto se conserva la lista anterior). `hasData` es false hasta la primera respuesta buena y después de un
  * error. `retry` vuelve a pedir con los mismos filtros
  * @param {FiltrosPostulaciones} filtros
  */
-export function usePostulaciones({ vacanteId, estado }) {
+export function usePostulaciones({ vacanteId, estado, orden }) {
   const [attempt, setAttempt] = useState(0)
-  const requestKey = `${vacanteId ?? ''}|${estado}|${attempt}`
+  const requestKey = `${vacanteId ?? ''}|${estado}|${orden}|${attempt}`
   const [state, setState] = useState({
     key: '',
     status: 'success',
@@ -24,7 +25,7 @@ export function usePostulaciones({ vacanteId, estado }) {
     const controller = new AbortController()
     const { signal } = controller
 
-    listarPostulaciones({ vacanteId, estado }, { signal })
+    listarPostulaciones({ vacanteId, estado, orden }, { signal })
       .then((postulaciones) => {
         if (!signal.aborted) setState({ key: requestKey, status: 'success', postulaciones })
       })
@@ -33,7 +34,7 @@ export function usePostulaciones({ vacanteId, estado }) {
       })
 
     return () => controller.abort()
-  }, [vacanteId, estado, requestKey])
+  }, [vacanteId, estado, orden, requestKey])
 
   return {
     status: state.status,

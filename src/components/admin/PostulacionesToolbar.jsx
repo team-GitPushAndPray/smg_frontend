@@ -1,5 +1,5 @@
 import { FilterX } from 'lucide-react'
-import { ESTADOS_POSTULACION } from '../../utils/postulaciones'
+import { ESTADOS_POSTULACION, ORDENES_POSTULACIONES } from '../../utils/postulaciones'
 import FilterSelect from './FilterSelect'
 
 /** @import { FiltrosPostulaciones } from '../../types/postulaciones' */
@@ -10,10 +10,14 @@ function vacanteLabel(vacante) {
   return vacante.activa ? vacante.titulo : `${vacante.titulo} (inactiva)`
 }
 
+const TEXTO_SIN_VACANTE = 'Elegí una vacante para ver el ranking'
+
 /**
- * Filtros de la Bandeja: vacante (todas, activas e inactivas) y estado. Se aplican al momento y se combinan.
+ * Filtros de la Bandeja: vacante (todas, activas e inactivas), estado y orden. Se aplican al momento y se combinan.
  * Si las vacantes no cargan, su filtro queda deshabilitado y el de estado sigue andando. Una vacante que viene en la
- * URL pero ya no está en la lista se conserva como opción, para que el select no mienta sobre lo que se está filtrando
+ * URL pero ya no está en la lista se conserva como opción, para que el select no mienta sobre lo que se está filtrando.
+ * "Mayor afinidad" (el ranking) solo se puede elegir con una vacante: sin ella queda deshabilitado y se explica abajo
+ * del selector (al sacar la vacante, useFiltrosPostulaciones vuelve a "Más recientes")
  * @param {{
  *   filtros: FiltrosPostulaciones,
  *   onFiltrosChange: (cambios: Partial<FiltrosPostulaciones>) => void,
@@ -25,6 +29,7 @@ function vacanteLabel(vacante) {
  */
 export default function PostulacionesToolbar({ filtros, onFiltrosChange, vacantes, vacantesStatus, hasFilters, onClear }) {
   const vacanteValue = filtros.vacanteId === null ? '' : String(filtros.vacanteId)
+  const sinVacante = filtros.vacanteId === null
   const vacanteDesconocida =
     vacantesStatus === 'success' && filtros.vacanteId !== null && !vacantes.some(({ id }) => id === filtros.vacanteId)
 
@@ -33,8 +38,8 @@ export default function PostulacionesToolbar({ filtros, onFiltrosChange, vacante
   else if (vacantesStatus === 'error') todasLabel = 'No se pudieron cargar las vacantes'
 
   return (
-    <div className="flex flex-col gap-3 md:flex-row md:items-center">
-      <div className="grid flex-1 gap-3 sm:grid-cols-2 md:max-w-2xl">
+    <div className="flex flex-col gap-3 md:flex-row md:items-start">
+      <div className="grid flex-1 items-start gap-3 sm:grid-cols-2 md:max-w-4xl lg:grid-cols-3">
         <FilterSelect
           id="postulaciones-vacante"
           label="Filtrar por vacante"
@@ -63,6 +68,26 @@ export default function PostulacionesToolbar({ filtros, onFiltrosChange, vacante
             </option>
           ))}
         </FilterSelect>
+        <div className="flex min-w-0 flex-col gap-1.5">
+          <FilterSelect
+            id="postulaciones-orden"
+            label="Ordenar por"
+            value={filtros.orden}
+            onChange={(orden) => onFiltrosChange({ orden })}
+            describedBy={sinVacante ? 'postulaciones-orden-ayuda' : undefined}
+          >
+            {ORDENES_POSTULACIONES.map(({ id, label }) => (
+              <option key={id} value={id} disabled={id === 'afinidad' && sinVacante}>
+                {label}
+              </option>
+            ))}
+          </FilterSelect>
+          {sinVacante && (
+            <p id="postulaciones-orden-ayuda" className="px-1 text-xs text-neutral-600 dark:text-neutral-400">
+              {TEXTO_SIN_VACANTE}
+            </p>
+          )}
+        </div>
       </div>
 
       {hasFilters && (

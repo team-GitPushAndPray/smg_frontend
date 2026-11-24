@@ -1,7 +1,10 @@
 import { ChevronDown } from 'lucide-react'
 
-// Select de filtro sobre el fondo de la página: mismo vidrio opaco que el buscador. La etiqueta es solo para lectores
-export default function FilterSelect({ id, label, value, onChange, disabled, children }) {
+/*
+ * Select de filtro sobre el fondo de la página: mismo vidrio opaco que el buscador. La etiqueta es solo para lectores.
+ * `describedBy` es el id de un texto de ayuda visible que acompaña al select
+ */
+export default function FilterSelect({ id, label, value, onChange, disabled, describedBy, children }) {
   return (
     <div className="relative min-w-0">
       <label htmlFor={id} className="sr-only">
@@ -12,6 +15,7 @@ export default function FilterSelect({ id, label, value, onChange, disabled, chi
         value={value}
         onChange={(event) => onChange(event.target.value)}
         disabled={disabled}
+        aria-describedby={describedBy}
         className="field-glass appearance-none truncate pr-11 pl-3.5 disabled:opacity-60"
       >
         {children}

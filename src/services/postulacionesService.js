@@ -1,6 +1,6 @@
 import { apiFetch, toQuery } from './api'
 
-/** @import { EstadoPostulacion, FiltrosPostulaciones, Postulacion } from '../types/postulaciones' */
+/** @import { EstadoAnalisis, EstadoPostulacion, FiltrosPostulaciones, Postulacion } from '../types/postulaciones' */
 
 /*
  * Envía una postulación a una vacante (ruta pública, sin sesión), en multipart: los datos ya validados y con trim,
@@ -34,12 +34,15 @@ export async function enviarPostulacion({ vacanteId, datos, website, cv, aceptaT
  */
 
 /**
- * Postulaciones recibidas, ya ordenadas por el back de la más nueva a la más vieja (no se reordena)
- * @param {FiltrosPostulaciones} filtros
+ * Postulaciones recibidas, ya ordenadas por el back (no se reordenan): de la más nueva a la más vieja o, con
+ * `orden: 'afinidad'`, como ranking por puntaje con su `posicion` (las que no tienen puntaje, al final). El back exige
+ * una vacante para el ranking (400 sin ella). 'recientes' es el orden por defecto del back: no viaja
+ * @param {Partial<FiltrosPostulaciones>} filtros
  * @returns {Promise<Postulacion[]>}
  */
-export async function listarPostulaciones({ vacanteId, estado }, { signal } = {}) {
-  const postulaciones = await apiFetch(`/postulaciones${toQuery({ vacante_id: vacanteId, estado })}`, { signal })
+export async function listarPostulaciones({ vacanteId, estado, orden }, { signal } = {}) {
+  const query = toQuery({ vacante_id: vacanteId, estado, orden: orden === 'afinidad' ? orden : undefined })
+  const postulaciones = await apiFetch(`/postulaciones${query}`, { signal })
   return Array.isArray(postulaciones) ? postulaciones : []
 }
 
@@ -66,4 +69,16 @@ export function obtenerPostulacion(id, { signal } = {}) {
  */
 export function cambiarEstadoPostulacion(id, estado) {
   return apiFetch(`/postulaciones/${id}/estado`, { method: 'PATCH', body: { estado } })
+}
+
+/**
+ * Vuelve a analizar el CV de una postulación con IA (exige poder editar el módulo: 403). El back descarga el PDF, lo
+ * analiza y responde recién al terminar (de 5 a 40 s), con el registro del análisis ya guardado: `estado` COMPLETADO
+ * con su puntaje, o ERROR con `error_detalle` si falló la descarga o la IA (eso no es un error HTTP: responde 200).
+ * 404 si la postulación ya no existe
+ * @param {number} id
+ * @returns {Promise<{ estado: EstadoAnalisis, puntaje: number | null, error_detalle: string | null }>}
+ */
+export function analizarPostulacion(id) {
+  return apiFetch(`/postulaciones/${id}/analizar`, { method: 'POST' })
 }
