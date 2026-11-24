@@ -5,10 +5,12 @@ import { apiFetch, toQuery } from './api'
 /*
  * Envía una postulación a una vacante (ruta pública, sin sesión), en multipart: los datos ya validados y con trim,
  * el CV en el campo `cv` y el honeypot `website` tal como quedó en el formulario (vacío salvo que lo complete un bot:
- * en ese caso el back responde 201 y la descarta). El back guarda la postulación con estado NUEVO.
- * Un 400 avisa datos o archivo inválidos o una vacante que ya no está activa, y un 413 un CV de más de 4 MB (error.status)
+ * en ese caso el back responde 201 y la descarta). `acepta_tratamiento` es el consentimiento del checkbox: el back lo
+ * exige en 'true' y guarda la fecha en que se dio. El back guarda la postulación con estado NUEVO.
+ * Un 400 avisa datos o archivo inválidos, falta de consentimiento o una vacante que ya no está activa, y un 413 un CV
+ * de más de 4 MB (error.status)
  */
-export async function enviarPostulacion({ vacanteId, datos, website, cv }) {
+export async function enviarPostulacion({ vacanteId, datos, website, cv, aceptaTratamiento }) {
   const body = new FormData()
   body.append('vacante_id', String(vacanteId))
   body.append('nombre', datos.nombre)
@@ -19,6 +21,8 @@ export async function enviarPostulacion({ vacanteId, datos, website, cv }) {
   body.append('mensaje', datos.mensaje)
   body.append('website', website)
   body.append('cv', cv)
+  // Multipart solo transporta texto: el back acepta 'true' y lo convierte a booleano
+  body.append('acepta_tratamiento', String(aceptaTratamiento === true))
 
   await apiFetch('/postulaciones', { method: 'POST', auth: false, body })
 }
