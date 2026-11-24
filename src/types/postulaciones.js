@@ -25,6 +25,33 @@
  * @property {string} creado_en
  * @property {string} actualizado_en
  * @property {{ id: number, titulo: string, activa: boolean }} vacante
+ * @property {AnalisisPostulacion | null} analisis Análisis del CV con IA; null si la postulación no tiene registro
+ * @property {number | null} [posicion] Solo con orden por afinidad: puesto en el ranking (1, 2, 3…), o null si todavía
+ *   no tiene puntaje (sin analizar o con error). Esas van al final
+ */
+
+/**
+ * Estado del análisis del CV con IA (enum EstadoAnalisis del back). Nace PENDIENTE
+ * @typedef {'PENDIENTE' | 'COMPLETADO' | 'ERROR'} EstadoAnalisis
+ */
+
+/**
+ * Análisis del CV con IA de una postulación (AnalisisAdminView del back). `puntaje` (0 a 100) solo viene en COMPLETADO;
+ * `error_detalle`, en ERROR. `desactualizado` es true si los requisitos de la vacante cambiaron después del análisis
+ * @typedef {object} AnalisisPostulacion
+ * @property {EstadoAnalisis} estado
+ * @property {number | null} puntaje
+ * @property {string | null} resumen_experiencia
+ * @property {string | null} justificacion
+ * @property {string | null} error_detalle
+ * @property {string | null} modelo
+ * @property {string | null} analizado_en
+ * @property {boolean} desactualizado
+ */
+
+/**
+ * Orden de la bandeja (query `orden` del back). 'afinidad' es el ranking por puntaje y exige una vacante elegida
+ * @typedef {'recientes' | 'afinidad'} OrdenPostulaciones
  */
 
 /**
@@ -32,6 +59,7 @@
  * @typedef {object} FiltrosPostulaciones
  * @property {number | null} vacanteId
  * @property {EstadoPostulacion | ''} estado
+ * @property {OrdenPostulaciones} orden 'afinidad' solo con una vacante elegida; si no, siempre 'recientes'
  */
 
 export {}

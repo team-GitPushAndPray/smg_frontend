@@ -1,7 +1,7 @@
 import { formatFechaChecklist } from './historial'
 import { getErrorGenerico } from './usuarios'
 
-/** @import { EstadoPostulacion, Postulacion } from '../types/postulaciones' */
+/** @import { EstadoPostulacion, OrdenPostulaciones, Postulacion } from '../types/postulaciones' */
 
 /*
  * Reglas del formulario de postulación ("Trabajá con nosotros"), espejo de las del back.
@@ -215,4 +215,99 @@ export function getErrorEstadoPostulacion(error) {
   if (error.status === 400) return 'No pudimos cambiar el estado. Recargá la página e intentá de nuevo.'
   const generico = getErrorGenerico(error)
   return generico && `No pudimos cambiar el estado. ${generico}`
+}
+
+/*
+ * Orden de la bandeja, con la clave tal cual la espera el back (?orden=). El primero es el de por defecto: no se
+ * escribe en la URL. "Mayor afinidad" es el ranking por puntaje y solo tiene sentido dentro de una vacante
+ */
+export const ORDENES_POSTULACIONES = Object.freeze([
+  { id: 'recientes', label: 'Ordenar por: Más recientes' },
+  { id: 'afinidad', label: 'Ordenar por: Mayor afinidad' },
+])
+
+export const ORDEN_POR_DEFECTO = ORDENES_POSTULACIONES[0].id
+
+/**
+ * @param {string | null} orden
+ * @returns {orden is OrdenPostulaciones}
+ */
+export function esOrdenPostulaciones(orden) {
+  return ORDENES_POSTULACIONES.some(({ id }) => id === orden)
+}
+
+/*
+ * Franjas del puntaje de afinidad (0 a 100), de la más alta a la más baja. Siguen la escala del prompt del back
+ * (70 a 89: cumple los requisitos centrales; 40 a 69: cumple una parte; 0 a 39: el perfil no está relacionado).
+ * Usan el verde y el ámbar de estado de index.css (no son acentos) y gris para la más baja; el número siempre va
+ * escrito, así que el color nunca es lo único que informa. ok-700 sobre ok-50 y warn-800 sobre warn-100 pasan AA en
+ * claro; ok-300 y warn-300 sobre su tinte, en oscuro
+ */
+const FRANJAS_AFINIDAD = Object.freeze([
+  {
+    minimo: 70,
+    label: 'Afinidad alta',
+    className: 'bg-ok-50 text-ok-700 ring-1 ring-ok-700/20 ring-inset dark:bg-ok-300/15 dark:text-ok-300 dark:ring-ok-300/25',
+  },
+  {
+    minimo: 40,
+    label: 'Afinidad media',
+    className:
+      'bg-warn-100 text-warn-800 ring-1 ring-warn-800/15 ring-inset dark:bg-warn-400/15 dark:text-warn-300 dark:ring-warn-300/25',
+  },
+  {
+    minimo: 0,
+    label: 'Afinidad baja',
+    className: 'bg-black/5 text-neutral-700 dark:bg-white/10 dark:text-neutral-300',
+  },
+])
+
+/**
+ * Cómo se muestra el análisis con IA de una postulación en la bandeja:
+ * - { tipo: 'sin-analizar' }: PENDIENTE o sin registro de análisis.
+ * - { tipo: 'error', detalle }: ERROR, con el `error_detalle` del back. Gana sobre "desactualizado": no hay puntaje.
+ * - { tipo: 'puntaje', puntaje, franja, desactualizado }: COMPLETADO; `desactualizado` (cambiaron los requisitos de la
+ *   vacante después del análisis) se muestra junto al puntaje, no lo reemplaza.
+ * Un COMPLETADO sin puntaje (no debería pasar) o un estado que el front no conoce se toman como sin analizar
+ * @param {Postulacion} postulacion
+ */
+export function getAfinidad(postulacion) {
+  const analisis = postulacion.analisis
+  if (analisis?.estado === 'ERROR') return { tipo: 'error', detalle: analisis.error_detalle }
+  if (analisis?.estado === 'COMPLETADO' && typeof analisis.puntaje === 'number') {
+    const franja = FRANJAS_AFINIDAD.find(({ minimo }) => analisis.puntaje >= minimo) ?? FRANJAS_AFINIDAD.at(-1)
+    return { tipo: 'puntaje', puntaje: analisis.puntaje, franja, desactualizado: analisis.desactualizado === true }
+  }
+  return { tipo: 'sin-analizar' }
+}
+
+/**
+ * Si "Analizar pendientes" tiene que (volver a) analizarla: sin analizar, con error o con un análisis desactualizado
+ * @param {Postulacion} postulacion
+ */
+export function necesitaAnalisis(postulacion) {
+  const afinidad = getAfinidad(postulacion)
+  return afinidad.tipo !== 'puntaje' || afinidad.desactualizado
+}
+
+// Puestos del ranking que se destacan en la bandeja
+export const PUESTOS_DESTACADOS = 3
+
+/*
+ * Resultado del lote de "Analizar pendientes" para el aviso final: "15 analizadas · 2 con error". Las que volvieron
+ * con error también cuentan como analizadas (se procesaron). Si se canceló, se aclara
+ */
+export function getResumenAnalisis({ procesadas, conError, cancelado }) {
+  const analizadas = `${procesadas} ${procesadas === 1 ? 'analizada' : 'analizadas'}`
+  const resumen = conError > 0 ? `${analizadas} · ${conError} con error` : analizadas
+  return cancelado ? `Análisis cancelado: ${resumen}` : resumen
+}
+
+/*
+ * Mensaje simple para cuando no se pudo armar la lista de "Analizar pendientes" (el pedido de las postulaciones de la
+ * vacante falló). null si ya lo avisó apiFetch: 401 cierra la sesión y 403 muestra su propio aviso
+ */
+export function getErrorAnalisisPendientes(error) {
+  const generico = getErrorGenerico(error)
+  return generico && `No pudimos empezar el análisis. ${generico}`
 }

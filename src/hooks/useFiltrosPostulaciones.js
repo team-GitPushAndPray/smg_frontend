@@ -1,15 +1,17 @@
 import { useCallback, useMemo } from 'react'
 import { useSearchParams } from 'react-router'
-import { getEstadoPostulacion } from '../utils/postulaciones'
+import { esOrdenPostulaciones, getEstadoPostulacion, ORDEN_POR_DEFECTO } from '../utils/postulaciones'
 import { PESTANAS_POSTULACIONES } from '../utils/vacantes'
 
 /** @import { FiltrosPostulaciones } from '../types/postulaciones' */
 
-// Nombre de cada parámetro en la URL (/admin/postulaciones?vacante_id=1&estado=NUEVO, /admin/postulaciones?tab=vacantes)
+// Nombre de cada parámetro en la URL (/admin/postulaciones?vacante_id=1&estado=NUEVO&orden=afinidad,
+// /admin/postulaciones?tab=vacantes)
 const PARAMS = Object.freeze({
   tab: 'tab',
   vacanteId: 'vacante_id',
   estado: 'estado',
+  orden: 'orden',
 })
 
 const TAB_POR_DEFECTO = PESTANAS_POSTULACIONES[0].id
@@ -20,11 +22,13 @@ function toPositiveInt(value) {
 }
 
 /*
- * Pestaña activa del módulo Postulaciones (Bandeja / Vacantes) y filtros de la Bandeja (vacante y estado), guardados
- * en la URL: sobreviven a recargar y a volver desde la ficha. Lo que no sea válido (una pestaña o un estado que no
- * existen, una vacante que no es un número positivo) se ignora; "Todas" / "Todos" y la pestaña por defecto no se
- * escriben. `setPestana` cambia de pestaña y descarta los filtros (son solo de la Bandeja); `setFiltros` recibe solo
- * los que cambian. Se reemplaza la entrada del historial: "atrás" lleva a la pantalla anterior, no al filtro anterior
+ * Pestaña activa del módulo Postulaciones (Bandeja / Vacantes) y filtros de la Bandeja (vacante, estado y orden),
+ * guardados en la URL: sobreviven a recargar y a volver desde la ficha. Lo que no sea válido (una pestaña, un estado o
+ * un orden que no existen, una vacante que no es un número positivo) se ignora; "Todas" / "Todos", el orden y la
+ * pestaña por defecto no se escriben. El orden por afinidad (ranking) exige una vacante: sin ella se toma "Más
+ * recientes", y al sacar la vacante se borra de la URL. `setPestana` cambia de pestaña y descarta los filtros (son solo
+ * de la Bandeja); `setFiltros` recibe solo los que cambian. Se reemplaza la entrada del historial: "atrás" lleva a la
+ * pantalla anterior, no al filtro anterior
  */
 export function useFiltrosPostulaciones() {
   const [searchParams, setSearchParams] = useSearchParams()
@@ -34,9 +38,11 @@ export function useFiltrosPostulaciones() {
   const vacanteId = toPositiveInt(searchParams.get(PARAMS.vacanteId))
   const estadoParam = searchParams.get(PARAMS.estado)
   const estado = getEstadoPostulacion(estadoParam) ? estadoParam : ''
+  const ordenParam = searchParams.get(PARAMS.orden)
+  const orden = vacanteId !== null && esOrdenPostulaciones(ordenParam) ? ordenParam : ORDEN_POR_DEFECTO
 
   /** @type {FiltrosPostulaciones} */
-  const filtros = useMemo(() => ({ vacanteId, estado }), [vacanteId, estado])
+  const filtros = useMemo(() => ({ vacanteId, estado, orden }), [vacanteId, estado, orden])
 
   const update = useCallback(
     (cambios) => {
@@ -44,10 +50,16 @@ export function useFiltrosPostulaciones() {
         (current) => {
           const next = new URLSearchParams(current)
           for (const [clave, valor] of Object.entries(cambios)) {
-            const vacio = valor === '' || valor === null || (clave === 'tab' && valor === TAB_POR_DEFECTO)
+            const vacio =
+              valor === '' ||
+              valor === null ||
+              (clave === 'tab' && valor === TAB_POR_DEFECTO) ||
+              (clave === 'orden' && valor === ORDEN_POR_DEFECTO)
             if (vacio) next.delete(PARAMS[clave])
             else next.set(PARAMS[clave], String(valor))
           }
+          // Sin vacante no hay ranking: vuelve a "Más recientes"
+          if (!next.has(PARAMS.vacanteId)) next.delete(PARAMS.orden)
           return next
         },
         { replace: true },
@@ -56,9 +68,15 @@ export function useFiltrosPostulaciones() {
     [setSearchParams],
   )
 
-  const setPestana = useCallback((valor) => update({ tab: valor, vacanteId: null, estado: '' }), [update])
+  const setPestana = useCallback(
+    (valor) => update({ tab: valor, vacanteId: null, estado: '', orden: ORDEN_POR_DEFECTO }),
+    [update],
+  )
   const setFiltros = useCallback((cambios) => update(cambios), [update])
-  const limpiarFiltros = useCallback(() => update({ vacanteId: null, estado: '' }), [update])
+  const limpiarFiltros = useCallback(
+    () => update({ vacanteId: null, estado: '', orden: ORDEN_POR_DEFECTO }),
+    [update],
+  )
 
   const hasFilters = Boolean(vacanteId || estado)
 
