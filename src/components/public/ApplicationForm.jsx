@@ -16,6 +16,8 @@ import { Field } from '../admin/FormField'
 
 const textMuted = 'text-neutral-600 dark:text-neutral-400'
 
+const TEXTO_ESPERA = 'Enviando tu postulación… puede demorar unos segundos.'
+
 // Zona para elegir el CV: el input nativo queda oculto (sr-only, pero enfocable) y su foco se ve en la zona (peer)
 const cvZoneClass =
   'interactive flex min-h-16 cursor-pointer items-center gap-3 rounded-control border border-dashed border-(--field-border) bg-(--field-bg) px-3.5 py-3 hover:border-brand-600/50 peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-(--focus-ring) peer-disabled:pointer-events-none peer-disabled:opacity-60 peer-aria-[invalid=true]:border-(--field-border-invalid) dark:hover:border-brand-400/50'
@@ -52,8 +54,8 @@ function CvInput({ cv, disabled, onChange, ...accesibilidad }) {
 
 /*
  * Formulario de postulación a una vacante. Valida todo antes de enviar (el CV, apenas se elige) y no envía nada con
- * errores: el foco va al primer campo a corregir. Mientras se envía, el botón queda bloqueado (y el modal no se cierra:
- * `onSubmittingChange`). Al salir bien llama a `onEnviada` con los datos; si la vacante ya no está activa, a `onVacanteCerrada`
+ * errores: el foco va al primer campo a corregir. Mientras se envía (puede tardar: el back analiza el CV), el botón
+ * queda bloqueado con un aviso de espera debajo (y el modal no se cierra: `onSubmittingChange`). Al salir bien llama a `onEnviada` con los datos; si la vacante ya no está activa, a `onVacanteCerrada`
  */
 export default function ApplicationForm({ vacante, onSubmittingChange, onEnviada, onVacanteCerrada }) {
   const honeypotId = useId()
@@ -268,10 +270,17 @@ export default function ApplicationForm({ vacante, onSubmittingChange, onEnviada
         </div>
       )}
 
-      <button type="submit" disabled={isSubmitting} className="btn-primary w-full">
-        {isSubmitting && <LoaderCircle size={18} strokeWidth={1.75} aria-hidden="true" className="animate-spin" />}
-        {isSubmitting ? 'Enviando…' : 'Enviar postulación'}
-      </button>
+      <div className="flex flex-col gap-2">
+        <button type="submit" disabled={isSubmitting} className="btn-primary w-full">
+          {isSubmitting && <LoaderCircle size={18} strokeWidth={1.75} aria-hidden="true" className="animate-spin" />}
+          {isSubmitting ? 'Enviando…' : 'Enviar postulación'}
+        </button>
+        {/* El back analiza el CV antes de responder (5 a 20 s): se avisa que la espera es normal. La región está
+            siempre montada (oculta si está vacía) para que el lector de pantalla anuncie el texto al aparecer */}
+        <p role="status" className={isSubmitting ? `text-center text-sm text-pretty ${textMuted}` : 'sr-only'}>
+          {isSubmitting && TEXTO_ESPERA}
+        </p>
+      </div>
     </form>
   )
 }
