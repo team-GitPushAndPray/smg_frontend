@@ -106,7 +106,13 @@ export default function ApplicationForm({ vacante, onSubmittingChange, onEnviada
 
     setSubmitting(true)
     try {
-      await enviarPostulacion({ vacanteId: vacante.id, datos, website: values.website, cv })
+      await enviarPostulacion({
+        vacanteId: vacante.id,
+        datos,
+        website: values.website,
+        cv,
+        aceptaTratamiento: consentimiento,
+      })
       onEnviada(datos)
     } catch (error) {
       setSubmitting(false)

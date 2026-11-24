@@ -110,9 +110,10 @@ const ERROR_GENERICO = 'No pudimos enviar tu postulación. Revisá tu conexión 
  * Traduce el error del envío a un mensaje simple, sin texto técnico del back. Devuelve:
  * - { vacanteCerrada: true }: la vacante ya no está activa (la desactivaron mientras se completaba el formulario).
  * - { campo: 'cv', mensaje }: el CV no pasó la validación del back (no es un PDF real o pesa más de 4 MB).
+ * - { campo: 'consentimiento', mensaje }: el back no recibió la aceptación del uso de datos (`acepta_tratamiento`).
  * - { mensaje }: cualquier otro caso, para mostrar arriba del botón de enviar.
  * En los 400, Nest manda `message` como lista si falló la validación del DTO y como texto si lo lanzó el servicio
- * (vacante inactiva, PDF inválido): solo el texto se usa para distinguir el motivo
+ * (vacante inactiva, PDF inválido). El consentimiento se reconoce en la lista; el resto de los motivos, solo en el texto
  */
 export function getErrorPostulacion(error) {
   if (error.status === 413) {
@@ -121,6 +122,10 @@ export function getErrorPostulacion(error) {
   if (error.status !== 400) return { mensaje: ERROR_GENERICO }
 
   const message = error.data?.message
+  const mensajes = Array.isArray(message) ? message : [message]
+  if (mensajes.some((m) => typeof m === 'string' && /aceptar el uso de tus datos|acepta_tratamiento/i.test(m))) {
+    return { campo: 'consentimiento', mensaje: 'Para postularte tenés que aceptar el uso de tus datos.' }
+  }
   if (typeof message === 'string') {
     if (/vacante/i.test(message)) return { vacanteCerrada: true }
     if (/pdf|archivo|cv/i.test(message)) {
