@@ -257,7 +257,7 @@ sgm_frontend/
     │   ├── catalogoService.js  # GET /catalogo y GET /catalogo/id=:id: equipos disponibles y detalle de uno
     │   ├── vendedoresService.js # GET /vendedores/public: vendedores activos, ordenados por cargo
     │   ├── vacantesService.js  # GET /vacantes/publicas (sin sesión): vacantes activas ({ id, titulo, descripcion, requisitos }). Panel (módulo POSTULACIONES): GET /vacantes (activas e inactivas, con cantidad_postulaciones), POST /vacantes y PATCH /vacantes/:id (edición parcial y activar/desactivar: no hay DELETE)
-    │   ├── postulacionesService.js # POST /postulaciones (sin sesión, multipart): vacante_id, datos del candidato, honeypot `website` y el CV en `cv`. Panel: GET /postulaciones con filtros opcionales `vacante_id` y `estado` (los vacíos no viajan), GET /postulaciones/:id (ficha) y PATCH /postulaciones/:id/estado (requiere edición)
+    │   ├── postulacionesService.js # POST /postulaciones (sin sesión, multipart): vacante_id, datos del candidato, honeypot `website`, el CV en `cv` y el consentimiento `acepta_tratamiento` ('true'). El back analiza el CV con IA antes de responder (5 a 20 s). Panel: GET /postulaciones con filtros opcionales `vacante_id` y `estado` (los vacíos no viajan), GET /postulaciones/:id (ficha) y PATCH /postulaciones/:id/estado (requiere edición)
     │   ├── usuariosService.js  # ABM de usuarios (GET, POST y PATCH /usuarios, PATCH /usuarios/:id/estado)
     │   ├── rolesService.js     # Roles y permisos: GET /roles, GET /modulos, POST y PATCH /roles, PUT /roles/:id/modulos
     │   ├── equiposService.js   # Equipos del panel: GET /equipos (paginado, con filtros), GET /equipos/:id, POST y PATCH /equipos, PATCH /equipos/:id/horas y /estado, y DELETE /equipos/:id (baja lógica)

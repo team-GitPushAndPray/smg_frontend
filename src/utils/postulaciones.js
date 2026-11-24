@@ -52,6 +52,8 @@ function validarTexto(valor, { requerido, maximo, vacio, largo }) {
   return undefined
 }
 
+const MENSAJE_CONSENTIMIENTO = 'Para postularte tenés que aceptar el uso de tus datos.'
+
 /*
  * Errores por campo, en el orden en que aparecen en el formulario (el foco va al primero).
  * `datos` ya viene con trim (getDatosPostulacion)
@@ -89,7 +91,7 @@ export function validarPostulacion(datos, { cv, consentimiento }) {
       largo: `El mensaje puede tener hasta ${LIMITES.mensaje} caracteres.`,
     }),
     cv: validarCv(cv),
-    consentimiento: consentimiento ? undefined : 'Para postularte tenés que aceptar el uso de tus datos.',
+    consentimiento: consentimiento ? undefined : MENSAJE_CONSENTIMIENTO,
   }
   return Object.fromEntries(Object.entries(errors).filter(([, error]) => error))
 }
@@ -110,7 +112,8 @@ const ERROR_GENERICO = 'No pudimos enviar tu postulación. Revisá tu conexión 
  * Traduce el error del envío a un mensaje simple, sin texto técnico del back. Devuelve:
  * - { vacanteCerrada: true }: la vacante ya no está activa (la desactivaron mientras se completaba el formulario).
  * - { campo: 'cv', mensaje }: el CV no pasó la validación del back (no es un PDF real o pesa más de 4 MB).
- * - { campo: 'consentimiento', mensaje }: el back no recibió la aceptación del uso de datos (`acepta_tratamiento`).
+ * - { campo: 'consentimiento', mensaje }: el back no recibió la aceptación del uso de datos (`acepta_tratamiento`);
+ *   el mensaje es el que devuelve el back.
  * - { mensaje }: cualquier otro caso, para mostrar arriba del botón de enviar.
  * En los 400, Nest manda `message` como lista si falló la validación del DTO y como texto si lo lanzó el servicio
  * (vacante inactiva, PDF inválido). El consentimiento se reconoce en la lista; el resto de los motivos, solo en el texto
@@ -123,8 +126,13 @@ export function getErrorPostulacion(error) {
 
   const message = error.data?.message
   const mensajes = Array.isArray(message) ? message : [message]
-  if (mensajes.some((m) => typeof m === 'string' && /aceptar el uso de tus datos|acepta_tratamiento/i.test(m))) {
-    return { campo: 'consentimiento', mensaje: 'Para postularte tenés que aceptar el uso de tus datos.' }
+  const consentimiento = mensajes.find(
+    (m) => typeof m === 'string' && /aceptar el uso de tus datos|acepta_tratamiento/i.test(m),
+  )
+  if (consentimiento) {
+    // Se muestra el texto del back; si viniera el técnico (con el nombre del campo), el del front
+    const mensaje = /acepta_tratamiento/i.test(consentimiento) ? MENSAJE_CONSENTIMIENTO : consentimiento
+    return { campo: 'consentimiento', mensaje }
   }
   if (typeof message === 'string') {
     if (/vacante/i.test(message)) return { vacanteCerrada: true }
